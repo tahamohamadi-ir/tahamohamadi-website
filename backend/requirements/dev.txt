@@ -1,0 +1,14 @@
+# Development dependencies.
+# Usage: pip install -r requirements/dev.txt
+
+-r base.txt
+
+# Testing
+pytest>=8.0
+pytest-django>=4.8
+pytest-cov>=6.0
+factory-boy>=3.3
+hypothesis>=6.100
+
+# Code quality
+ruff>=0.11.0

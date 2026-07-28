@@ -1,0 +1,7 @@
+# Production dependencies.
+# Usage: pip install -r requirements/prod.txt
+
+-r base.txt
+
+# WSGI application server
+gunicorn==26.0.0

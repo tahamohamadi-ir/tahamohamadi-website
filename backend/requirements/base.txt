@@ -1,0 +1,32 @@
+# Base runtime dependencies (shared by dev and prod).
+# Exact pins for reproducible builds; regenerate with `pip freeze` after an
+# intentional upgrade. Interpreter: Python 3.12.x (see backend/README.md).
+
+# Web framework and API
+Django==5.2.16
+djangorestframework==3.17.1
+django-filter==26.1
+django-cors-headers==4.9.0
+
+# Configuration (.env + typed env vars)
+django-environ==0.14.0
+
+# Database
+psycopg[binary]==3.3.4
+
+# Media processing (image dimension extraction)
+Pillow==12.3.0
+
+# JSON Schema validation (block settings per block_type)
+jsonschema==4.23.0
+
+# Static file serving
+whitenoise==6.12.0
+
+# Transitive pins, kept explicit so builds are reproducible
+asgiref==3.12.1
+sqlparse==0.5.5
+typing_extensions==4.16.0
+tzdata==2026.3
+
+# Celery + django-celery-beat are added with scheduled publishing (task 6.5).

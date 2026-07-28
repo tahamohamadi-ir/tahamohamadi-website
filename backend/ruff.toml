@@ -1,0 +1,38 @@
+# Ruff configuration for the Django backend.
+# Docs: https://docs.astral.sh/ruff/configuration/
+
+target-version = "py312"
+line-length = 100
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort (import sorting)
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "A",   # flake8-builtins
+    "DJ",  # flake8-django
+    "S",   # flake8-bandit (security)
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+    "T20", # flake8-print (no print statements)
+]
+ignore = [
+    "S101",  # allow assert in tests
+    "B008",  # allow function call defaults (DRF depends_on pattern)
+]
+
+[lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "S106"]  # allow assert and hardcoded passwords in tests
+"*/migrations/*.py" = ["E501"]       # allow long lines in migrations
+
+[lint.isort]
+known-first-party = ["apps", "config"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
