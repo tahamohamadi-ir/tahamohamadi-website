@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
-from apps.identity.models import Experience, SiteProfile, Skill, SocialLink
+from apps.identity.models import Publication, ResearchProject, Experience, SiteProfile, Skill, SocialLink
 
 
 @pytest.mark.django_db
@@ -23,6 +23,7 @@ def test_public_identity_suppresses_drafts_and_localizes():
         "social_links": [{"label": "گیت‌هاب", "url": "https://github.com/example"}],
         "skills": [{"name": "پایتون", "category": "فنی"}], "experience": [],
         "education": [], "certifications": [], "affiliations": [], "languages": [],
+        "research_projects": [], "research_interests": [], "publications": [],
     }
 
 
@@ -33,6 +34,7 @@ def test_public_identity_has_explicit_empty_state_for_draft_profile():
     assert APIClient().get("/api/public/identity/").json() == {
         "profile": None, "social_links": [], "skills": [], "experience": [],
         "education": [], "certifications": [], "affiliations": [], "languages": [],
+        "research_projects": [], "research_interests": [], "publications": [],
     }
 
 
@@ -85,3 +87,25 @@ def test_public_identity_includes_only_published_experience_in_requested_locale(
         "organization": "سازمان", "title": "نقش", "summary": "خلاصه",
         "started_on": "2025-01-01", "ended_on": None,
     }]
+
+
+@pytest.mark.django_db
+def test_public_identity_suppresses_draft_research_and_publications():
+    SiteProfile.objects.create(name_fa="نام", name_en="Name", status="published")
+    ResearchProject.objects.create(
+        slug_fa="پژوهش", slug_en="research", title_fa="پژوهش", title_en="Research",
+        summary_fa="خلاصه", summary_en="Summary", status="published",
+    )
+    Publication.objects.create(
+        slug_fa="مقاله", slug_en="paper", title_fa="مقاله", title_en="Paper",
+        publication_type="article", status="published", doi="10.1000/example",
+    )
+    Publication.objects.create(
+        slug_fa="پیش‌نویس", slug_en="draft", title_fa="پیش‌نویس", title_en="Draft",
+        publication_type="manuscript", status="draft",
+    )
+
+    response = APIClient().get("/api/public/identity/?locale=en")
+
+    assert [item["slug_en"] for item in response.json()["research_projects"]] == ["research"]
+    assert [item["slug_en"] for item in response.json()["publications"]] == ["paper"]

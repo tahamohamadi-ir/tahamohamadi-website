@@ -119,3 +119,52 @@ class LanguageProficiency(VersionedModel):
 
     class Meta:
         ordering = ["ordering", "id"]
+
+
+class ResearchProject(VersionedModel):
+    slug_fa = models.SlugField(max_length=255, unique=True, allow_unicode=True)
+    slug_en = models.SlugField(max_length=255, unique=True)
+    title_fa = models.CharField(max_length=255)
+    title_en = models.CharField(max_length=255)
+    summary_fa = models.TextField(blank=True, default="")
+    summary_en = models.TextField(blank=True, default="")
+    methodology_fa = models.TextField(blank=True, default="")
+    methodology_en = models.TextField(blank=True, default="")
+    status = models.CharField(max_length=20, default="draft")
+    featured = models.BooleanField(default=False)
+    published_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-published_at", "-updated_at"]
+
+
+class ResearchInterest(VersionedModel):
+    name_fa = models.CharField(max_length=255)
+    name_en = models.CharField(max_length=255)
+    description_fa = models.TextField(blank=True, default="")
+    description_en = models.TextField(blank=True, default="")
+    ordering = models.PositiveIntegerField(default=0)
+    status = models.CharField(max_length=20, default="draft")
+
+    class Meta:
+        ordering = ["ordering", "id"]
+
+
+class Publication(VersionedModel):
+    TYPES = [(kind, kind) for kind in ("article", "book", "conference", "report", "manuscript")]
+
+    slug_fa = models.SlugField(max_length=255, unique=True, allow_unicode=True)
+    slug_en = models.SlugField(max_length=255, unique=True)
+    title_fa = models.CharField(max_length=500)
+    title_en = models.CharField(max_length=500)
+    abstract_fa = models.TextField(blank=True, default="")
+    abstract_en = models.TextField(blank=True, default="")
+    publication_type = models.CharField(max_length=20, choices=TYPES)
+    citation = models.TextField(blank=True, default="")
+    doi = models.CharField(max_length=255, blank=True, default="")
+    isbn = models.CharField(max_length=32, blank=True, default="")
+    published_on = models.DateField(null=True, blank=True)
+    status = models.CharField(max_length=20, default="draft")
+
+    class Meta:
+        ordering = ["-published_on", "-updated_at"]

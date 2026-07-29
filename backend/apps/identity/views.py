@@ -12,7 +12,7 @@ from apps.core.services import ConflictError, save_with_optimistic_lock
 
 from apps.identity.models import (
     Affiliation, Certification, Education, Experience, LanguageProficiency,
-    SiteProfile, Skill, SocialLink,
+    Publication, ResearchInterest, ResearchProject, SiteProfile, Skill, SocialLink,
 )
 from apps.identity.serializers import (
     PublicIdentitySerializer,
@@ -31,6 +31,12 @@ from apps.identity.serializers import (
     PublicEducationSerializer,
     PublicExperienceSerializer,
     PublicLanguageProficiencySerializer,
+    PublicationAdminSerializer,
+    PublicPublicationSerializer,
+    PublicResearchInterestSerializer,
+    PublicResearchProjectSerializer,
+    ResearchInterestAdminSerializer,
+    ResearchProjectAdminSerializer,
 )
 
 
@@ -124,6 +130,24 @@ class AdminLanguageProficiencyViewSet(IdentityAdminViewSet):
     search_fields = ["name_fa", "name_en"]
 
 
+class AdminResearchProjectViewSet(IdentityAdminViewSet):
+    queryset = ResearchProject.objects.all()
+    serializer_class = ResearchProjectAdminSerializer
+    search_fields = ["title_fa", "title_en", "slug_fa", "slug_en"]
+
+
+class AdminResearchInterestViewSet(IdentityAdminViewSet):
+    queryset = ResearchInterest.objects.all()
+    serializer_class = ResearchInterestAdminSerializer
+    search_fields = ["name_fa", "name_en"]
+
+
+class AdminPublicationViewSet(IdentityAdminViewSet):
+    queryset = Publication.objects.all()
+    serializer_class = PublicationAdminSerializer
+    search_fields = ["title_fa", "title_en", "slug_fa", "slug_en", "doi", "isbn"]
+
+
 class PublicIdentityView(APIView):
     permission_classes = [AllowAny]
     authentication_classes: list = []
@@ -137,6 +161,7 @@ class PublicIdentityView(APIView):
             return Response({
                 "profile": None, "social_links": [], "skills": [], "experience": [],
                 "education": [], "certifications": [], "affiliations": [], "languages": [],
+                "research_projects": [], "research_interests": [], "publications": [],
             })
         context = {"locale": locale, "request": request}
         return Response({
@@ -152,4 +177,7 @@ class PublicIdentityView(APIView):
             "certifications": PublicCertificationSerializer(Certification.objects.filter(status="published"), many=True, context=context).data,
             "affiliations": PublicAffiliationSerializer(Affiliation.objects.filter(status="published"), many=True, context=context).data,
             "languages": PublicLanguageProficiencySerializer(LanguageProficiency.objects.filter(status="published"), many=True, context=context).data,
+            "research_projects": PublicResearchProjectSerializer(ResearchProject.objects.filter(status="published"), many=True, context=context).data,
+            "research_interests": PublicResearchInterestSerializer(ResearchInterest.objects.filter(status="published"), many=True, context=context).data,
+            "publications": PublicPublicationSerializer(Publication.objects.filter(status="published"), many=True, context=context).data,
         })

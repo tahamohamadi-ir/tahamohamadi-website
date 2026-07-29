@@ -269,7 +269,8 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 |---|---|---|
 | R1-01 | 🟡 | مدل‌ها، migration، projection عمومیِ published-only و Admin CRUD با optimistic 409 پیاده شد؛ public viewport QA و محتوای واقعی باقی است. |
 | R1-02 | 🟡 | Experience/Education/Certification/Affiliation/LanguageProficiency با migration، projection عمومیِ published-only و CRUD Admin پیاده شد؛ QA مرورگر و دادهٔ واقعی باقی است. |
-| R1-03 تا R1-10 | ⬜ | انجام‌نشده. |
+| R1-03 | 🟡 | ResearchProject/ResearchInterest/Publication با migration، projection عمومیِ published-only و CRUD Admin پیاده شد؛ routeهای عمومی اختصاصی، frontend و دادهٔ تأییدشده باقی است. |
+| R1-04 تا R1-10 | ⬜ | انجام‌نشده. |
 
 ### R0 — تثبیت Runtime و قراردادهای شکسته
 

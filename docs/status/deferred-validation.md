@@ -62,6 +62,12 @@
   projection backend فقط رکوردهای published را برمی‌گرداند و دادهٔ شخصی (phone/reference)
   در مدل یا serializer عمومی وجود ندارد.
 
+## R1-03 — پژوهش و آثار
+
+- [ ] routeهای عمومی detail/list، frontend و QA دو locale برای ResearchProject و
+  Publication؛ backend aggregate فقط رکوردهای published را برمی‌گرداند و
+  manuscript/book در وضعیت draft هرگز public نیست.
+
 ## R0-09 — Sentry instrumentation
 
 - [ ] ارسال خطای آزمایشی از server و client به پروژهٔ واقعی Sentry و تأیید scrub

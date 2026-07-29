@@ -9,6 +9,9 @@ from apps.identity.views import (
     AdminCertificationViewSet,
     AdminAffiliationViewSet,
     AdminLanguageProficiencyViewSet,
+    AdminPublicationViewSet,
+    AdminResearchInterestViewSet,
+    AdminResearchProjectViewSet,
 )
 
 router = DefaultRouter()
@@ -20,5 +23,8 @@ router.register("education", AdminEducationViewSet, basename="admin-identity-edu
 router.register("certifications", AdminCertificationViewSet, basename="admin-identity-certifications")
 router.register("affiliations", AdminAffiliationViewSet, basename="admin-identity-affiliations")
 router.register("languages", AdminLanguageProficiencyViewSet, basename="admin-identity-languages")
+router.register("research-projects", AdminResearchProjectViewSet, basename="admin-identity-research-projects")
+router.register("research-interests", AdminResearchInterestViewSet, basename="admin-identity-research-interests")
+router.register("publications", AdminPublicationViewSet, basename="admin-identity-publications")
 
 urlpatterns = router.urls

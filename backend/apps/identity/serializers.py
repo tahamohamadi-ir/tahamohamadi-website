@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from apps.identity.models import (
     Affiliation, Certification, Education, Experience, LanguageProficiency,
+    Publication, ResearchInterest, ResearchProject,
     SiteProfile, Skill, SocialLink,
 )
 from apps.media.serializers import MediaAssetSerializer
@@ -110,6 +111,21 @@ class LanguageProficiencyAdminSerializer(IdentityAdminSerializer):
         model = LanguageProficiency
 
 
+class ResearchProjectAdminSerializer(IdentityAdminSerializer):
+    class Meta(IdentityAdminSerializer.Meta):
+        model = ResearchProject
+
+
+class ResearchInterestAdminSerializer(IdentityAdminSerializer):
+    class Meta(IdentityAdminSerializer.Meta):
+        model = ResearchInterest
+
+
+class PublicationAdminSerializer(IdentityAdminSerializer):
+    class Meta(IdentityAdminSerializer.Meta):
+        model = Publication
+
+
 class LocalizedPublicSerializer(serializers.ModelSerializer):
     """Projects bilingual fields to the requested locale without fallback."""
 
@@ -167,3 +183,35 @@ class PublicLanguageProficiencySerializer(LocalizedPublicSerializer):
         model = LanguageProficiency
         fields = ["name", "proficiency"]
     get_name = lambda self, obj: self.localized(obj, "name")
+
+
+class PublicResearchProjectSerializer(LocalizedPublicSerializer):
+    title = serializers.SerializerMethodField()
+    summary = serializers.SerializerMethodField()
+    methodology = serializers.SerializerMethodField()
+    class Meta:
+        model = ResearchProject
+        fields = ["slug_fa", "slug_en", "title", "summary", "methodology", "featured", "published_at"]
+    get_title = lambda self, obj: self.localized(obj, "title")
+    get_summary = lambda self, obj: self.localized(obj, "summary")
+    get_methodology = lambda self, obj: self.localized(obj, "methodology")
+
+
+class PublicResearchInterestSerializer(LocalizedPublicSerializer):
+    name = serializers.SerializerMethodField()
+    description = serializers.SerializerMethodField()
+    class Meta:
+        model = ResearchInterest
+        fields = ["name", "description"]
+    get_name = lambda self, obj: self.localized(obj, "name")
+    get_description = lambda self, obj: self.localized(obj, "description")
+
+
+class PublicPublicationSerializer(LocalizedPublicSerializer):
+    title = serializers.SerializerMethodField()
+    abstract = serializers.SerializerMethodField()
+    class Meta:
+        model = Publication
+        fields = ["slug_fa", "slug_en", "title", "abstract", "publication_type", "citation", "doi", "isbn", "published_on"]
+    get_title = lambda self, obj: self.localized(obj, "title")
+    get_abstract = lambda self, obj: self.localized(obj, "abstract")
