@@ -20,6 +20,7 @@ urlpatterns = [
     path("public/blog/", include("apps.blog.urls_public")),
     path("public/portfolio/", include("apps.portfolio.urls_public")),
     path("public/workflow/", include("apps.workflow.urls_public")),
+    path("public/identity/", include("apps.identity.urls_public")),
     path("admin/", include("apps.core.urls_admin")),
     path("admin/pages/", include("apps.cms.urls_admin")),
     path("admin/media/", include("apps.media.urls_admin")),

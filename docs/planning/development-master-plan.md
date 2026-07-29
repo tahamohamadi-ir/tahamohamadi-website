@@ -263,6 +263,13 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | R0-09 | 🟡 | scrub صریح Sentry و تست واحد آن در حال پیاده‌سازی است؛ ارسال واقعی server/client به پروژهٔ Sentry نیازمند DSN غیرمحلی است. |
 | R0-10 | ⬜ | ۵ failure فعلی BlockRenderer ثبت شده؛ فایل‌های Hero/Quote تغییرات مستقل دارند و باید semantic contract را بازگردانند. |
 
+#### وضعیت شروع R1
+
+| ID | وضعیت | شواهد / اقدام بعدی |
+|---|---|---|
+| R1-01 | 🟡 | مدل‌های SiteProfile/SocialLink/Skill، migration و projection عمومیِ published-only پیاده شد؛ Admin CRUD و public viewport QA باقی است. |
+| R1-02 تا R1-10 | ⬜ | انجام‌نشده. |
+
 ### R0 — تثبیت Runtime و قراردادهای شکسته
 
 | ID | P | Size | Task | وابستگی / پذیرش |

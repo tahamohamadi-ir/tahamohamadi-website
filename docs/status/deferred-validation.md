@@ -51,6 +51,13 @@
 - [ ] بارگذاری و تأیید محتوای واقعی هم‌locale (portrait/project/publication/OG)
   پیش از release عمومی؛ این برش عمداً هیچ asset جایگزین یا ساختگی ایجاد نمی‌کند.
 
+## R1-01 — Identity
+
+- [ ] Admin CRUD، session/CSRF و optimistic-lock برای SiteProfile، SocialLink و
+  Skill؛ این برش فقط مدل و public projection امن را فراهم کرده است.
+- [ ] QA مرورگر public identity در هر دو locale و تأیید محتوای واقعی؛ endpoint
+  در نبود profile منتشرشده صریحاً empty state برمی‌گرداند و fallback بین localeها ندارد.
+
 ## R0-09 — Sentry instrumentation
 
 - [ ] ارسال خطای آزمایشی از server و client به پروژهٔ واقعی Sentry و تأیید scrub
