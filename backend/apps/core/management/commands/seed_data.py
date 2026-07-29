@@ -23,6 +23,11 @@ from apps.blog.models import Article, ArticleBlock, Topic
 from apps.cms.models import Block, Page, Section
 from apps.media.models import MediaAsset
 from apps.portfolio.models import CaseStudy, CaseStudyBlock
+from apps.identity.models import (
+    Affiliation, Certification, Education, Experience, LanguageProficiency,
+    Publication, ResearchInterest, ResearchProject, ResumeVariant, SiteProfile, Skill, SocialLink,
+)
+from apps.siteconfig.models import NavigationItem, RedirectRule, SiteSettings
 
 User = get_user_model()
 
@@ -45,6 +50,7 @@ class Command(BaseCommand):
         self.stdout.write("Seeding database...")
         self._create_superuser()
         self._remove_broken_seed_media()
+        self._create_identity_and_siteconfig_drafts()
         self._create_pages()
         topics = self._create_topics()
         self._create_articles(topics, [])
@@ -53,6 +59,21 @@ class Command(BaseCommand):
 
     def _flush(self):
         """Remove all seeded data."""
+        RedirectRule.objects.all().delete()
+        NavigationItem.objects.all().delete()
+        SiteSettings.objects.all().delete()
+        ResumeVariant.objects.all().delete()
+        Publication.objects.all().delete()
+        ResearchInterest.objects.all().delete()
+        ResearchProject.objects.all().delete()
+        LanguageProficiency.objects.all().delete()
+        Affiliation.objects.all().delete()
+        Certification.objects.all().delete()
+        Education.objects.all().delete()
+        Experience.objects.all().delete()
+        Skill.objects.all().delete()
+        SocialLink.objects.all().delete()
+        SiteProfile.objects.all().delete()
         CaseStudyBlock.objects.all().delete()
         CaseStudy.objects.all().delete()
         ArticleBlock.objects.all().delete()
@@ -94,6 +115,48 @@ class Command(BaseCommand):
         if removed:
             self.stdout.write(f"  Removed {removed} broken seed media record(s).")
         return removed
+
+    def _create_identity_and_siteconfig_drafts(self):
+        """Create safe, review-only records without real contact data or assets."""
+        profile, profile_created = SiteProfile.objects.get_or_create(
+            name_en="Draft profile",
+            defaults={
+                "name_fa": "پروفایل پیش‌نویس",
+                "headline_fa": "برای بازبینی پیش از انتشار",
+                "headline_en": "Review before publishing",
+                "status": "draft",
+                "created_by": "seed",
+                "updated_by": "seed",
+            },
+        )
+        if profile_created:
+            self.stdout.write("  Created draft identity profile.")
+
+        if not SiteSettings.objects.exists():
+            SiteSettings.objects.create(
+                site_title_fa="تنظیمات پیش‌نویس سایت",
+                site_title_en="Draft site settings",
+                primary_cta_label_fa="بازبینی",
+                primary_cta_label_en="Review",
+                primary_cta_url="/en",
+                status="draft",
+                created_by="seed",
+                updated_by="seed",
+            )
+            self.stdout.write("  Created draft site settings.")
+
+        NavigationItem.objects.get_or_create(
+            label_en="Home",
+            location="header",
+            defaults={
+                "label_fa": "خانه",
+                "href": "/en",
+                "ordering": 0,
+                "status": "draft",
+                "created_by": "seed",
+                "updated_by": "seed",
+            },
+        )
 
     def _create_pages(self):
         """Create sample CMS pages with sections and blocks."""
