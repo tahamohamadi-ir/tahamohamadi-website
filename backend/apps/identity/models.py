@@ -8,6 +8,7 @@ from apps.core.models import VersionedModel
 class SiteProfile(VersionedModel):
     """The single public profile record; public data is served only when published."""
 
+    singleton = models.BooleanField(default=True, unique=True, editable=False)
     name_fa = models.CharField(max_length=255)
     name_en = models.CharField(max_length=255)
     headline_fa = models.CharField(max_length=500, blank=True, default="")

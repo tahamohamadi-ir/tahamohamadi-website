@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from rest_framework.test import APIClient
 
 from apps.identity.models import Publication, ResearchProject, ResumeVariant, Experience, SiteProfile, Skill, SocialLink
@@ -37,6 +38,14 @@ def test_public_identity_has_explicit_empty_state_for_draft_profile():
         "education": [], "certifications": [], "affiliations": [], "languages": [],
         "research_projects": [], "research_interests": [], "publications": [], "resumes": [],
     }
+
+
+@pytest.mark.django_db
+def test_site_profile_has_a_database_singleton_constraint():
+    SiteProfile.objects.create(name_fa="نخست", name_en="First")
+
+    with pytest.raises(IntegrityError):
+        SiteProfile.objects.create(name_fa="دوم", name_en="Second")
 
 
 @pytest.mark.django_db

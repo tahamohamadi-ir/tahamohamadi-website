@@ -53,6 +53,7 @@
 
 ## R1-01 — Identity
 
+- [x] `SiteProfile` نیز unique singleton constraint دارد و API در race، Problem Details 409 می‌دهد.
 - [ ] QA مرورگر public identity در هر دو locale و تأیید محتوای واقعی؛ endpoint
   در نبود profile منتشرشده صریحاً empty state برمی‌گرداند و fallback بین localeها ندارد.
 
