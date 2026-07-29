@@ -27,4 +27,5 @@ urlpatterns = [
     path("admin/blog/", include("apps.blog.urls_admin")),
     path("admin/portfolio/", include("apps.portfolio.urls_admin")),
     path("admin/workflow/", include("apps.workflow.urls_admin")),
+    path("admin/identity/", include("apps.identity.urls_admin")),
 ]

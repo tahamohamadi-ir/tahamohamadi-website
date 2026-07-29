@@ -267,7 +267,7 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 
 | ID | وضعیت | شواهد / اقدام بعدی |
 |---|---|---|
-| R1-01 | 🟡 | مدل‌های SiteProfile/SocialLink/Skill، migration و projection عمومیِ published-only پیاده شد؛ Admin CRUD و public viewport QA باقی است. |
+| R1-01 | 🟡 | مدل‌ها، migration، projection عمومیِ published-only و Admin CRUD با optimistic 409 پیاده شد؛ public viewport QA و محتوای واقعی باقی است. |
 | R1-02 تا R1-10 | ⬜ | انجام‌نشده. |
 
 ### R0 — تثبیت Runtime و قراردادهای شکسته

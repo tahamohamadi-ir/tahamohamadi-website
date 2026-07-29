@@ -53,8 +53,6 @@
 
 ## R1-01 — Identity
 
-- [ ] Admin CRUD، session/CSRF و optimistic-lock برای SiteProfile، SocialLink و
-  Skill؛ این برش فقط مدل و public projection امن را فراهم کرده است.
 - [ ] QA مرورگر public identity در هر دو locale و تأیید محتوای واقعی؛ endpoint
   در نبود profile منتشرشده صریحاً empty state برمی‌گرداند و fallback بین localeها ندارد.
 

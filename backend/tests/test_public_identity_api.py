@@ -1,4 +1,5 @@
 import pytest
+from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
 from apps.identity.models import SiteProfile, Skill, SocialLink
@@ -31,3 +32,32 @@ def test_public_identity_has_explicit_empty_state_for_draft_profile():
     assert APIClient().get("/api/public/identity/").json() == {
         "profile": None, "social_links": [], "skills": []
     }
+
+
+@pytest.mark.django_db
+def test_identity_admin_crud_requires_auth_and_enforces_optimistic_locking():
+    client = APIClient()
+    payload = {"name_fa": "نام", "name_en": "Name", "status": "draft"}
+    assert client.post("/api/admin/identity/profiles/", payload, format="json").status_code == 403
+
+    user = get_user_model().objects.create_user(username="identity-admin")
+    client.force_authenticate(user)
+    created = client.post("/api/admin/identity/profiles/", payload, format="json")
+    assert created.status_code == 201
+    profile_id = created.json()["id"]
+
+    updated = client.patch(
+        f"/api/admin/identity/profiles/{profile_id}/",
+        {"headline_en": "Updated", "version": 1},
+        format="json",
+    )
+    assert updated.status_code == 200
+    assert updated.json()["version"] == 2
+
+    stale = client.patch(
+        f"/api/admin/identity/profiles/{profile_id}/",
+        {"headline_en": "Stale", "version": 1},
+        format="json",
+    )
+    assert stale.status_code == 409
+    assert stale.json()["current_version"] == 2
