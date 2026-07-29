@@ -1,2 +1,5 @@
 {
+    "chat.useClaudeSkills": true,
+    "chat.useNestedAgentsMdFiles": true,
+    "typescript.autoClosingTags": false
 }

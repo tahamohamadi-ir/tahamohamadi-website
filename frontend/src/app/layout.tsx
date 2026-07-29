@@ -7,14 +7,15 @@ export const metadata: Metadata = {
     "Bilingual Persian/English personal website, blog, portfolio, and CMS",
 };
 
+/**
+ * Root layout — intentionally minimal.
+ * Lang/dir are set dynamically by the [locale] layout segment.
+ * We suppress hydration warnings since lang/dir are set server-side per route.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <body>{children}</body>
-    </html>
-  );
+  return children;
 }

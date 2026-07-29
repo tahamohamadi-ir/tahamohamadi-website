@@ -1,0 +1,164 @@
+# Production Nginx — HTTPS with Let's Encrypt
+# Used by docker-compose.prod.yml
+
+upstream django {
+    server django:8000;
+}
+
+upstream nextjs {
+    server nextjs:3000;
+}
+
+# ─── HTTP → HTTPS redirect ────────────────────────────────────────────────────
+server {
+    listen 80;
+    server_name tahamohamadi.ir www.tahamohamadi.ir;
+
+    # ACME challenge for Let's Encrypt certificate renewal
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    # Nginx health check (used by Docker healthcheck on port 80)
+    location = /health {
+        access_log off;
+        return 200 "ok\n";
+        add_header Content-Type text/plain;
+    }
+
+    # Redirect all other HTTP traffic to HTTPS
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# ─── HTTPS server ─────────────────────────────────────────────────────────────
+server {
+    listen 443 ssl http2;
+    server_name tahamohamadi.ir www.tahamohamadi.ir;
+
+    # SSL certificates (managed by Certbot)
+    ssl_certificate /etc/letsencrypt/live/tahamohamadi.ir/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/tahamohamadi.ir/privkey.pem;
+
+    # SSL hardening
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
+
+    # OCSP stapling
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    resolver 8.8.8.8 8.8.4.4 valid=300s;
+    resolver_timeout 5s;
+
+    # ─── Public API routes (CDN-cacheable) ─────────────────────────────────────
+
+    location /api/public/ {
+        proxy_pass http://django;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        add_header Cache-Control "public, s-maxage=3600, stale-while-revalidate=86400" always;
+    }
+
+    # ─── Preview endpoint (no-store, noindex) ──────────────────────────────────
+
+    location /api/public/workflow/preview/ {
+        proxy_pass http://django;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        add_header Cache-Control "no-store" always;
+        add_header X-Robots-Tag "noindex" always;
+    }
+
+    # ─── Admin API routes (no-cache) ──────────────────────────────────────────
+
+    location /api/admin/ {
+        proxy_pass http://django;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+    }
+
+    # ─── Catch-all /api/ ──────────────────────────────────────────────────────
+
+    location /api/ {
+        proxy_pass http://django;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+
+    location /admin-api/ {
+        proxy_pass http://django;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+    }
+
+    # ─── Django static files (content-hashed, immutable) ──────────────────────
+
+    location /static/ {
+        proxy_pass http://django;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+    }
+
+    # ─── Media files (content-hash named, immutable) ──────────────────────────
+
+    location /media/ {
+        alias /srv/media/;
+
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        add_header X-Content-Type-Options "nosniff" always;
+    }
+
+    # ─── Next.js static assets (content-hashed) ──────────────────────────────
+
+    location /_next/static/ {
+        proxy_pass http://nextjs;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+    }
+
+    # ─── Next.js (all public pages) ──────────────────────────────────────────
+
+    location / {
+        proxy_pass http://nextjs;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        add_header Cache-Control "public, s-maxage=3600, stale-while-revalidate=86400" always;
+
+        # WebSocket support for HMR (development only, harmless in prod)
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}

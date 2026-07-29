@@ -107,6 +107,121 @@ BLOCK_SCHEMAS: dict[str, dict] = {
         "required": ["title", "description"],
         "additionalProperties": False,
     },
+    # ---------------------------------------------------------------------------
+    # Animation Block Schemas (UI Animations Page Builder)
+    # ---------------------------------------------------------------------------
+    "scroll_reveal": {
+        "type": "object",
+        "properties": {
+            "title": {"type": "string"},
+            "description": {"type": ["string", "null"]},
+            "duration": {"type": "integer", "minimum": 50, "maximum": 3000},
+            "delay": {"type": "integer", "minimum": 0, "maximum": 2000},
+            "easing": {"type": "string", "enum": ["ease-in", "ease-out", "ease-in-out", "linear", "spring", "cubic-bezier"]},
+            "trigger": {"type": "string", "enum": ["scroll", "load", "hover", "click"]},
+            "direction": {"type": "string", "enum": ["up", "down", "left", "right"]},
+        },
+        "required": ["title", "duration", "delay", "easing", "trigger"],
+        "additionalProperties": False,
+    },
+    "parallax": {
+        "type": "object",
+        "properties": {
+            "title": {"type": "string"},
+            "subtitle": {"type": ["string", "null"]},
+            "media_url": {"type": ["string", "null"]},
+            "speed": {"type": "number", "minimum": -2.0, "maximum": 2.0},
+            "duration": {"type": "integer", "minimum": 50, "maximum": 3000},
+            "delay": {"type": "integer", "minimum": 0, "maximum": 2000},
+            "easing": {"type": "string", "enum": ["ease-in", "ease-out", "ease-in-out", "linear", "spring", "cubic-bezier"]},
+            "trigger": {"type": "string", "enum": ["scroll", "load", "hover", "click"]},
+        },
+        "required": ["title", "duration", "delay", "easing", "trigger"],
+        "additionalProperties": False,
+    },
+    "text_stagger": {
+        "type": "object",
+        "properties": {
+            "content": {"type": "string", "maxLength": 500},
+            "stagger_delay": {"type": "integer", "minimum": 10, "maximum": 500},
+            "duration": {"type": "integer", "minimum": 50, "maximum": 3000},
+            "delay": {"type": "integer", "minimum": 0, "maximum": 2000},
+            "easing": {"type": "string", "enum": ["ease-in", "ease-out", "ease-in-out", "linear", "spring", "cubic-bezier"]},
+            "trigger": {"type": "string", "enum": ["scroll", "load", "hover", "click"]},
+        },
+        "required": ["content", "duration", "delay", "easing", "trigger"],
+        "additionalProperties": False,
+    },
+    "fade_in_sequence": {
+        "type": "object",
+        "properties": {
+            "items": {
+                "type": "array",
+                "items": {"type": "string"},
+            },
+            "duration": {"type": "integer", "minimum": 50, "maximum": 3000},
+            "delay": {"type": "integer", "minimum": 0, "maximum": 2000},
+            "easing": {"type": "string", "enum": ["ease-in", "ease-out", "ease-in-out", "linear", "spring", "cubic-bezier"]},
+            "trigger": {"type": "string", "enum": ["scroll", "load", "hover", "click"]},
+        },
+        "required": ["items", "duration", "delay", "easing", "trigger"],
+        "additionalProperties": False,
+    },
+    "hover_card": {
+        "type": "object",
+        "properties": {
+            "title": {"type": "string"},
+            "description": {"type": "string", "maxLength": 500},
+            "icon": {"type": ["string", "null"]},
+            "hover_effect": {"type": "string", "enum": ["scale", "lift", "glow", "flip"]},
+            "duration": {"type": "integer", "minimum": 50, "maximum": 3000},
+            "delay": {"type": "integer", "minimum": 0, "maximum": 2000},
+            "easing": {"type": "string", "enum": ["ease-in", "ease-out", "ease-in-out", "linear", "spring", "cubic-bezier"]},
+            "trigger": {"type": "string", "enum": ["scroll", "load", "hover", "click"]},
+        },
+        "required": ["title", "description", "duration", "delay", "easing", "trigger"],
+        "additionalProperties": False,
+    },
+    "counter_animation": {
+        "type": "object",
+        "properties": {
+            "label": {"type": "string"},
+            "target_number": {"type": "integer"},
+            "suffix": {"type": ["string", "null"]},
+            "duration": {"type": "integer", "minimum": 50, "maximum": 3000},
+            "delay": {"type": "integer", "minimum": 0, "maximum": 2000},
+            "easing": {"type": "string", "enum": ["ease-in", "ease-out", "ease-in-out", "linear", "spring", "cubic-bezier"]},
+            "trigger": {"type": "string", "enum": ["scroll", "load", "hover", "click"]},
+        },
+        "required": ["label", "target_number", "duration", "delay", "easing", "trigger"],
+        "additionalProperties": False,
+    },
+    "image_reveal": {
+        "type": "object",
+        "properties": {
+            "media_url": {"type": "string"},
+            "alt": {"type": ["string", "null"]},
+            "reveal_direction": {"type": "string", "enum": ["left", "right", "top", "bottom", "center"]},
+            "duration": {"type": "integer", "minimum": 50, "maximum": 3000},
+            "delay": {"type": "integer", "minimum": 0, "maximum": 2000},
+            "easing": {"type": "string", "enum": ["ease-in", "ease-out", "ease-in-out", "linear", "spring", "cubic-bezier"]},
+            "trigger": {"type": "string", "enum": ["scroll", "load", "hover", "click"]},
+        },
+        "required": ["media_url", "duration", "delay", "easing", "trigger"],
+        "additionalProperties": False,
+    },
+    "section_transition": {
+        "type": "object",
+        "properties": {
+            "transition_type": {"type": "string", "enum": ["fade", "slide", "zoom", "clip"]},
+            "duration": {"type": "integer", "minimum": 50, "maximum": 3000},
+            "delay": {"type": "integer", "minimum": 0, "maximum": 2000},
+            "easing": {"type": "string", "enum": ["ease-in", "ease-out", "ease-in-out", "linear", "spring", "cubic-bezier"]},
+            "trigger": {"type": "string", "enum": ["scroll", "load", "hover", "click"]},
+        },
+        "required": ["transition_type", "duration", "delay", "easing", "trigger"],
+        "additionalProperties": False,
+    },
 }
 
 # Pre-compile validators for each schema (faster repeated validation)

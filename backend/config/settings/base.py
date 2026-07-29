@@ -52,6 +52,7 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "django_filters",
     "corsheaders",
+    "django_celery_beat",
 ]
 
 LOCAL_APPS = [
@@ -60,6 +61,7 @@ LOCAL_APPS = [
     "apps.media",
     "apps.blog",
     "apps.portfolio",
+    "apps.workflow",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -78,6 +80,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.core.middleware.CacheControlMiddleware",
+    "apps.workflow.middleware.AuditLoggingMiddleware",
 ]
 
 TEMPLATES = [
@@ -125,6 +129,16 @@ SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_AGE = 86400 * 14  # 2 weeks
+
+
+# --- Security headers (base defaults) ----------------------------------
+# These are safe for development. Production overrides in prod.py add HSTS,
+# SSL redirect, and secure cookies.
+
+X_FRAME_OPTIONS = "DENY"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 
 
 # --- CSRF ---------------------------------------------------------------
@@ -202,6 +216,19 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ],
+    # Rate limiting (Requirements 3.7, 12.5).
+    # Default throttles apply to all views. Endpoint-specific throttles
+    # (login, upload) are applied per-view via throttle_classes.
+    "DEFAULT_THROTTLE_CLASSES": [
+        "apps.core.throttling.PublicAnonRateThrottle",
+        "apps.core.throttling.PublicUserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "login": "5/min",
+        "upload": "20/min",
+        "public_anon": "100/min",
+        "public_user": "1000/min",
+    },
     "DEFAULT_PAGINATION_CLASS": "apps.core.pagination.DefaultPageNumberPagination",
     "PAGE_SIZE": env.int("API_PAGE_SIZE", default=20),
     "EXCEPTION_HANDLER": "apps.core.exceptions.problem_detail_exception_handler",
@@ -242,5 +269,52 @@ LOGGING = {
             "level": "WARNING",
             "propagate": False,
         },
+    },
+}
+
+
+# --- Caching ------------------------------------------------------------
+# Django's cache framework is used by DRF throttling to track request counts.
+# Redis (same instance as Celery broker, different DB) keeps throttle state
+# resilient across server restarts.
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "throttle-cache",
+    },
+}
+
+# In production, override to Redis via CACHE_URL env var. Example:
+#   CACHE_URL=redis://localhost:6379/1
+_CACHE_URL = env("CACHE_URL", default="")
+if _CACHE_URL:
+    CACHES["default"] = {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": _CACHE_URL,
+    }
+
+
+# --- Celery (async task queue) ------------------------------------------
+# Redis is used as the broker. The result backend is disabled (we don't need
+# to retrieve task results). django-celery-beat stores the periodic schedule
+# in the PostgreSQL database.
+
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = None
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+
+# django-celery-beat: periodic task schedule.
+# The `process_scheduled_publishes` task runs every minute to pick up pending
+# scheduled publications whose scheduled_at has passed.
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_BEAT_SCHEDULE = {
+    "process-scheduled-publishes": {
+        "task": "apps.workflow.tasks.process_scheduled_publishes",
+        "schedule": 60.0,  # every 60 seconds
     },
 }

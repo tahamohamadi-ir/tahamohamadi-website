@@ -19,9 +19,11 @@ urlpatterns = [
     path("public/pages/", include("apps.cms.urls_public")),
     path("public/blog/", include("apps.blog.urls_public")),
     path("public/portfolio/", include("apps.portfolio.urls_public")),
+    path("public/workflow/", include("apps.workflow.urls_public")),
     path("admin/", include("apps.core.urls_admin")),
     path("admin/pages/", include("apps.cms.urls_admin")),
     path("admin/media/", include("apps.media.urls_admin")),
     path("admin/blog/", include("apps.blog.urls_admin")),
     path("admin/portfolio/", include("apps.portfolio.urls_admin")),
+    path("admin/workflow/", include("apps.workflow.urls_admin")),
 ]

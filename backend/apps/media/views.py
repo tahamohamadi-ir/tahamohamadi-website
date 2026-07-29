@@ -19,6 +19,7 @@ from rest_framework.viewsets import ModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.core.exceptions import build_problem, PROBLEM_CONTENT_TYPE
+from apps.core.throttling import UploadRateThrottle
 from apps.media.models import MediaAsset
 from apps.media.serializers import (
     MediaAssetSerializer,
@@ -90,7 +91,7 @@ class AdminMediaViewSet(ModelViewSet):
     # Upload (custom action)
     # ------------------------------------------------------------------
 
-    @action(detail=False, methods=["post"], url_path="upload")
+    @action(detail=False, methods=["post"], url_path="upload", throttle_classes=[UploadRateThrottle])
     def upload(self, request):
         """Upload a new media file.
 

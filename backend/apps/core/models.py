@@ -39,6 +39,14 @@ class VersionedModel(TimestampedModel):
     """
 
     version = models.IntegerField(default=1)
+    locale_updated_at = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text=(
+            "Per-locale last-edit timestamps. "
+            'Example: {"fa": "2024-01-01T12:00:00Z", "en": "2024-01-02T14:30:00Z"}'
+        ),
+    )
 
     class Meta:
         abstract = True

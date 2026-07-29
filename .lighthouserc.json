@@ -1,0 +1,92 @@
+{
+    "ci": {
+        "collect": {
+            "url": [
+                "http://localhost/fa",
+                "http://localhost/en",
+                "http://localhost/fa/blog",
+                "http://localhost/en/blog",
+                "http://localhost/fa/portfolio",
+                "http://localhost/fa/about",
+                "http://localhost/fa/contact"
+            ],
+            "numberOfRuns": 3,
+            "settings": {
+                "preset": "desktop",
+                "onlyCategories": [
+                    "performance",
+                    "accessibility",
+                    "best-practices",
+                    "seo"
+                ]
+            }
+        },
+        "assert": {
+            "assertions": {
+                "categories:performance": [
+                    "error",
+                    {
+                        "minScore": 0.9
+                    }
+                ],
+                "categories:accessibility": [
+                    "warn",
+                    {
+                        "minScore": 0.9
+                    }
+                ],
+                "categories:best-practices": [
+                    "warn",
+                    {
+                        "minScore": 0.9
+                    }
+                ],
+                "categories:seo": [
+                    "warn",
+                    {
+                        "minScore": 0.9
+                    }
+                ],
+                "largest-contentful-paint": [
+                    "error",
+                    {
+                        "maxNumericValue": 2500
+                    }
+                ],
+                "cumulative-layout-shift": [
+                    "error",
+                    {
+                        "maxNumericValue": 0.1
+                    }
+                ],
+                "total-blocking-time": [
+                    "error",
+                    {
+                        "maxNumericValue": 200
+                    }
+                ],
+                "first-contentful-paint": [
+                    "warn",
+                    {
+                        "maxNumericValue": 1800
+                    }
+                ],
+                "speed-index": [
+                    "warn",
+                    {
+                        "maxNumericValue": 3400
+                    }
+                ],
+                "interactive": [
+                    "warn",
+                    {
+                        "maxNumericValue": 3800
+                    }
+                ]
+            }
+        },
+        "upload": {
+            "target": "temporary-public-storage"
+        }
+    }
+}

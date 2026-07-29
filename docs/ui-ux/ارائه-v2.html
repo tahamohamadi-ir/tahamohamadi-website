@@ -1,0 +1,1216 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>از داده تا تصمیم قابل اعتماد — طه محمدی</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@300;400;500;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#071a21; --surface:#0f2b34; --surface2:#133440;
+  --line:#26525f; --line2:#37697b;
+  --ink:#f2f8f4; --body-t:#ddebe4; --mut:#b7d1c8; --dim:#8fb0a6;
+  --grn:#45e0a5; --amb:#ffb454; --cor:#ff8a7a; --sky:#63c7e9;
+  --disp:'Lalezar',cursive; --body:'Vazirmatn',sans-serif; --mono:'IBM Plex Mono',monospace;
+  --g1:clamp(10px,1.7vh,16px); --g2:clamp(14px,2.5vh,24px);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:var(--body);color:var(--body-t);overflow:hidden;
+  background:
+    radial-gradient(1000px 560px at 82% -10%, rgba(99,199,233,.06), transparent 60%),
+    radial-gradient(820px 520px at 8% 110%, rgba(69,224,165,.05), transparent 55%),
+    var(--bg);
+  font-size:clamp(15px,.5vw + 11.5px,17px);
+}
+::selection{background:rgba(69,224,165,.3)}
+.en{font-family:var(--mono);direction:ltr;unicode-bidi:isolate;font-size:.88em}
+b,strong{color:var(--ink);font-weight:700}
+
+#amb{position:fixed;inset:0;z-index:0;opacity:.5;pointer-events:none}
+.gridlayer{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(99,199,233,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(99,199,233,.04) 1px,transparent 1px);
+  background-size:46px 46px;
+  -webkit-mask-image:radial-gradient(ellipse at 50% 42%,#000 25%,transparent 85%);mask-image:radial-gradient(ellipse at 50% 42%,#000 25%,transparent 85%)}
+.scrim{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(125% 100% at 50% 46%, rgba(7,26,33,.88) 0%, rgba(7,26,33,.6) 46%, rgba(7,26,33,.05) 82%)}
+
+.chrome{position:fixed;inset-inline:0;z-index:10;display:flex;align-items:center;gap:16px;padding:0 22px;background:#081e25;user-select:none}
+.chrome.top{top:0;height:52px;border-bottom:1px solid var(--line)}
+.chrome.bot{bottom:0;height:58px;border-top:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mut);white-space:nowrap}
+.brand b{color:var(--ink)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--grn);box-shadow:0 0 10px var(--grn);animation:blink 1.4s infinite;flex:none}
+@keyframes blink{50%{opacity:.25}}
+.prog{flex:1;height:3px;background:#12333d;border-radius:99px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--grn),var(--sky));box-shadow:0 0 12px rgba(69,224,165,.7);transition:width .5s cubic-bezier(.2,.7,.2,1)}
+.meta{display:flex;align-items:center;gap:14px;font-size:12.5px;color:var(--mut);white-space:nowrap}
+.meta .hrv{color:var(--grn);font-weight:600}
+.s-title{flex:1;font-size:13.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s-title .en{color:var(--grn);font-size:11px;letter-spacing:.14em}
+.count{font-family:var(--mono);direction:ltr;font-size:13px;color:var(--mut)}
+.count b{color:var(--grn);font-weight:600}
+.ctrl{display:flex;gap:8px}
+.ctrl button{width:40px;height:40px;border-radius:9px;border:1px solid var(--line2);background:var(--surface);color:var(--ink);font-size:16px;cursor:pointer;transition:.22s;display:grid;place-items:center}
+.ctrl button:hover{border-color:var(--grn);color:var(--grn);box-shadow:0 0 14px rgba(69,224,165,.25);transform:translateY(-2px)}
+.ctrl button:active{transform:scale(.92)}
+
+.deck{position:fixed;top:52px;bottom:58px;inset-inline:0;z-index:1}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;
+  padding:clamp(18px,3vh,30px) clamp(20px,4.5vw,68px) clamp(12px,2.4vh,22px);
+  opacity:0;visibility:hidden;transform:translateX(-4.5%);
+  transition:opacity .55s ease,transform .55s cubic-bezier(.22,.8,.24,1),visibility 0s .55s}
+.slide.active{opacity:1;visibility:visible;transform:none;transition:opacity .55s ease,transform .55s cubic-bezier(.22,.8,.24,1)}
+.slide.before{transform:translateX(4.5%)}
+.slide::after{content:attr(data-num);position:absolute;bottom:-30px;inset-inline-end:16px;z-index:0;
+  font-family:var(--disp);font-size:clamp(110px,22vh,200px);line-height:1;color:rgba(183,209,200,.045);pointer-events:none}
+.wrap{position:relative;z-index:1;width:min(1180px,100%);margin-inline:auto;flex:1;min-height:0;
+  display:flex;flex-direction:column;gap:var(--g2);overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+.wrap::-webkit-scrollbar{width:5px}.wrap::-webkit-scrollbar-thumb{background:var(--line2);border-radius:9px}
+.wrap.dense{gap:var(--g1)}
+.mid{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:var(--g2)}
+.mid.dense{gap:var(--g1)}
+.rv{opacity:0;transform:translateY(14px)}
+.slide.active .rv{animation:rise .6s cubic-bezier(.2,.7,.2,1) forwards;animation-delay:var(--d,0s)}
+@keyframes rise{to{opacity:1;transform:none}}
+
+.sh{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:clamp(8px,1.4vh,13px)}
+.sh .code{font:600 11px/1 var(--mono);letter-spacing:.22em;color:var(--grn)}
+.sh h2{font-family:var(--disp);font-weight:400;color:var(--ink);font-size:clamp(1.6rem,1.1rem + 2vh,2.4rem);line-height:1.3}
+.sh .sub{margin-inline-start:auto;color:var(--mut);font-size:clamp(12px,1.6vh,13.5px)}
+.kick{font-size:clamp(12.5px,1.7vh,14px);color:var(--mut)}
+.kick .en{color:var(--grn);letter-spacing:.18em;font-size:11px}
+.panel{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:clamp(16px,2.4vh,24px) clamp(18px,1.8vw,26px);box-shadow:0 10px 28px rgba(0,0,0,.28)}
+.tick::before,.tick::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--grn);opacity:.9}
+.tick::before{top:-1px;inset-inline-start:-1px;border-bottom:0;border-inline-end:0;border-radius:8px 0 0 0}
+.tick::after{bottom:-1px;inset-inline-end:-1px;border-top:0;border-inline-start:0;border-radius:0 0 8px 0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;padding:6px 14px;border:1px solid var(--line2);border-radius:999px;
+  font-size:clamp(12px,1.6vh,13.5px);color:var(--body-t);background:var(--surface2);transition:.25s;cursor:default}
+.chip:hover{color:var(--ink);border-color:var(--grn);transform:translateY(-2px)}
+.chip.g{border-color:rgba(69,224,165,.55);color:var(--grn)}
+.chip.a{border-color:rgba(255,180,84,.55);color:var(--amb)}
+.chip.c{border-color:rgba(255,138,122,.55);color:var(--cor)}
+.chip.s{border-color:rgba(99,199,233,.55);color:var(--sky)}
+.lst{list-style:none;display:flex;flex-direction:column;gap:clamp(8px,1.3vh,12px)}
+.lst li{position:relative;padding-inline-start:20px;color:var(--mut);font-weight:500;
+  font-size:clamp(14px,.45vw + 11px,16.5px);line-height:2.05}
+.lst li::before{content:"◂";position:absolute;inset-inline-start:0;top:3px;color:var(--ac,var(--grn));font-size:11px}
+.lst li b{color:var(--ink)}
+.lst.coral{--ac:var(--cor)} .lst.amber{--ac:var(--amb)} .lst.sky{--ac:var(--sky)}
+.q{border-inline-start:3px solid var(--amb);background:rgba(255,180,84,.09);
+  padding:clamp(12px,1.9vh,16px) clamp(16px,1.6vw,20px);border-radius:0 10px 10px 0;
+  color:#ffe2b8;font-size:clamp(14px,.45vw + 11px,16.5px);line-height:2.1;font-weight:500}
+.q b{color:#fff3da}
+.q.g{border-color:var(--grn);background:rgba(69,224,165,.09);color:#cdf5e5}.q.g b{color:#ecfff7}
+.q.c{border-color:var(--cor);background:rgba(255,138,122,.09);color:#ffd9d1}.q.c b{color:#ffefe9}
+.pipe{display:flex;align-items:stretch;gap:clamp(6px,.8vw,10px);flex-wrap:wrap}
+.step{flex:1;min-width:128px;background:var(--surface);border:1px solid var(--line);border-top:2px solid var(--ac,var(--line2));
+  border-radius:9px;padding:clamp(10px,1.6vh,14px) clamp(12px,1vw,16px);transition:.25s}
+.step:hover{transform:translateY(-4px);border-color:var(--ac,var(--sky));box-shadow:0 8px 20px rgba(0,0,0,.35)}
+.step .sn{font:600 9.5px var(--mono);color:var(--ac,var(--dim));letter-spacing:.12em}
+.step b{display:block;font-size:clamp(13px,.4vw + 10.5px,15px);margin:3px 0 2px}
+.step small{color:var(--mut);font-size:clamp(11.5px,1.5vh,13px);line-height:1.85;display:block}
+.arr{align-self:center;color:var(--grn);font-size:17px;animation:arrp 1.7s infinite}
+@keyframes arrp{50%{opacity:.3;transform:translateX(-4px)}}
+.down{color:var(--grn);font-size:16px;align-self:flex-start;margin-inline-start:5%;animation:arrp2 1.7s infinite}
+@keyframes arrp2{50%{opacity:.3;transform:translateY(3px)}}
+.bar{height:7px;background:#12333d;border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--grn),var(--sky));transition:width 1.1s cubic-bezier(.2,.7,.2,1) .35s}
+.slide.active .bar i{width:var(--w)}
+.bar.c i{background:linear-gradient(90deg,var(--cor),var(--amb))}
+.bar.a i{background:var(--amb)} .bar.s i{background:var(--sky)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:var(--g2)}
+.two.dense{gap:var(--g1)}
+.h3t{font-size:clamp(14px,.4vw + 11px,16px);font-weight:800;color:var(--sky);margin-bottom:clamp(9px,1.5vh,13px)}
+.h3t.g{color:var(--grn)} .h3t.c{color:var(--cor)} .h3t.a{color:var(--amb)}
+
+/* اسلاید ۱ */
+.s1grid{flex:1;min-height:0;display:grid;grid-template-columns:1.22fr .92fr;gap:clamp(24px,4vw,56px);align-items:center}
+.s1r h1{font-family:var(--disp);font-weight:400;color:var(--ink);font-size:clamp(2.5rem,1.5rem + 4.8vh,4.5rem);line-height:1.25;margin:clamp(10px,1.8vh,16px) 0 clamp(8px,1.4vh,13px)}
+.s1r h1 em{font-style:normal;color:var(--grn);text-shadow:0 0 26px rgba(69,224,165,.45)}
+.lead{color:var(--mut);font-size:clamp(14.5px,.5vw + 11px,17.5px);line-height:2.15;font-weight:500}
+.hl{color:var(--grn);background:linear-gradient(transparent 64%,rgba(69,224,165,.22) 0);padding:0 3px}
+.who{display:flex;align-items:center;gap:14px;margin:clamp(14px,2.4vh,22px) 0 clamp(12px,2vh,18px);
+  padding:12px 16px;border:1px solid var(--line);border-radius:11px;background:var(--surface);width:max-content;max-width:100%;transition:.25s}
+.who:hover{border-color:var(--line2);transform:translateY(-2px)}
+.ava{width:48px;height:48px;flex:none;border-radius:12px;display:grid;place-items:center;font-family:var(--disp);font-size:21px;color:#052018;
+  background:linear-gradient(140deg,var(--grn),#1d9d74);box-shadow:0 0 18px rgba(69,224,165,.35)}
+.who b{display:block;font-size:16px}
+.who span{display:block;color:var(--mut);font-size:12.5px;line-height:1.9;margin-top:2px}
+.foot-note{margin-top:clamp(10px,1.8vh,16px);font-size:13px;color:var(--dim)}
+.hint{color:var(--mut)} .hint b{color:var(--grn)}
+.mon{background:#081e26;border:1px solid var(--line2);border-radius:13px;padding:14px 15px;
+  box-shadow:0 22px 50px rgba(0,0,0,.45), inset 0 0 40px rgba(69,224,165,.04)}
+.mon-h{display:flex;align-items:center;gap:9px;font:600 11px var(--mono);letter-spacing:.16em;color:var(--grn);margin-bottom:9px}
+.mon-h .dim{margin-inline-start:auto;letter-spacing:.1em;color:var(--dim)}
+.ecg-btn{margin-inline-start:auto;height:24px;min-width:28px;padding:0 6px;border-radius:6px;border:1px solid var(--line2);
+  background:var(--surface);color:var(--grn);font-size:13px;cursor:pointer;line-height:1;transition:.2s}
+.ecg-btn:hover{border-color:var(--grn);box-shadow:0 0 10px rgba(69,224,165,.25)}
+.ecg-btn.paused{color:var(--amb);border-color:var(--amb)}
+#mECG{width:100%;height:clamp(104px,19vh,150px);display:block;border-radius:8px;
+  background:linear-gradient(rgba(99,199,233,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(99,199,233,.07) 1px,transparent 1px);background-size:22px 22px}
+.vit{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:8px;margin-top:10px;text-align:center}
+.vit>div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 4px;transition:.25s}
+.vit>div:hover{border-color:var(--line2);transform:translateY(-2px)}
+.vit span{font:600 9.5px var(--mono);letter-spacing:.14em;color:var(--dim);display:block}
+.vit b{font-family:var(--disp);font-weight:400;font-size:clamp(19px,3vh,24px);color:var(--sky);line-height:1.25}
+.vit small{font-size:9.5px;color:var(--dim);display:block}
+.v-main b{font-size:clamp(28px,5vh,38px);color:var(--grn);text-shadow:0 0 16px rgba(69,224,165,.5);animation:beat 1.1s infinite}
+@keyframes beat{0%,100%{opacity:1}18%{opacity:.55}36%{opacity:1}}
+.mon-f{margin-top:10px;font:600 9.5px var(--mono);letter-spacing:.14em;color:var(--dim);text-align:center}
+
+/* مسیر */
+.route{list-style:none;position:relative;display:flex;flex-direction:column;gap:clamp(4px,.8vh,8px)}
+.route::before{content:"";position:absolute;inset-inline-start:31px;top:30px;bottom:30px;border-inline-start:2px dashed var(--line2)}
+.route li{display:grid;grid-template-columns:64px 1fr auto;gap:20px;align-items:center;padding:clamp(11px,1.8vh,16px) 18px;border-radius:11px;position:relative;transition:.28s;cursor:default}
+.route li:hover{background:var(--surface);transform:translateX(-8px)}
+.rn{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;font-family:var(--disp);font-size:24px;color:var(--ac);
+  border:1px solid var(--ac);background:#081e26;box-shadow:0 0 18px color-mix(in srgb,var(--ac) 25%,transparent);position:relative;z-index:1}
+.route li b{font-size:clamp(15px,.5vw + 11.5px,17.5px);font-weight:800}
+.route li p{color:var(--mut);font-size:clamp(13px,.4vw + 10.5px,15px);line-height:2;margin-top:3px;font-weight:500}
+.rtag{font:600 10px var(--mono);letter-spacing:.2em;color:var(--ac);border:1px solid var(--ac);border-radius:99px;padding:5px 12px;opacity:.85}
+
+/* لایه‌ها */
+.layers{display:flex;flex-direction:column;gap:clamp(9px,1.5vh,14px)}
+.layer{display:flex;align-items:center;gap:18px;padding:clamp(12px,1.9vh,17px) 22px;border-radius:11px;
+  background:var(--surface);border:1px solid var(--line);border-inline-start:4px solid var(--ac);transition:.28s}
+.layer:hover{transform:translateX(-8px);border-color:var(--ac);box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.lic{width:46px;height:46px;flex:none;display:grid;place-items:center;font-size:21px;color:var(--ac);border:1px solid var(--ac);border-radius:12px;background:#081e26}
+.layer b{font-size:clamp(14.5px,.45vw + 11.5px,17px);font-weight:800}
+.layer p{color:var(--mut);font-size:clamp(13px,.4vw + 10.5px,14.5px);line-height:1.95;margin-top:2px;font-weight:500}
+.lcode{margin-inline-start:auto;font:600 10px var(--mono);letter-spacing:.2em;color:var(--dim)}
+
+/* تایم‌لاین */
+.tl{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;position:relative;padding-top:26px}
+.tl::before{content:"";position:absolute;top:8px;inset-inline:6px;border-top:2px solid var(--line2)}
+.tnode{position:relative;transition:.25s}
+.tnode:hover{transform:translateY(-4px)}
+.tnode::before{content:"";position:absolute;top:-24px;inset-inline-start:6px;width:13px;height:13px;border-radius:50%;
+  background:var(--ac);box-shadow:0 0 12px var(--ac)}
+.tk{display:inline-block;font-size:10px;color:var(--ac);border:1px solid var(--ac);border-radius:99px;padding:2px 9px;margin-bottom:7px}
+.tnode b{display:block;font-size:clamp(12.5px,.35vw + 10px,14px);font-weight:800;line-height:1.6}
+.tnode p{color:var(--mut);font-size:clamp(11px,1.4vh,12.5px);line-height:1.9;margin-top:4px;font-weight:500}
+
+/* حلقه R&D */
+.loopd{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.lstep{flex:1;min-width:86px;text-align:center;padding:10px 6px;border:1px solid var(--line);border-radius:9px;background:var(--surface2);
+  font-size:clamp(12.5px,.35vw + 10px,14.5px);font-weight:700;color:var(--body-t);transition:.25s}
+.lstep:hover{border-color:var(--grn);color:var(--grn);transform:translateY(-3px)}
+.larr{color:var(--grn);font-size:15px}
+
+/* داستان‌ها */
+.story{display:flex;gap:16px;align-items:flex-start;transition:.25s}
+.story:hover{transform:translateY(-3px)}
+.story .sic{width:54px;height:54px;flex:none;border-radius:14px;display:grid;place-items:center;font-size:25px;
+  border:1px solid var(--ac);color:var(--ac);background:#0a222b;box-shadow:0 0 16px color-mix(in srgb,var(--ac) 20%,transparent)}
+.story b{font-size:clamp(14.5px,.45vw + 11.5px,17px);font-weight:800}
+.story p{color:var(--mut);font-size:clamp(13.5px,.4vw + 11px,15.5px);line-height:2.05;margin-top:4px;font-weight:500}
+
+/* گواهینامه‌ها */
+.cert{display:flex;align-items:center;gap:14px;padding:11px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface);transition:.25s}
+.cert:hover{border-color:rgba(69,224,165,.5);transform:translateX(-5px)}
+.cert .ck{width:30px;height:30px;flex:none;border-radius:8px;display:grid;place-items:center;background:rgba(69,224,165,.15);color:var(--grn);font-weight:800;font-size:15px}
+.cert .en{font-size:12.5px;color:var(--body-t);font-weight:600}
+.cert small{color:var(--dim);font-size:11px;margin-inline-start:auto;font-family:var(--mono);direction:ltr}
+
+/* نقشه آثار */
+.artrow{display:grid;grid-template-columns:70px 1fr auto;gap:18px;align-items:center;padding:clamp(13px,2vh,18px) 20px;transition:.28s;cursor:default}
+.artrow:hover{transform:translateX(-8px);border-color:var(--ac)}
+.artrow .anum{font-family:var(--disp);font-size:38px;color:var(--ac);line-height:1}
+.artrow b{font-size:clamp(15px,.5vw + 11.5px,17.5px);font-weight:800}
+.artrow p{color:var(--mut);font-size:clamp(13px,.4vw + 10.5px,15px);line-height:2;margin-top:3px;font-weight:500}
+.artrow .ayr{font:600 11px var(--mono);color:var(--ac);border:1px solid var(--ac);border-radius:99px;padding:5px 13px;letter-spacing:.08em}
+
+/* کتاب */
+.bignum{display:flex;align-items:baseline;gap:14px}
+.bignum b{font-family:var(--disp);font-size:clamp(52px,10vh,92px);line-height:1;color:var(--amb);text-shadow:0 0 30px rgba(255,180,84,.35)}
+.bignum span{color:var(--mut);font-size:14.5px;line-height:2;font-weight:500}
+.flow{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.fchip{padding:6px 13px;border:1px solid var(--line2);border-radius:8px;font-size:12.5px;color:var(--body-t);background:var(--surface);transition:.22s;font-weight:500}
+.fchip:hover{border-color:var(--amb);transform:translateY(-2px)}
+.farr{color:var(--amb);font-size:13px}
+
+/* ران‌تایم‌ها */
+.rts{display:grid;grid-template-columns:1fr 1fr;gap:var(--g1)}
+.rt{padding:clamp(13px,2vh,18px) clamp(15px,1.4vw,20px);border-top:3px solid var(--ac)}
+.rt h3{font-size:clamp(14px,.4vw + 11px,16px);font-weight:800;color:var(--ac);margin-bottom:8px}
+.rt p{color:var(--mut);font-size:clamp(13px,.35vw + 10.5px,14.5px);line-height:2;font-weight:500}
+
+/* آمار */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--g1)}
+.stat{padding:clamp(11px,1.8vh,16px) clamp(12px,1.1vw,16px);transition:.25s}
+.stat:hover{transform:translateY(-4px);border-color:var(--line2)}
+.stat .lb{font:600 9px var(--mono);letter-spacing:.1em;color:var(--dim);display:block;min-height:13px}
+.stat .v{font-family:var(--disp);font-weight:400;font-size:clamp(23px,4vh,34px);line-height:1.3;color:var(--grn)}
+.stat .v small{font-size:.5em;color:var(--mut)}
+.stat.c .v{color:var(--cor)} .stat.s .v{color:var(--sky)} .stat.a .v{color:var(--amb)}
+.stat .fr{font-size:10.5px;color:var(--dim);margin:2px 0 7px;display:block}
+.evg{display:grid;grid-template-columns:1.1fr 1fr;gap:var(--g1)}
+.gauge{display:grid;grid-template-columns:1fr auto;gap:5px 12px;align-items:center;margin-bottom:9px}
+.gauge .gl{font-size:12.5px;color:var(--mut);font-weight:500}
+.gauge .gv{font-family:var(--disp);font-size:18px;color:var(--grn)}
+.gauge .bar{grid-column:1/-1}
+
+/* ابلیشن */
+.abars{display:flex;align-items:flex-end;gap:30px;height:clamp(130px,24vh,200px);padding:0 10px}
+.abc{display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end}
+.abv{font-family:var(--disp);font-size:18px;color:var(--mut)}
+.abc.hot .abv{color:var(--grn)}
+.ab{width:62px;height:0;border-radius:6px 6px 0 0;transition:height 1.1s cubic-bezier(.2,.7,.2,1) .35s}
+.slide.active .ab{height:var(--h)}
+.ab.d1{background:linear-gradient(180deg,rgba(99,199,233,.75),rgba(99,199,233,.15))}
+.ab.d2{background:linear-gradient(180deg,var(--grn),rgba(69,224,165,.2));box-shadow:0 0 22px rgba(69,224,165,.3)}
+.abl{font-size:11px;color:var(--mut);text-align:center;line-height:1.8;font-family:var(--mono);direction:ltr}
+
+/* مهارت‌ها */
+.skg{display:grid;grid-template-columns:1fr 1fr;gap:var(--g1)}
+.skrow{padding:clamp(12px,1.9vh,16px) clamp(14px,1.3vw,18px)}
+.skrow h3{font-size:clamp(13.5px,.4vw + 10.5px,15.5px);font-weight:800;color:var(--ac);margin-bottom:9px}
+
+/* ستون‌ها */
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--g2)}
+.pillar{padding:clamp(15px,2.2vh,20px) clamp(15px,1.4vw,20px);border-top:3px solid var(--ac);transition:.28s}
+.pillar:hover{transform:translateY(-5px);border-color:var(--ac);box-shadow:0 12px 28px rgba(0,0,0,.35)}
+.pillar .pi{font-size:22px;color:var(--ac)}
+.pillar b{display:block;font-size:15.5px;font-weight:800;margin:7px 0 9px}
+.convline{height:1px;background:var(--line2);margin:2px 9% 0;position:relative}
+.convline::after{content:"";position:absolute;left:50%;top:0;height:14px;border-inline-start:1px solid var(--line2)}
+.conv{margin-top:15px;text-align:center;padding:clamp(12px,1.9vh,16px) 20px;border:1px solid rgba(69,224,165,.5);border-radius:11px;
+  background:rgba(69,224,165,.09);box-shadow:0 0 30px rgba(69,224,165,.14);font-size:clamp(14px,.45vw + 11px,16px);line-height:2;font-weight:500}
+.conv b{color:var(--grn)}
+
+/* نقش‌ها */
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--g2)}
+.role{padding:clamp(14px,2.1vh,18px) clamp(14px,1.3vw,19px);border-top:3px solid var(--ac);transition:.28s;display:flex;flex-direction:column;gap:9px}
+.role:hover{transform:translateY(-5px);box-shadow:0 12px 28px rgba(0,0,0,.35)}
+.role h3{font-size:15.5px;font-weight:800;color:var(--ac);display:flex;gap:8px;align-items:center}
+.meter-lb{font-size:11px;color:var(--dim);margin-top:auto;font-weight:500}
+
+/* شش درس */
+.l6g{display:grid;grid-template-columns:1fr 1fr;gap:var(--g1)}
+.l6{display:flex;gap:16px;align-items:flex-start;padding:clamp(12px,1.9vh,16px) clamp(14px,1.3vw,18px);transition:.25s}
+.l6:hover{transform:translateX(-5px);border-color:var(--line2)}
+.l6 .ln{font-family:var(--disp);font-size:30px;color:var(--grn);line-height:1.1;flex:none;width:34px}
+.l6 b{font-size:clamp(14px,.45vw + 11px,16px);font-weight:800}
+.l6 p{color:var(--mut);font-size:clamp(13px,.35vw + 10.5px,14.5px);line-height:2;margin-top:2px;font-weight:500}
+.closeq{padding:clamp(16px,2.8vh,26px) 28px;text-align:center;border:1px solid rgba(69,224,165,.45);border-radius:13px;
+  background:linear-gradient(180deg,rgba(69,224,165,.1),var(--surface));box-shadow:0 0 40px rgba(69,224,165,.12)}
+.closeq p{font-size:clamp(14px,.5vw + 11px,17.5px);line-height:2.35;font-weight:500}
+.closeq p b{color:var(--grn)}
+.endline{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap}
+.endline .fin{font-family:var(--disp);font-size:22px;color:var(--mut)}
+.replay{border:1px solid var(--line2);background:var(--surface);color:var(--ink);border-radius:99px;padding:9px 24px;font-family:var(--body);font-size:13px;cursor:pointer;transition:.25s;font-weight:600}
+.replay:hover{border-color:var(--grn);color:var(--grn);box-shadow:0 0 16px rgba(69,224,165,.25);transform:translateY(-2px)}
+
+.ov{position:fixed;inset:0;z-index:20;background:rgba(5,15,19,.96);opacity:0;visibility:hidden;transition:.35s;overflow-y:auto;padding:76px 5vw 40px}
+.ov.open{opacity:1;visibility:visible}
+.ov h4{font-family:var(--disp);font-weight:400;font-size:26px;margin-bottom:18px;color:var(--grn)}
+.ov-in{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:11px}
+.ov-in button{text-align:start;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:13px 15px;cursor:pointer;color:var(--ink);font-family:var(--body);transition:.22s;display:flex;flex-direction:column;gap:6px}
+.ov-in button:hover{border-color:var(--grn);transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.ov-in .on{font-family:var(--disp);font-size:19px;color:var(--grn)}
+.ov-in b{font-size:12.5px;font-weight:600;line-height:1.8}
+.ov-in .oc{font:600 8.5px var(--mono);letter-spacing:.14em;color:var(--dim)}
+
+@media (max-width:960px){
+  .s1grid,.two,.evg,.rts,.skg,.l6g{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .pillars,.roles{grid-template-columns:1fr}
+  .tl{grid-template-columns:repeat(3,1fr)}
+  .route li,.artrow{grid-template-columns:52px 1fr}
+  .rtag,.ayr{display:none}
+}
+
+/* ===== دسترس‌پذیری ===== */
+/* هدف لمسی ۴۴px برای دکمه‌های ناوبری */
+.ctrl button{width:44px;height:44px}
+button.replay{min-height:44px}
+
+/* skip-link برای کاربران کیبورد/صفحه‌خوان */
+.skip-link{position:fixed;top:-60px;inset-inline-start:14px;z-index:30;
+  background:var(--grn);color:#052018;font-weight:700;padding:10px 18px;border-radius:9px;
+  font-size:14px;text-decoration:none;transition:top .2s;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.skip-link:focus{top:8px}
+
+/* focus-visible واضح برای پیمایش کیبورد */
+:focus-visible{outline:3px solid var(--grn);outline-offset:2px;border-radius:6px}
+.ctrl button:focus-visible,.ov-in button:focus-visible,.chip:focus-visible,
+.replay:focus-visible,.lst li:focus-visible,.step:focus-visible{outline:3px solid var(--grn);outline-offset:3px}
+/* در حالت overview، عنوان اسلاید فعال هم تارگت واضح دارد */
+.ov-in button:focus-visible{box-shadow:0 0 0 3px var(--grn)}
+
+/* کاهش انیمیشن برای کاربرانی که حساسیت دارند */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;scroll-behavior:auto !important}
+  .slide{transition:opacity .2s ease !important}
+  .dot{animation:none;opacity:.7}
+  .arr,.down{animation:none;opacity:.6}
+  .v-main b{animation:none}
+}
+
+/* ===== چاپ / PDF ===== */
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  html,body{height:auto;overflow:visible;background:#fff !important}
+  body{font-size:11pt;color:#111;background:#fff !important}
+  /* مخفی‌کردن عناصر فقط صفحه‌نمایش */
+  #amb,.gridlayer,.scrim,.chrome,.ov,.skip-link,.replay,.mon-f{display:none !important}
+  /* نمایش همه‌ی اسلایدها به‌صورت صفحات جدا */
+  .deck{position:static !important;top:auto !important;bottom:auto !important;height:auto !important}
+  .slide{position:relative !important;opacity:1 !important;visibility:visible !important;
+    transform:none !important;page-break-after:always;break-after:page;
+    min-height:175mm;padding:8mm 12mm;background:#fff !important;border-bottom:1px solid #ccc}
+  .slide::after{display:none}
+  .slide.active .rv,.rv{opacity:1 !important;transform:none !important}
+  /* رنگ‌ها: متن خالص و کنتراست بالا */
+  .panel{background:#f7f7f7 !important;border:1px solid #bbb !important;
+    box-shadow:none !important;color:#111;break-inside:avoid}
+  .lst li,.route li p,.story p,.step small,.kick,.lead,.chip,.h3t,
+  .meta,.s-title,.who span,.cert .en,.tnode p{color:#222 !important}
+  b,strong,h2,.lst li b,.route li b,.story b{color:#000 !important}
+  .sh{border-bottom:2px solid #333 !important}
+  .sh .code,.h3t,.h3t.g,.h3t.a,.h3t.c{color:#066 !important}
+  .q{background:#fafafa !important;color:#222 !important;border-inline-start:3px solid #999 !important}
+  .q b{color:#000 !important}
+  .bar{background:#ddd !important}.bar i{background:#555 !important;box-shadow:none !important;width:var(--w) !important}
+  .bar.c i{background:#a44 !important}.bar.a i{background:#a73 !important}.bar.s i{background:#369 !important}
+  canvas{display:none !important}
+  .mon{background:#fff !important;border:1px solid #bbb !important;box-shadow:none !important}
+  #mECG{background:#fff !important;border:1px dashed #ccc !important;min-height:40px}
+  .vit b,.vit span,.vit small{color:#000 !important;text-shadow:none !important}
+  .wrap{overflow:visible !important}
+}
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#deck">پرش به محتوای ارائه</a>
+
+<canvas id="amb" aria-hidden="true" role="img" aria-label="نوار قلب تزئینی"></canvas>
+<div class="gridlayer" aria-hidden="true"></div>
+<div class="scrim" aria-hidden="true"></div>
+
+<header class="chrome top">
+  <div class="brand"><span class="dot"></span> ارائه پژوهشی · <b>طه محمدی</b></div>
+  <div class="prog"><i id="prog"></i></div>
+  <div class="meta"><span id="fadate"></span><span id="fatime" class="en"></span><span class="en hrv" id="topHR">HR 74</span></div>
+</header>
+
+<main class="deck" id="deck">
+
+<section class="slide" data-title="معرفی و عنوان" data-code="TITLE" data-num="01">
+  <div class="wrap">
+    <div class="s1grid">
+      <div class="s1r">
+        <p class="kick rv" style="--d:.05s"><span class="en">RESEARCH DECK</span> · معرفی پژوهشی و پیشنهاد همکاری</p>
+        <h1 class="rv" style="--d:.15s">از داده تا <em>تصمیم قابل اعتماد</em></h1>
+        <p class="lead rv" style="--d:.3s">مروری بر کارهای انجام‌شده و مسیر پیش رو در حوزه‌ی <span class="en hl">Explainable Edge AI</span><br>برای سلامت جسمی و روانی</p>
+        <div class="who rv" style="--d:.42s">
+          <div class="ava">ط‌م</div>
+          <div><b>طه محمدی</b><span>پیشینه در مهندسی نرم‌افزار و طراحی — اکنون متمرکز بر <span class="en">XAI</span> و <span class="en">Edge AI</span> در سلامت</span></div>
+        </div>
+        <div class="chips rv" style="--d:.55s">
+          <span class="chip g">Edge xAI</span><span class="chip c">Healthcare</span><span class="chip s">Wearables</span>
+          <span class="chip a">Clinical AI</span><span class="chip g">Narrative XAI</span><span class="chip s">Human-in-the-Loop</span>
+        </div>
+        <p class="foot-note rv" style="--d:.7s">مروری بر کارهای انجام‌شده، شواهد و چشم‌انداز آینده <span class="hint">— برای شروع <b>←</b> را بزنید</span></p>
+      </div>
+      <aside class="mon tick rv" style="--d:.35s">
+        <div class="mon-h"><span class="dot"></span><span class="en">VITALS · LIVE</span><button id="ecgPause" class="ecg-btn" type="button" title="توقف/ادامه نوار قلب (P)" aria-label="توقف یا ادامه نوار قلب">⏸</button><span class="en dim">CH-01</span></div>
+        <canvas id="mECG" role="img" aria-label="نوار قلب زنده — نمایش گرافیکی ضربان قلب"></canvas>
+        <div class="vit">
+          <div class="v-main"><span class="en">HR</span><b id="vHR">74</b><small>bpm</small></div>
+          <div><span class="en">HRV</span><b id="vHRV">43</b><small>ms</small></div>
+          <div><span class="en">SpO₂</span><b id="vSP">98</b><small>%</small></div>
+          <div><span class="en">RESP</span><b id="vRE">14</b><small>rpm</small></div>
+        </div>
+        <div class="mon-f en">WEARABLE STREAM → EDGE INFERENCE → XAI</div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="نقشه ارائه" data-code="OVERVIEW" data-num="02">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">01 · OVERVIEW</span><h2>نقشه ارائه</h2><span class="sub">پنج پرده</span></header>
+    <div class="mid">
+      <ol class="route">
+        <li class="rv" style="--d:.08s;--ac:var(--grn)"><span class="rn">01</span>
+          <div><b>من چه کسی هستم؟</b><p>هویت میان‌رشته‌ای، مسیر شکل‌گیری و چراییِ سلامت.</p></div>
+          <span class="rtag en">WHO</span></li>
+        <li class="rv" style="--d:.18s;--ac:var(--sky)"><span class="rn">02</span>
+          <div><b>چه ساخته‌ام؟</b><p>داشبورد ملی، کتاب ۳۳۰ صفحه‌ای، سامانه <span class="en">VTD</span> و <span class="en">PARS-SQL</span>.</p></div>
+          <span class="rtag en">ARTIFACTS</span></li>
+        <li class="rv" style="--d:.28s;--ac:var(--amb)"><span class="rn">03</span>
+          <div><b>شواهد چه می‌گویند؟</b><p>اعداد واقعی، <span class="en">Ablation</span>، استرس‌تست و محدودیت‌های صادقانه.</p></div>
+          <span class="rtag en">EVIDENCE</span></li>
+        <li class="rv" style="--d:.38s;--ac:var(--cor)"><span class="rn">04</span>
+          <div><b>به کجا می‌روم؟</b><p><span class="en">Explainable Edge AI</span> برای پایش و پشتیبانی تصمیم در سلامت جسمی و روانی.</p></div>
+          <span class="rtag en">VISION</span></li>
+        <li class="rv" style="--d:.48s;--ac:var(--grn)"><span class="rn">05</span>
+          <div><b>چه همکاری می‌خواهم؟</b><p>زیرمسئله دقیق، پروژه مشترک، مقاله معتبر و مسیر دکتری.</p></div>
+          <span class="rtag en">COLLAB</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="هویت پژوهشی میان‌رشته‌ای" data-code="RESEARCH PROFILE" data-num="03">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">02 · RESEARCH PROFILE</span><h2>هویت پژوهشی میان‌رشته‌ای</h2><span class="sub">اتصال چهار لایه‌ای که معمولاً جدا بررسی می‌شوند</span></header>
+    <div class="mid">
+      <div class="layers">
+        <div class="layer rv" style="--d:.08s;--ac:var(--amb)"><span class="lic">◉</span>
+          <div><b>طراحی انسان‌محور</b><p>ادراک، معنا، تجربه کاربر، کاهش بار شناختی و طراحی نقش‌محور.</p></div>
+          <span class="lcode en">HCD · UX</span></div>
+        <div class="layer rv" style="--d:.18s;--ac:var(--sky)"><span class="lic">⌘</span>
+          <div><b>مهندسی سیستم</b><p><span class="en">Backend</span>، <span class="en">Microservices</span>، <span class="en">API</span>، پایگاه داده، امنیت و قابلیت استقرار.</p></div>
+          <span class="lcode en">SYS · API</span></div>
+        <div class="layer rv" style="--d:.28s;--ac:var(--grn)"><span class="lic">▥</span>
+          <div><b>داده و روایت</b><p>تبدیل داده خام به بینش قابل فهم، تصمیم‌پذیر و قابل اقدام.</p></div>
+          <span class="lcode en">DATA · NLG</span></div>
+        <div class="layer rv" style="--d:.38s;--ac:var(--cor)"><span class="lic">◎</span>
+          <div><b>هوش مصنوعی قابل اعتماد</b><p><span class="en">XAI</span>، <span class="en">Calibration</span>، <span class="en">Safety</span>، <span class="en">Abstention</span> و <span class="en">Human-in-the-Loop</span>.</p></div>
+          <span class="lcode en">XAI · SAFE</span></div>
+      </div>
+      <div class="q rv" style="--d:.5s">پرسش محوری من: خروجی یک سیستم هوشمند چگونه باید طراحی شود تا برای انسان <b>قابل فهم، قابل اعتماد و قابل استفاده</b> باشد؟</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="مسیر شکل‌گیری" data-code="JOURNEY" data-num="04">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">03 · JOURNEY</span><h2>مسیر شکل‌گیری — از طراحی تا سیستم‌های هوشمند</h2><span class="sub">چرخش‌های آگاهانه</span></header>
+    <div class="mid">
+      <div class="tl rv" style="--d:.1s">
+        <div class="tnode" style="--ac:var(--amb)"><span class="tk">کارشناسی</span><b>معماری داخلی</b><p>حل مسئله با خلاقیت و طراحی؛ درک ارتباط انسان و محیط.</p></div>
+        <div class="tnode" style="--ac:var(--amb)"><span class="tk">کارشناسی ارشد</span><b>طراحی گرافیک و ارتباطات بصری</b><p>معدل ۱۷٫۵۲ از ۲۰؛ معنا، نشانه‌شناسی و اثرگذاری بر مخاطب.</p></div>
+        <div class="tnode" style="--ac:var(--sky)"><span class="tk">رسانه</span><b>اینفوگرافیک و طراحی داده‌محور</b><p>فعالیت در رسانه‌های مطرح؛ سینما، مستند و روایت.</p></div>
+        <div class="tnode" style="--ac:var(--sky)"><span class="tk">چرخش به مهندسی</span><b>مهندسی نرم‌افزار</b><p>دوره‌ای فشرده از نقطه صفر؛ <span class="en">Backend</span> و <span class="en">Microservices</span>.</p></div>
+        <div class="tnode" style="--ac:var(--grn)"><span class="tk">صنعت</span><b>همراه اول</b><p>سیستم‌های مقیاس بزرگ؛ <span class="en">IAMS</span> و سامانه <span class="en">VTD</span>.</p></div>
+        <div class="tnode" style="--ac:var(--grn)"><span class="tk">پژوهش</span><b>PARS-SQL / VTD-Edge</b><p>هوش مصنوعی قابل توضیح برای سلامت.</p></div>
+      </div>
+      <div class="q g rv" style="--d:.3s">مسیر خطی نبوده؛ هر تغییر رشته، تجربه‌ای را اضافه کرده که در کارهای بعدی به کار آمده — از فهم فضا تا فهم داده و سیستم.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="ذهن حل‌مسئله" data-code="PROBLEM-SOLVER" data-num="05">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">04 · THE PROBLEM-SOLVER</span><h2>ذهن حل‌مسئله — از «بی‌تمرکزی» تا تمرکز عمیق</h2><span class="sub">چگونه یک ویژگی شخصیتی به نقاط قوت کاری تبدیل شد</span></header>
+    <div class="mid">
+      <div class="two">
+        <div class="panel rv" style="--d:.1s">
+          <div class="h3t a">داستان من</div>
+          <ul class="lst amber">
+            <li>سال‌ها با <span class="en">ADHD</span> تشخیص‌داده‌نشده زندگی می‌کردم.</li>
+            <li>شناخت و درمان کمک کرد تا با آن کار کنم، نه در تقابل با آن.</li>
+            <li>حالت‌های تمرکز عمیق که گاه مزاحم به نظر می‌رسید، در کار فنی سودمند شد.</li>
+          </ul>
+        </div>
+        <div class="panel rv" style="--d:.2s">
+          <div class="h3t g">حلقه‌ای که برای آن ساخته شده‌ام</div>
+          <div class="loopd">
+            <span class="lstep">مسئله</span><span class="larr">←</span>
+            <span class="lstep">تحقیق</span><span class="larr">←</span>
+            <span class="lstep">گزینه‌ها</span><span class="larr">←</span>
+            <span class="lstep">راه‌حل</span><span class="larr">←</span>
+            <span class="lstep">تحویل</span><span class="larr">↺</span>
+          </div>
+          <p style="color:var(--mut);font-size:13.5px;line-height:2;margin-top:12px;font-weight:500">این چرخه همان جایی است که سابقه‌ام در آن بیشتر به چشم می‌آید — کار تحقیق-توسعه و ساخت نمونه‌های اولیه.</p>
+        </div>
+      </div>
+      <div class="q rv" style="--d:.35s">درس شخصی: شناخت نحوه‌ی کارکرد ذهن خودم، در انتخاب نوع مسائل و نحوه برخورد با آن‌ها مؤثر بوده است.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="چرایی سلامت" data-code="WHY HEALTH" data-num="06">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">05 · WHY HEALTH</span><h2>سلامت — یک انتخاب شخصی، نه یک شعار</h2><span class="sub">از تجربه زیسته تا جهت‌گیری پژوهشی</span></header>
+    <div class="mid">
+      <div class="two">
+        <div class="panel story rv" style="--d:.1s;--ac:var(--cor)"><span class="sic">🫀</span>
+          <div><b>تشخیص اشتباه پدر</b>
+          <p>دو بار لخته خون در پا و آمبولی ریه — که ابتدا حتی با تصویربرداری، «عفونت ریه» تشخیص داده شد.</p></div>
+        </div>
+        <div class="panel story rv" style="--d:.2s;--ac:var(--cor)"><span class="sic">🩺</span>
+          <div><b>بیماری مادر</b>
+          <p>پلی‌میوزیت؛ داروها و شرایط جسمی قند خون را به بالای هزار رساند و منجر به کما شد.</p></div>
+        </div>
+      </div>
+      <div class="panel story rv" style="--d:.3s;--ac:var(--sky)"><span class="sic">🧬</span>
+        <div><b>الهام از شاهین محمدی — «بیمار همیشگی»</b>
+        <p>سال‌ها با ۱۰ تشخیص پراکنده دست‌وپنجه نرم کرد تا یک تحلیل ژنومی دقیق، ریشه همه را در یک جهش نادر آشکار کرد. درس او: پزشکی باید <b>علت‌های ریشه‌ای</b> را درمان کند، نه علائم را — و این با داده و هوش مصنوعی ممکن می‌شود.</p></div>
+      </div>
+      <div class="q g rv" style="--d:.42s">این تجربه‌ها سوأل‌هایی را جدی‌تر کرد: چطور می‌توان با داده و مدل، تشخیص‌های نادرست یا دیرهنگام را کمتر کرد؟ به همین دلیل تمرکز کاری‌ام را به سمت سلامت بردم.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="آمادگی نظام‌مند" data-code="PREPARATION" data-num="07">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">06 · PREPARATION</span><h2>آمادگی نظام‌مند برای هوش مصنوعی سلامت</h2><span class="sub">گواهینامه‌های Stanford Medicine</span></header>
+    <div class="mid">
+      <div style="display:flex;flex-direction:column;gap:var(--g1)">
+        <div class="cert rv" style="--d:.08s"><span class="ck">✓</span><span class="en">Introduction to Healthcare</span><small>2025 · CME</small></div>
+        <div class="cert rv" style="--d:.16s"><span class="ck">✓</span><span class="en">Introduction to Clinical Data</span><small>2025 · CME</small></div>
+        <div class="cert rv" style="--d:.24s"><span class="ck">✓</span><span class="en">Fundamentals of AI &amp; ML in Healthcare</span><small>2026 · CME</small></div>
+        <div class="cert rv" style="--d:.32s"><span class="ck">✓</span><span class="en">Evaluations of AI Applications in Healthcare</span><small>2026 · CME</small></div>
+        <div class="cert rv" style="--d:.4s"><span class="ck">✓</span><span class="en">AI in Healthcare Capstone Project</span><small>2026 · CME</small></div>
+      </div>
+      <div class="q rv" style="--d:.5s">ورود به حوزه‌ی سلامت برای من یک چرخش ناگهانی نیست؛ برای اینکه با مسئولیت کامل وارد این حوزه شوم، ابتدا دوره‌های پایه‌ای بالینی و <span class="en">AI in Healthcare</span> را گذراندم.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="نقشه آثار" data-code="ARTIFACTS MAP" data-num="08">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">07 · ARTIFACTS MAP</span><h2>چه ساخته‌ام؟ — سه اثر در یک جهت</h2><span class="sub">از داده سازمانی تا پرسش طبیعی برای سلامت</span></header>
+    <div class="mid">
+      <div style="display:flex;flex-direction:column;gap:var(--g1)">
+        <div class="panel artrow rv" style="--d:.1s;--ac:var(--amb)"><span class="anum">01</span>
+          <div><b>داشبورد ملی اطلاعات + کتاب</b><p>سازمان اداری و استخدامی کشور · بیش از ۱۰ داشبورد برای ده‌ها هزار کارمند · راهنمای ۳۳۰ صفحه‌ای.</p></div>
+          <span class="ayr">2022–2025</span></div>
+        <div class="down rv" style="--d:.18s;align-self:center;margin:0">↓</div>
+        <div class="panel artrow rv" style="--d:.26s;--ac:var(--sky)"><span class="anum">02</span>
+          <div><b>VTD — سامانه صوت‌به‌داشبورد</b><p>همراه اول · آفلاین و سه‌مرحله‌ای · تبدیل پرسش فارسی به تحلیل، روایت و نمودار.</p></div>
+          <span class="ayr">2024–2025</span></div>
+        <div class="down rv" style="--d:.34s;align-self:center;margin:0">↓</div>
+        <div class="panel artrow rv" style="--d:.42s;--ac:var(--grn)"><span class="anum">03</span>
+          <div><b>PARS-SQL / VTD-Edge</b><p>آرتیفکت پژوهشی · <span class="en">Text-to-SQL</span> محلی، امن و فارسی‌محور برای داده‌های سلامت روان و سبک زندگی.</p></div>
+          <span class="ayr">2026</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="داشبورد ملی" data-code="NATIONAL DASHBOARD" data-num="09">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">08 · COMPLETED WORK</span><h2>داشبورد ملی اطلاعات</h2><span class="sub">سازمان اداری و استخدامی کشور · انجام‌شده</span></header>
+    <div class="mid">
+      <div class="two">
+        <div class="panel rv" style="--d:.1s">
+          <div class="h3t a">زمینه و خروجی</div>
+          <ul class="lst amber">
+            <li>تبدیل داده‌های سازمانی به اطلاعات قابل تصمیم‌گیری.</li>
+            <li>بیش از <b>۱۰ داشبورد</b> اطلاعاتی.</li>
+            <li>کاربران: <b>ده‌ها هزار کارمند</b> در سطوح مختلف.</li>
+            <li>رویکرد <span class="en">Data Storytelling</span>: سلسله‌مراتب بصری، کاهش بار شناختی، تعامل.</li>
+          </ul>
+        </div>
+        <div class="panel rv" style="--d:.2s">
+          <div class="h3t g">سه سؤال محوری هر داشبورد</div>
+          <ul class="lst">
+            <li><b>چه اتفاقی افتاده است؟</b> — توصیف روشن وضعیت و روند.</li>
+            <li><b>چرا اهمیت دارد؟</b> — تبیین عوامل و زمینه تصمیم.</li>
+            <li><b>چه اقدامی لازم است؟</b> — پیوند بینش با تصمیم عملی.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="q rv" style="--d:.35s">دستاورد اصلی این پروژه، یاد گرفتن این بود که داشبورد فقط یک نمایشگر عدد نیست؛ باید با نقش و دانش مخاطب تطبیق پیدا کند تا در تصمیم واقعی به‌کار بیاید.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="کتاب" data-code="AUTHORING WORK" data-num="10">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">09 · AUTHORING WORK</span><h2>دستورالعمل طراحی داشبوردهای اطلاعاتی با روش داستان‌سرایی با داده</h2><span class="sub">بهار ۱۴۰۴ · در حال آماده‌سازی برای چاپ</span></header>
+    <div class="mid dense">
+      <div class="two dense">
+        <div>
+          <div class="bignum rv" style="--d:.1s"><b>۳۳۰</b><span>صفحه<br>۱۲ فصل</span></div>
+          <p class="rv" style="--d:.2s;color:var(--mut);font-size:14.5px;line-height:2.1;margin-top:12px;font-weight:500">از نیازسنجی و کیفیت داده تا <span class="en">NLG</span> و آینده داشبوردهای هوشمند.</p>
+        </div>
+        <div class="panel rv" style="--d:.25s">
+          <div class="h3t a">عمق علمی — فراتر از یک راهنمای عملی</div>
+          <div class="chips">
+            <span class="chip a">Tufte · Data-Ink</span><span class="chip s">Cleveland &amp; McGill</span><span class="chip g">Gestalt</span>
+            <span class="chip c">Cognitive Load</span><span class="chip s">WCAG</span><span class="chip a">F-Pattern</span>
+            <span class="chip g">Abela · Chart Chooser</span><span class="chip s">FT Visual Vocabulary</span><span class="chip c">NLG / NLQ</span>
+          </div>
+        </div>
+      </div>
+      <div class="flow rv" style="--d:.35s">
+        <span class="fchip">نیازسنجی کاربر</span><span class="farr">←</span><span class="fchip">انتخاب داده</span><span class="farr">←</span>
+        <span class="fchip">طراحی بصری و رنگ</span><span class="farr">←</span><span class="fchip">انتخاب نمودار</span><span class="farr">←</span>
+        <span class="fchip">تعامل و فیلتر</span><span class="farr">←</span><span class="fchip">سنجش و بهبود</span><span class="farr">←</span>
+        <span class="fchip">آموزش کاربر</span><span class="farr">←</span><span class="fchip">هوش مصنوعی و آینده</span><span class="farr">←</span>
+        <span class="fchip">تجربه پروژه</span>
+      </div>
+      <div class="q rv" style="--d:.45s">انگیزه‌ی نوشتن این کتاب، مسئله‌ای بود که در پروژه‌های واقعی با آن روبه‌رو می‌شدم: داده زیاد است، اما تبدیل آن به چیزی که در تصمیم‌گیری به‌کار بیاید، کار ساده‌ای نیست.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="سامانه VTD" data-code="VTD" data-num="11">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">10 · VTD</span><h2>VTD — سامانه آفلاین صوت‌به‌داشبورد</h2><span class="sub">همراه اول · Python · FastAPI</span></header>
+    <div class="mid">
+      <div class="pipe rv" style="--d:.1s">
+        <div class="step" style="--ac:var(--amb)"><span class="sn en">STAGE 1 · TEXT → SQL</span><b>پرسش فارسی به پرس‌وجوی امن</b><small>درک نیت و نگاشت به ساختار داده.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--sky)"><span class="sn en">STAGE 2 · DATA → NARRATIVE</span><b>روایت با بلوک‌های توضیحی</b><small>تولید متن قابل فهم از نتیجه.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--grn)"><span class="sn en">STAGE 3 · INTENT → VIZ</span><b>نمودار بر اساس ساختار SQL</b><small>انتخاب بصری متناسب با نوع تحلیل.</small></div>
+      </div>
+      <div class="two rv" style="--d:.25s">
+        <div class="panel"><div class="h3t">زیرساخت سازمانی — IAMS</div>
+          <p style="color:var(--mut);font-size:14px;line-height:2.1;font-weight:500">سامانه ملی مدیریت دارایی با <span class="en">Java</span>، <span class="en">Spring Boot</span>، <span class="en">PostgreSQL</span> و <span class="en">Microservices</span> — بیش از ۵ سال تجربه در محیط‌های مقیاس‌بزرگ و تنظیم‌شده.</p></div>
+        <div class="panel"><div class="h3t g">چرا مهم است؟</div>
+          <p style="color:var(--mut);font-size:14px;line-height:2.1;font-weight:500">VTD بذر <span class="en">VTD-Edge</span> شد: همان معماری سه‌مرحله‌ای، این بار برای داده‌های بالینی روی دستگاه‌های لبه.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="PARS-SQL" data-code="RESEARCH ARTIFACT" data-num="12">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">11 · RESEARCH ARTIFACT</span><h2>PARS-SQL — سامانه محلی، امن و فارسی‌محور Text-to-SQL</h2><span class="sub">نسخه ۲٫۳ · آماده اجرا</span></header>
+    <div class="mid dense">
+      <div class="two dense">
+        <div class="panel rv" style="--d:.1s">
+          <div class="h3t g">هدف</div>
+          <p style="color:var(--mut);font-size:14px;line-height:2.1;font-weight:500">تبدیل پرسش‌های فارسی — محاوره‌ای، مبهم، حتی <span class="en">Finglish</span> — به <span class="en">SQL</span> امن و قابل توضیح روی داده‌های سلامت روان و سبک زندگی.</p>
+          <div class="chips" style="margin-top:12px">
+            <span class="chip c">خواب</span><span class="chip c">اضطراب</span><span class="chip a">افسردگی</span><span class="chip a">فشار تحصیلی</span><span class="chip s">HRV / EDA</span>
+          </div>
+        </div>
+        <div class="panel rv" style="--d:.2s">
+          <div class="h3t a">سه‌گانه اعتمادپذیری — Reliability-First</div>
+          <ul class="lst amber">
+            <li><b>Clarification</b> — وقتی سؤال مبهم است، می‌پرسد.</li>
+            <li><b>Abstention</b> — وقتی مطمئن نیست، پاسخ نمی‌دهد.</li>
+            <li><b>Unsafe Rejection</b> — درخواست خطرناک را اجرا نمی‌کند.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="q c rv" style="--d:.35s">مرزبندی: PARS-SQL یک <b>آرتیفکت پژوهشی</b> برای مقاله و یادگیری است — نه محصول آماده، نه ابزار تشخیص بالینی.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="معماری" data-code="SYSTEM ARCHITECTURE" data-num="13">
+  <div class="wrap dense">
+    <header class="sh rv"><span class="code en">12 · SYSTEM ARCHITECTURE</span><h2>معماری کامپایلرمانند با دو Runtime</h2><span class="sub">یک هسته مشترک، دو هدف اجرا</span></header>
+    <div class="mid dense">
+      <div class="pipe rv" style="--d:.08s">
+        <div class="step" style="--ac:var(--amb)"><span class="sn en">NORMALIZE</span><b>نرمال‌سازی فارسی</b><small>عدد، تاریخ، Finglish.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--sky)"><span class="sn en">ROUTE</span><b>ایمنی / نیت / ابهام</b><small>مسیردهی پرسش.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--sky)"><span class="sn en">LINK</span><b>Schema / Value Linking</b><small>اتصال معنا به داده.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--sky)"><span class="sn en">PACK</span><b>Context Packing</b><small>بسته‌بندی زمینه.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--grn)"><span class="sn en">GENERATE</span><b>تولید SQL</b><small>مدل محلی کوچک.</small></div>
+      </div>
+      <div class="pipe rv" style="--d:.2s">
+        <div class="step" style="--ac:var(--cor)"><span class="sn en">VALIDATE</span><b>اعتبارسنجی قطعی</b><small>syntax / schema / safety.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--cor)"><span class="sn en">ABSTAIN / REPAIR</span><b>خودداری یا ترمیم</b><small>پاسخ ندادنِ به‌جا.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--cor)"><span class="sn en">EXECUTE</span><b>اجرای فقط‌خواندنی</b><small>SELECT-only.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--amb)"><span class="sn en">CRITIC</span><b>منتقد معنایی</b><small>سازگاری نتیجه.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--grn)"><span class="sn en">ANSWER</span><b>پاسخ / نمودار / هشدار</b><small>خروجی کاربر.</small></div>
+      </div>
+      <div class="rts rv" style="--d:.32s">
+        <div class="panel rt" style="--ac:var(--sky)"><h3>Research Runtime</h3><p>LangGraph · trace کامل · چند کاندید · benchmark و ablation — برای مقاله.</p></div>
+        <div class="panel rt" style="--ac:var(--grn)"><h3>Edge Runtime</h3><p>State machine سبک · یک مدل کوچک · timeout سخت · لاگ حداقلی — برای دستگاه.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="شواهد" data-code="EVIDENCE" data-num="14" data-count>
+  <div class="wrap dense">
+    <header class="sh rv"><span class="code en">13 · EVIDENCE</span><h2>شواهد — نتایج واقعی PARS-SQL</h2><span class="sub">سه خانواده مستقل: Execution، Behavioral، Semantic</span></header>
+    <div class="mid dense">
+      <div class="stats rv" style="--d:.1s">
+        <div class="panel stat"><span class="lb en">EXECUTION ACCURACY</span><b class="v"><span class="cnt" data-v="25.89" data-d="2">0</span><small>%</small></b><span class="fr en">102 / 394</span><div class="bar"><i style="--w:25.89%"></i></div></div>
+        <div class="panel stat s"><span class="lb en">VALID SQL RATE</span><b class="v"><span class="cnt" data-v="74.87" data-d="2">0</span><small>%</small></b><span class="fr en">295 / 394</span><div class="bar s"><i style="--w:74.87%"></i></div></div>
+        <div class="panel stat"><span class="lb en">UNSAFE SQL POSITIVE</span><b class="v"><span class="cnt" data-v="0" data-d="0">0</span></b><span class="fr en">0 / 400</span><div class="bar"><i style="--w:100%"></i></div></div>
+        <div class="panel stat a"><span class="lb en">EXPECTED-ACTION BEHAVIORAL</span><b class="v"><span class="cnt" data-v="76" data-d="0">0</span><small>%</small></b><span class="fr en">304 / 400</span><div class="bar a"><i style="--w:76%"></i></div></div>
+        <div class="panel stat c"><span class="lb en">SEMANTIC JUDGE</span><b class="v"><span class="cnt" data-v="40.25" data-d="2">0</span><small>%</small></b><span class="fr en">161 / 400</span><div class="bar c"><i style="--w:40.25%"></i></div></div>
+      </div>
+      <div class="evg rv" style="--d:.25s">
+        <div class="panel">
+          <div class="h3t g"><span class="en">Behavioral Reliability</span> · اعتمادپذیری رفتاری</div>
+          <div class="gauge"><span class="gl en">Safety rejection</span><b class="gv"><span class="cnt" data-v="100" data-d="0">0</span>%</b><div class="bar"><i style="--w:100%"></i></div></div>
+          <div class="gauge"><span class="gl en">Clarification</span><b class="gv"><span class="cnt" data-v="88" data-d="0">0</span>%</b><div class="bar"><i style="--w:88%"></i></div></div>
+          <div class="gauge"><span class="gl en">Abstention precision</span><b class="gv"><span class="cnt" data-v="88.89" data-d="2">0</span>%</b><div class="bar"><i style="--w:88.89%"></i></div></div>
+          <div class="gauge"><span class="gl en">Abstention recall</span><b class="gv"><span class="cnt" data-v="96.39" data-d="2">0</span>%</b><div class="bar"><i style="--w:96.39%"></i></div></div>
+        </div>
+        <div class="panel" style="border-color:rgba(255,138,122,.45)">
+          <div class="h3t c">تفسیر صادقانه</div>
+          <ul class="lst coral">
+            <li>تولید <span class="en">SQL</span> هنوز برای کاربرد عملی کافی نیست.</li>
+            <li>سیستم در <span class="en">Safety</span>، <span class="en">Clarification</span> و <span class="en">Abstention</span> قوی‌تر است.</li>
+            <li><span class="en">Semantic metric</span> با <span class="en">LLM-as-a-Judge</span> است، نه ارزیابی انسانی کامل.</li>
+            <li>عدد ۴۰۰/۴۰۰ فقط <span class="en">Gold SQL sanity check</span> است، نه دقت مدل.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="q g rv" style="--d:.4s">معیار محوری ما <b>Reliability Score</b> است: سیستم پاداش می‌گیرد وقتی پاسخ درست می‌دهد، و وقتی مطمئن نیست، باید <b>پاسخ ندهد</b> یا برای روشن‌سازی بپرسد.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="درس‌آموخته‌ها" data-code="LESSONS LEARNED" data-num="15">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">14 · LESSONS LEARNED</span><h2>درس‌آموخته‌ها — Ablation و استرس‌تست</h2><span class="sub">پیچیدگی بیشتر همیشه بهتر نیست</span></header>
+    <div class="mid dense">
+      <div class="two dense">
+        <div class="panel rv" style="--d:.1s">
+          <div class="h3t s" style="color:var(--sky)">Execution Accuracy</div>
+          <div class="abars">
+            <div class="abc"><span class="abv">≈۱۰٪</span><div class="ab d1" style="--h:39%"></div><span class="abl">A0–A3</span></div>
+            <div class="abc hot"><span class="abv">۲۵٫۶۳٪</span><div class="ab d2" style="--h:100%"></div><span class="abl">A4+CAG</span></div>
+            <div class="abc"><span class="abv">۲۵٫۶۳٪</span><div class="ab d1" style="--h:100%"></div><span class="abl">A7</span></div>
+          </div>
+          <p style="color:var(--amb);font-size:13.5px;line-height:2;text-align:center;margin-top:12px;font-weight:500">بزرگ‌ترین جهش از <b>بازیابی مثال‌های مرتبط</b> آمد، نه افزایش اجزای Agent.</p>
+        </div>
+        <div class="panel rv" style="--d:.2s;--ac:var(--cor)">
+          <div class="h3t c">استرس‌تست Milestone 1.5 — دروازه ورود به CAG</div>
+          <ul class="lst coral">
+            <li>۱۰ سؤال <span class="en">Finglish</span> / غلط املایی.</li>
+            <li>۵ سؤال تاریخ شمسی و عبارت زمانی فارسی.</li>
+            <li>۵ سؤال ناامن — router نباید SQL تولید کند.</li>
+            <li>تا شکست‌ها در <span class="en">error taxonomy</span> ثبت نشوند، فاز بعد شروع نمی‌شود.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="q c rv" style="--d:.35s">محدودیت‌ها (EX پایین، نیاز به <span class="en">holdout</span>، نبود ادعای بالینی) <b>بخشی از روایت پژوهشی</b> هستند، نه چیزی برای پنهان‌کردن.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="عمق فنی" data-code="TECHNICAL DEPTH" data-num="16">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">15 · TECHNICAL DEPTH</span><h2>عمق فنی — در جبهه مهندسی</h2><span class="sub">ابزارها در خدمت مسئله</span></header>
+    <div class="mid">
+      <div class="skg">
+        <div class="panel skrow rv" style="--d:.08s;--ac:var(--sky)"><h3>زبان‌ها و Backend</h3>
+          <div class="chips"><span class="chip s">Python · FastAPI</span><span class="chip s">PyTorch · pandas</span><span class="chip s">Java · Spring Boot</span><span class="chip s">Kafka · OAuth2</span><span class="chip s">Vue.js</span></div></div>
+        <div class="panel skrow rv" style="--d:.16s;--ac:var(--grn)"><h3>داده</h3>
+          <div class="chips"><span class="chip g">PostgreSQL</span><span class="chip g">Oracle</span><span class="chip g">MySQL</span><span class="chip g">SQLite</span><span class="chip g">طراحی Schema و پرس‌وجوی پیچیده</span></div></div>
+        <div class="panel skrow rv" style="--d:.24s;--ac:var(--amb)"><h3>LLM و Edge</h3>
+          <div class="chips"><span class="chip a">LangChain / LangGraph</span><span class="chip a">LlamaIndex</span><span class="chip a">GGUF · llama.cpp</span><span class="chip a">کوانتیزیشن با بودجه حافظه ۴–۸ گیگ</span></div></div>
+        <div class="panel skrow rv" style="--d:.32s;--ac:var(--cor)"><h3>بصری‌سازی و UX</h3>
+          <div class="chips"><span class="chip c">D3.js · نمودارهای سفارشی</span><span class="chip c">Figma · Adobe XD</span><span class="chip c">داستان‌سرایی داده</span><span class="chip c">Docker · Git</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="سه ستون" data-code="FUTURE IDENTITY" data-num="17">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">16 · FUTURE RESEARCH IDENTITY</span><h2>سه ستون مسیر پژوهشی آینده</h2><span class="sub">Research Positioning</span></header>
+    <div class="mid">
+      <div class="pillars">
+        <div class="panel pillar rv" style="--d:.1s;--ac:var(--amb)"><span class="pi">◉</span><b>طراحی انسان‌محور</b>
+          <ul class="lst amber"><li>نیاز و مدل ذهنی کاربر</li><li>فهم‌پذیری و بار شناختی</li><li>عاملیت، اعتماد و <span class="en">Contestability</span></li><li>ارزیابی <span class="en">UX</span> و <span class="en">User Study</span></li></ul></div>
+        <div class="panel pillar rv" style="--d:.2s;--ac:var(--grn)"><span class="pi">◎</span><b><span class="en">Reliable &amp; Explainable AI</span></b>
+          <ul class="lst"><li><span class="en">XAI</span> و <span class="en">Counterfactuals</span></li><li><span class="en">Uncertainty</span> و <span class="en">Calibration</span></li><li><span class="en">Abstention</span> و <span class="en">Defer-to-Human</span></li><li><span class="en">Safety</span> و <span class="en">Reproducibility</span></li></ul></div>
+        <div class="panel pillar rv" style="--d:.3s;--ac:var(--sky)"><span class="pi">⌁</span><b>سیستم‌های <span class="en">Edge-aware</span></b>
+          <ul class="lst sky"><li>پردازش محلی و <span class="en">Privacy</span></li><li><span class="en">Latency</span> و مصرف انرژی</li><li><span class="en">Event-triggered inference</span></li><li>استقرار در محیط واقعی</li></ul></div>
+      </div>
+      <div>
+        <div class="convline rv" style="--d:.42s"></div>
+        <div class="conv rv" style="--d:.52s">نقطه اتصال این سه ستون: <b><span class="en">Human-Centered Explainable Edge AI</span> برای <span class="en">Healthcare</span> و <span class="en">Mental Well-being</span></b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="معماری بلندمدت" data-code="LONG-TERM VISION" data-num="18">
+  <div class="wrap dense">
+    <header class="sh rv"><span class="code en">17 · LONG-TERM VISION</span><h2>معماری بلندمدت — Edge xAI در سلامت</h2><span class="sub">Wearables → Edge AI → XAI → Decision Support</span></header>
+    <div class="mid dense">
+      <div class="pipe rv" style="--d:.08s">
+        <div class="step" style="--ac:var(--amb)"><span class="sn en">SENSING</span><b>ساعت / حلقه / گوشی</b><small>HRV، EDA، خواب، حرکت.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--sky)"><span class="sn en">SIGNAL QUALITY</span><b>کیفیت سیگنال و زمینه</b><small>تشخیص نویز و context.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--grn)"><span class="sn en">EVENT-TRIGGERED EDGE AI</span><b>مدل سبک و محلی</b><small>استنتاج رویدادمحور.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--grn)"><span class="sn en">MOBILE LAYER</span><b>تجمیع و شخصی‌سازی</b><small>Uncertainty &amp; Calibration.</small></div>
+      </div>
+      <div class="down rv" style="--d:.2s">↓</div>
+      <div class="pipe rv" style="--d:.3s">
+        <div class="step" style="--ac:var(--sky)"><span class="sn en">EXPLAINABLE AI</span><b>توضیح‌پذیری</b><small>SHAP، Counterfactual، مثال.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--amb)"><span class="sn en">NARRATIVE DASHBOARD</span><b>داشبورد روایی</b><small>توضیح نقش‌محور.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--cor)"><span class="sn en">HUMAN DECISION</span><b>تصمیم انسانی</b><small>خودمدیریتی و پشتیبانی بالینی.</small></div>
+        <div style="flex:1;min-width:60px"></div>
+      </div>
+      <div class="two dense rv" style="--d:.42s">
+        <div class="q g" style="margin:0">اصل <b><span class="en">Edge-first</span></b>: ارسال <span class="en">Summary</span> و <span class="en">Insight</span> به‌جای <span class="en">Raw Stream</span> — برای حریم خصوصی، کاهش <span class="en">latency</span> و کاهش وابستگی شبکه.</div>
+        <div class="q c" style="margin:0"><b>مرزبندی بالینی:</b> هدف، پایش تغییرات، تشخیص ریسک و پشتیبانی تصمیم است — <b>نه تشخیص مستقل و نه جایگزینی پزشک</b>.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="سیگنال‌ها و کاربردها" data-code="SIGNALS & USE CASES" data-num="19">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">18 · SIGNALS &amp; USE CASES</span><h2>سیگنال‌ها و کاربردهای محتاطانه</h2><span class="sub">Personal baseline and context-aware monitoring</span></header>
+    <div class="mid dense">
+      <div class="two dense">
+        <div class="panel rv" style="--d:.1s">
+          <div class="h3t">داده‌ها و سیگنال‌ها</div>
+          <div class="chips">
+            <span class="chip g">ضربان قلب</span><span class="chip g">HRV</span><span class="chip s">EDA</span><span class="chip s">خواب</span>
+            <span class="chip a">حرکت</span><span class="chip a">فعالیت</span><span class="chip c">تعامل با گوشی</span><span class="chip c">EMA / خودگزارشی</span>
+          </div>
+          <p style="color:var(--mut);font-size:13.5px;line-height:2;margin-top:12px;font-weight:500">مدل باید کیفیت سیگنال، زمینه فعالیت و <b>baseline شخصی</b> را در نظر بگیرد؛ یک مقدار مشابه برای دو فرد معنای متفاوتی دارد.</p>
+        </div>
+        <div class="panel rv" style="--d:.2s">
+          <div class="h3t g">کاربردهای هدف</div>
+          <ul class="lst">
+            <li>پایش روندهای شخصی و تغییر نسبت به baseline.</li>
+            <li>شناسایی تغییرات و peakهای هیجانی / فیزیولوژیک.</li>
+            <li>پشتیبانی از مدیریت استرس، خواب و تمرکز.</li>
+            <li>مطالعه نشانگرهای مرتبط با اضطراب، افسردگی و <span class="en">ADHD</span>.</li>
+            <li>تحلیل پاسخ به مداخلات در طول زمان.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="q c rv" style="--d:.35s">عبارت دقیق پژوهشی: <b>«پایش نشانگرها و پشتیبانی از ارزیابی»</b> — نه ادعای تشخیص قطعی اختلالات از روی پوشیدنی‌ها.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="ذی‌نفعان" data-code="MULTI-STAKEHOLDER" data-num="20">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">19 · MULTI-STAKEHOLDER</span><h2>یک سیستم، سه گروه کاربری</h2><span class="sub">Role-aware explanation and access control</span></header>
+    <div class="mid dense">
+      <div class="roles">
+        <div class="panel role rv" style="--d:.1s;--ac:var(--grn)"><h3>👤 فرد · <span class="en">Self-management</span></h3>
+          <ul class="lst"><li>خودآگاهی و روندهای شخصی</li><li>توضیح ساده، همدلانه و قابل اقدام</li><li>هشدارهای کنترل‌شده</li><li>امکان <span class="en">Confirm / Correct / Reject</span></li></ul>
+          <span class="meter-lb">سطح جزئیات روایت</span><div class="bar"><i style="--w:60%"></i></div></div>
+        <div class="panel role rv" style="--d:.2s;--ac:var(--sky)"><h3>⚕ پزشک · <span class="en">Clinical Dashboard</span></h3>
+          <ul class="lst sky"><li>روندهای طولی و کیفیت داده</li><li><span class="en">Confidence</span> و <span class="en">Uncertainty</span></li><li><span class="en">XAI</span> تخصصی و <span class="en">Drill-down</span></li><li>پشتیبانی از تصمیم درمانی</li></ul>
+          <span class="meter-lb">عمق تحلیل</span><div class="bar s"><i style="--w:95%"></i></div></div>
+        <div class="panel role rv" style="--d:.3s;--ac:var(--amb)"><h3>🤝 خانواده · <span class="en">Caregiver</span></h3>
+          <ul class="lst amber"><li>حداقل اطلاعات ضروری</li><li>دسترسی رضایت‌محور و قابل لغو</li><li>هشدارهای سطح‌بندی‌شده</li><li>جلوگیری از <span class="en">Surveillance</span></li></ul>
+          <span class="meter-lb">دامنه دسترسی</span><div class="bar a"><i style="--w:25%"></i></div></div>
+      </div>
+      <div class="q rv" style="--d:.45s">نوع روایت، سطح جزئیات و حدود دسترسی باید با <b>نقش، رضایت و پیامد اخلاقی</b> تنظیم شود.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="XAI و Calibration" data-code="TRUSTWORTHY AI" data-num="21">
+  <div class="wrap dense">
+    <header class="sh rv"><span class="code en">20 · TRUSTWORTHY AI</span><h2>XAI و Calibration — از پیش‌بینی تا اعتماد مناسب</h2><span class="sub">Model calibration + Human trust calibration</span></header>
+    <div class="mid dense">
+      <div class="two dense">
+        <div class="panel rv" style="--d:.1s">
+          <div class="h3t g"><span class="en">XAI</span> باید پاسخ دهد</div>
+          <ul class="lst">
+            <li>چرا این هشدار تولید شد؟</li>
+            <li>کدام سیگنال‌ها بیشترین اثر را داشتند؟</li>
+            <li>کیفیت داده در این بازه چگونه بود؟</li>
+            <li>مدل چقدر مطمئن است؟</li>
+            <li>چه تغییر خلاف‌واقعی نتیجه را تغییر می‌داد؟</li>
+            <li>آیا با baseline شخصی مقایسه شده است؟</li>
+          </ul>
+          <div class="chips" style="margin-top:10px"><span class="chip g">SHAP</span><span class="chip s">Counterfactual</span><span class="chip a">Example-based</span><span class="chip c">Narrative</span></div>
+        </div>
+        <div class="panel rv" style="--d:.2s">
+          <div class="h3t"><span class="en">Calibration</span> و کالیبراسیون اعتماد</div>
+          <ul class="lst sky">
+            <li><span class="en">Expected Calibration Error</span> و <span class="en">Brier Score</span>.</li>
+            <li><span class="en">Reliability Diagram</span> و <span class="en">Temperature Scaling</span>.</li>
+            <li><span class="en">Confidence Threshold</span> و <span class="en">Defer-to-Human</span>.</li>
+            <li>جلوگیری از اعتماد بیش‌ازحد به خروجی نادرست.</li>
+            <li>جلوگیری از بی‌اعتمادی غیرضروری پس از خطای مقطعی.</li>
+            <li>مدیریت <span class="en">False Alarm</span> و <span class="en">Alert Fatigue</span>.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="q g rv" style="--d:.35s">هدف، «اعتماد بیشتر» نیست؛ هدف <b>اعتماد متناسب با قابلیت واقعی سیستم</b> است.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="نظارت انسانی" data-code="HUMAN OVERSIGHT" data-num="22">
+  <div class="wrap dense">
+    <header class="sh rv"><span class="code en">21 · HUMAN OVERSIGHT</span><h2>Human-in-the-Loop و محدوده اخلاقی</h2><span class="sub">AI as a contestable collaborator</span></header>
+    <div class="mid dense">
+      <div class="pipe rv" style="--d:.08s">
+        <div class="step" style="--ac:var(--sky)"><span class="sn en">DETECT</span><b>تشخیص</b><small>یک رویداد یا تغییر.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--amb)"><span class="sn en">REVIEW</span><b>بررسی</b><small>توسط فرد یا پزشک.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--cor)"><span class="sn en">CONFIRM / CORRECT / REJECT</span><b>اصلاح زمینه و برچسب</b><small>پذیرش، اصلاح یا رد.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--grn)"><span class="sn en">PERSONALIZE</span><b>بهبود threshold و calibration</b><small>یادگیری از بازخورد.</small></div>
+      </div>
+      <div class="loopd rv" style="--d:.2s;justify-content:center">
+        <span style="color:var(--mut);font-size:13px;font-weight:500">↺ بازگشت بازخورد برای شخصی‌سازی — حلقه به‌طور پیوسته تکرار می‌شود.</span>
+      </div>
+      <div class="two dense rv" style="--d:.3s">
+        <div class="panel"><div class="h3t a">چرا HITL ضروری است؟</div>
+          <ul class="lst amber">
+            <li>حسگرها زمینه زندگی واقعی را کامل نمی‌بینند.</li>
+            <li>افزایش ضربان می‌تواند ورزش، اضطراب یا بیماری باشد.</li>
+            <li>کاربر و پزشک باید بتوانند خروجی را <span class="en">Contest</span> کنند.</li>
+            <li>بازخوردها داده شخصی‌سازی‌شده تولید می‌کنند.</li>
+          </ul></div>
+        <div class="panel"><div class="h3t g">اصول بالینی و اخلاقی</div>
+          <ul class="lst">
+            <li><span class="en">Decision Support</span>، نه تشخیص مستقل.</li>
+            <li>رضایت قابل لغو و حداقل‌سازی داده.</li>
+            <li><span class="en">Privacy by Design</span> و پردازش <span class="en">Edge-first</span>.</li>
+            <li><span class="en">Fairness</span> میان گروه‌های مختلف.</li>
+            <li><span class="en">Audit Trail</span> و <span class="en">Defer-to-Human</span>.</li>
+          </ul></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="برنامه پژوهشی" data-code="RESEARCH PROGRAM" data-num="23">
+  <div class="wrap dense">
+    <header class="sh rv"><span class="code en">22 · RESEARCH PROGRAM</span><h2>برنامه پژوهشی — از چشم‌انداز تا پروژه‌های مقاله‌پذیر</h2><span class="sub">Research questions, publishable units, roadmap</span></header>
+    <div class="mid dense">
+      <div class="two dense rv" style="--d:.08s">
+        <div class="panel"><div class="h3t">مسائل پژوهشی محوری</div>
+          <ul class="lst sky">
+            <li>چگونه مدل <span class="en">Edge</span> سبک و رویدادمحور بسازیم؟</li>
+            <li>چگونه تغییر را نسبت به baseline شخصی تشخیص دهیم؟</li>
+            <li>کدام توضیح برای فرد، پزشک و مراقب مناسب‌تر است؟</li>
+            <li>چگونه <span class="en">Confidence</span> مدل و اعتماد انسان را هم‌زمان کالیبره کنیم؟</li>
+            <li>آیا <span class="en">HITL</span> خطا و هشدار کاذب را کاهش می‌دهد؟</li>
+            <li>چگونه <span class="en">Privacy</span>، <span class="en">Fairness</span> و <span class="en">Agency</span> را حفظ کنیم؟</li>
+          </ul></div>
+        <div class="panel"><div class="h3t g">پروژه‌های پیشنهادی</div>
+          <ul class="lst">
+            <li><b><span class="en">Reliable Persian NLI for Health Data</span></b></li>
+            <li><b><span class="en">Human-Centered XAI Dashboard for Wearable Stress</span></b></li>
+            <li><b><span class="en">Narrative-as-Explanation</span></b></li>
+            <li><b><span class="en">Event-Triggered Explainable Edge AI</span></b></li>
+            <li><b><span class="en">Human-in-the-Loop Personalization</span></b></li>
+          </ul></div>
+      </div>
+      <div class="pipe rv" style="--d:.25s">
+        <div class="step" style="--ac:var(--sky)"><span class="sn en">3–6 MONTHS</span><b>فاز اول</b><small>تکمیل مقاله PARS-SQL، مرور HCD-XAI، انتخاب دیتاست، Wireframe.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--amb)"><span class="sn en">6–12 MONTHS</span><b>فاز دوم</b><small>Prototype داشبورد، XAI، Calibration، Narrative، Pilot User Study.</small></div><span class="arr">←</span>
+        <div class="step" style="--ac:var(--grn)"><span class="sn en">12–24 MONTHS</span><b>فاز سوم</b><small>Edge deployment، Personalization، Robustness، Fairness، همکاری تخصصی سلامت.</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="همکاری" data-code="COLLABORATION" data-num="24">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">23 · COLLABORATION</span><h2>پیشنهاد همکاری پژوهشی</h2><span class="sub">آنچه می‌آورم — و آنچه دنبال می‌کنم</span></header>
+    <div class="mid dense">
+      <div class="two dense rv" style="--d:.08s">
+        <div class="panel"><div class="h3t g">ارزش افزوده من برای گروه</div>
+          <ul class="lst">
+            <li>تبدیل <span class="en">Concept</span> به <span class="en">Prototype</span> قابل آزمون.</li>
+            <li>طراحی <span class="en">Backend</span>، <span class="en">API</span> و معماری داده.</li>
+            <li>طراحی داشبورد، <span class="en">UI/UX</span> و <span class="en">Narrative Explanation</span>.</li>
+            <li>ساخت <span class="en">Benchmark</span>، <span class="en">Trace</span> و <span class="en">Artifact-backed evaluation</span>.</li>
+            <li><span class="en">Error Analysis</span>، مستندسازی و پژوهش بازتولیدپذیر.</li>
+            <li>اتصال طراحی، سیستم و <span class="en">AI</span> در یک پروژه یکپارچه.</li>
+          </ul></div>
+        <div class="panel"><div class="h3t a">هدف من از همکاری</div>
+          <ul class="lst amber">
+            <li>انتخاب یک زیرمسئله دقیق و قابل انتشار.</li>
+            <li>مشارکت در پروژه‌های جاری گروه.</li>
+            <li>یادگیری طراحی آزمایش و ارزیابی استاندارد.</li>
+            <li>همکاری با متخصصان سلامت و دسترسی به داده یا محیط آزمایش.</li>
+            <li>تدوین مقاله مشترک و تقویت رزومه آکادمیک.</li>
+            <li>ساخت مسیر منسجم برای پذیرش دکتری.</li>
+          </ul></div>
+      </div>
+      <div class="closeq rv" style="--d:.25s">
+        <p>هدف از این ارائه، پیدا کردن یک نقطه‌ی مشترک است:<br>جایی که پیشینه‌ی من در طراحی، مهندسی سیستم و داده — با یک زیرمسئله‌ی مشخص و قابل انتشار در حوزه‌ی <b><span class="en">Explainable Edge AI</span> برای سلامت</b> هم‌خوان شود.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="شش درس و پایان" data-code="SIX LESSONS" data-num="25">
+  <div class="wrap">
+    <header class="sh rv"><span class="code en">24 · SIX LESSONS</span><h2>شش درس — و سخن پایانی</h2><span class="sub">آنچه از همه این مسیر آموخته‌ام</span></header>
+    <div class="mid dense">
+      <div class="l6g rv" style="--d:.08s">
+        <div class="panel l6"><span class="ln">۱</span><div><b>دانش عمومی به‌تنهایی کافی نیست</b><p>هر بار که وارد حوزه‌ی جدیدی شدم، باید عملاً ابزارها و مفاهیمش را از صفر می‌گرفتم؛ نه اتفاق عجیبی بود، نه میان‌بر.</p></div></div>
+        <div class="panel l6"><span class="ln">۲</span><div><b>مسیر مستقیم وجود ندارد</b><p>از طراحی به مهندسی نرم‌افزار و از آنجا به داده، با یک برنامه‌ی از پیش تعیین‌شده نرسیدم. هر مرحله، مواد اولیه‌ی مرحله‌ی بعد شد.</p></div></div>
+        <div class="panel l6"><span class="ln">۳</span><div><b>تعریف مسئله مهم‌تر از حل آن است</b><p>وقتی مشخص نبود دقیقاً چه سوالی را جواب می‌دهم، خروجی یا خیلی کلی می‌شد یا اصلاً به درد نمی‌خورد.</p></div></div>
+        <div class="panel l6"><span class="ln">۴</span><div><b>شناخت نقطه‌ضعف، به‌جای پنهان‌کردن آن</b><p>وقتی فهمیدم ADHD دارم، به‌جای تلاش برای «اصلاح»، سعی کردم محیط کاری‌ام را با نحوه‌ی کارکرد ذهنم تنظیم کنم.</p></div></div>
+        <div class="panel l6"><span class="ln">۵</span><div><b>ابزار نبود، ساختمش</b><p>برای دیتاست فارسی NLI ابزاری نبود؛ برای داشبورد قابل‌فهم طراحی آماده نبود. گاهی خود ابزار، بخشی از پژوهش است.</p></div></div>
+        <div class="panel l6"><span class="ln">۶</span><div><b>مسیر آکادمیک عجله نمی‌پذیرد</b><p>سخت‌ترین بخش، پذیرش این بود که باید مرحله‌به‌مرحله پیش بروم — نه اینکه همه‌چیز را هم‌زمان شروع کنم.</p></div></div>
+      </div>
+      <div class="closeq rv" style="--d:.3s">
+        <p>این ارائه، یک پایان نیست؛ نقطه‌ی شروع یک کار مشترک است.<br>از هر اشاره، انتقاد یا پیشنهادی که در این جلسه بشنوم استقبال می‌کنم.</p>
+      </div>
+      <div class="endline rv" style="--d:.45s">
+        <span class="fin">❏ پایان — سپاس از توجه شما</span>
+        <button class="replay" onclick="go(0)">بازگشت به آغاز ⟲</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="chrome bot">
+  <div class="s-title" id="stitle"></div>
+  <div class="ctrl">
+    <button id="bPrev" title="اسلاید قبلی" aria-label="اسلاید قبلی (→)">→</button>
+    <button id="bMenu" title="نمای کلی همه اسلایدها" aria-label="نمای کلی (G)">⊞</button>
+    <button id="bNext" title="اسلاید بعدی" aria-label="اسلاید بعدی (←)">←</button>
+  </div>
+  <div class="count"><b id="cur">01</b> / <span id="tot">25</span></div>
+</footer>
+
+<div class="ov" id="ov" role="dialog" aria-modal="true" aria-label="نمای کلی اسلایدها" aria-hidden="true">
+  <h4>نمای کلی جلسه — <span class="en" style="font-size:.6em;color:var(--dim)">25 SLIDES</span></h4>
+  <div class="ov-in" id="ovin"></div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const slides=$$('.slide'), N=slides.length;
+$('#tot').textContent=String(N).padStart(2,'0');
+let cur=-1;
+
+function runCounts(scope){
+  scope.querySelectorAll('.cnt').forEach(el=>{
+    const t=parseFloat(el.dataset.v), d=+(el.dataset.d||0), dur=950, st=performance.now();
+    (function f(now){const p=Math.min(1,(now-st)/dur), e=1-Math.pow(1-p,3);
+      el.textContent=(t*e).toFixed(d); if(p<1)requestAnimationFrame(f);})(st);
+  });
+}
+function go(n){
+  n=Math.max(0,Math.min(N-1,n)); if(n===cur)return; cur=n;
+  slides.forEach((s,i)=>{s.classList.toggle('active',i===n); s.classList.toggle('before',i<n);});
+  $('#prog').style.width=((n+1)/N*100)+'%';
+  $('#cur').textContent=String(n+1).padStart(2,'0');
+  const s=slides[n];
+  $('#stitle').innerHTML=`<span class="en">${s.dataset.code}</span> — ${s.dataset.title}`;
+  history.replaceState(null,'','#'+(n+1));
+  if(s.hasAttribute('data-count')) setTimeout(()=>runCounts(s),350);
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key==='PageDown'||e.key===' '){e.preventDefault();go(cur+1);}
+  else if(e.key==='ArrowRight'||e.key==='PageUp'){e.preventDefault();go(cur-1);}
+  else if(e.key==='Home'){go(0);} else if(e.key==='End'){go(N-1);}
+  else if(e.key==='Escape'){toggleOv(false);}
+  else if(e.key==='g'||e.key==='G'){toggleOv();}
+  else if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();}
+});
+$('#bNext').onclick=()=>go(cur+1);
+$('#bPrev').onclick=()=>go(cur-1);
+let lastWheel=0;
+let wheelAccum=0, wheelTimer=null;
+addEventListener('wheel',e=>{wheelAccum+=e.deltaY;
+if(wheelTimer)return;
+wheelTimer=setTimeout(()=>{wheelTimer=null;if(Math.abs(wheelAccum)>=38){wheelAccum>0?go(cur+1):go(cur-1);}wheelAccum=0;},180);},{passive:true});
+let tx=0,ty=0;
+addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)){dx<0?go(cur+1):go(cur-1);}},{passive:true});
+
+const ov=$('#ov'), ovin=$('#ovin');
+slides.forEach((s,i)=>{
+  const b=document.createElement('button');
+  b.innerHTML=`<span class="on">${String(i+1).padStart(2,'0')}</span><b>${s.dataset.title}</b><span class="oc">${s.dataset.code}</span>`;
+  b.setAttribute('aria-label','رفتن به اسلاید '+(i+1)+' — '+s.dataset.title);
+  b.onclick=()=>{go(i);toggleOv(false);};
+  ovin.appendChild(b);
+});
+function toggleOv(force){
+  const open=ov.classList.toggle('open',force!==undefined?force:!ov.classList.contains('open'));
+  ov.setAttribute('aria-hidden',open?'false':'true');
+}
+$('#bMenu').onclick=()=>toggleOv();
+
+function ecgWave(p){
+  const g=(c,w,a)=>a*Math.exp(-((p-c)*(p-c))/(2*w*w));
+  return g(.16,.026,.14)+g(.285,.010,-.16)+g(.315,.012,1)+g(.345,.011,-.28)+g(.55,.05,.26);
+}
+const reducedMotion=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+const traces=[];
+function trace(canvas,cfg){
+  const ctx=canvas.getContext('2d'); let w,h;
+  function rs(){const dpr=Math.min(2,devicePixelRatio||1);
+    w=canvas.clientWidth;h=canvas.clientHeight;
+    canvas.width=w*dpr;canvas.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);}
+  rs(); addEventListener('resize',rs);
+  let x=0,px=null,py=null,ph=Math.random(),seed=Math.random()*6;
+  let running=!reducedMotion, rafId=null;
+  // اگر reduced-motion باشد، یک فریم ثابت رسم کن و متوقف شو
+  function drawStatic(){const v=ecgWave(.3);const y=h*cfg.base-v*h*cfg.amp;
+    ctx.strokeStyle=cfg.color;ctx.lineWidth=cfg.lw||1.8;ctx.shadowColor=cfg.glow;ctx.shadowBlur=cfg.blur||6;
+    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  function step(){
+    if(!running||document.hidden)return;
+    for(let k=0;k<2;k++){
+      ph+=cfg.bpm/60/120;
+      const v=ecgWave(ph%1)+.03*Math.sin(ph*2.1+seed)+(Math.random()-.5)*.012;
+      const y=h*cfg.base-v*h*cfg.amp;
+      ctx.clearRect(x+1,0,cfg.gap||16,h);
+      if(px!==null){ctx.strokeStyle=cfg.color;ctx.lineWidth=cfg.lw||1.8;
+        ctx.shadowColor=cfg.glow;ctx.shadowBlur=cfg.blur||6;
+        ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(x,y);ctx.stroke();}
+      px=x;py=y;x=(x+1)%w; if(x===0)px=null;
+    }
+    rafId=requestAnimationFrame(step);
+  }
+  const inst={canvas,start(){if(running&&!rafId)step();},stop(){running=false;if(rafId){cancelAnimationFrame(rafId);rafId=null;}},
+    resume(){if(!running){running=true;px=null;step();}},isRunning(){return running;}};
+  traces.push(inst);
+  // احترام به visibility صفحه
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){if(rafId){cancelAnimationFrame(rafId);rafId=null;}}
+    else if(running)step();
+  });
+  if(reducedMotion)drawStatic();
+  else step();
+  return inst;
+}
+const amb=$('#amb');
+function sizeAmb(){amb.style.width=innerWidth+'px';amb.style.height=innerHeight+'px';}
+sizeAmb(); addEventListener('resize',sizeAmb);
+trace(amb,{bpm:62,base:.14,amp:.12,gap:26,color:'rgba(69,224,165,.28)',glow:'rgba(69,224,165,.3)',blur:4,lw:1.4});
+trace(amb,{bpm:74,base:.86,amp:.10,gap:26,color:'rgba(99,199,233,.22)',glow:'rgba(99,199,233,.25)',blur:4,lw:1.3});
+const monCfg={bpm:74,base:.62,amp:.34,gap:18,color:'rgba(69,224,165,.95)',glow:'rgba(69,224,165,.7)',blur:8,lw:2};
+const monTrace=trace($('#mECG'),monCfg);
+
+let hr=74;
+setInterval(()=>{
+  hr=Math.max(66,Math.min(84,hr+Math.round((Math.random()-.5)*4)));
+  $('#vHR').textContent=hr; $('#topHR').textContent='HR '+hr;
+  $('#vHRV').textContent=38+Math.round(Math.random()*10);
+  $('#vSP').textContent=97+Math.round(Math.random()*2);
+  $('#vRE').textContent=13+Math.round(Math.random()*3);
+  monCfg.bpm=hr;
+},1900);
+
+function tickClock(){
+  try{
+    $('#fadate').textContent=new Intl.DateTimeFormat('fa-IR',{weekday:'long',day:'numeric',month:'long'}).format(new Date());
+    $('#fatime').textContent=new Intl.DateTimeFormat('fa-IR-u-nu-latn',{hour:'2-digit',minute:'2-digit'}).format(new Date());
+  }catch(e){}
+}
+tickClock(); setInterval(tickClock,30000);
+
+// دکمه توقف/ادامه‌ی نوار قلب (تنها روی اسلاید ۱)
+const ecgBtn=$('#ecgPause');
+if(ecgBtn){
+  function toggleEcg(){
+    if(!monTrace)return;
+    if(monTrace.isRunning()){monTrace.stop();ecgBtn.textContent='▶';ecgBtn.classList.add('paused');ecgBtn.setAttribute('aria-label','ادامه نوار قلب');}
+    else{monTrace.resume();ecgBtn.textContent='⏸';ecgBtn.classList.remove('paused');ecgBtn.setAttribute('aria-label','توقف نوار قلب');}
+  }
+  ecgBtn.onclick=toggleEcg;
+  // میانبر کیبورد P (فقط وقتی اسلاید ۱ فعال است)
+  addEventListener('keydown',e=>{
+    if((e.key==='p'||e.key==='P')&&!/(input|textarea)/i.test(e.target.tagName)){e.preventDefault();toggleEcg();}
+  });
+}
+
+const h=parseInt(location.hash.replace('#',''))||1;
+go(Math.max(1,Math.min(N,h))-1);
+if(cur===-1)go(0);
+</script>
+</body>
+</html>
