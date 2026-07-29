@@ -54,6 +54,20 @@ class AdminSiteProfileViewSet(IdentityAdminViewSet):
     serializer_class = SiteProfileAdminSerializer
     search_fields = ["name_fa", "name_en", "public_email"]
 
+    def create(self, request, *args, **kwargs):
+        if SiteProfile.objects.exists():
+            problem = build_problem(
+                status.HTTP_409_CONFLICT,
+                "Only one site profile may exist.",
+                instance=request.path,
+            )
+            return Response(
+                problem,
+                status=status.HTTP_409_CONFLICT,
+                content_type=PROBLEM_CONTENT_TYPE,
+            )
+        return super().create(request, *args, **kwargs)
+
 
 class AdminSocialLinkViewSet(IdentityAdminViewSet):
     queryset = SocialLink.objects.all()

@@ -45,6 +45,7 @@ def test_identity_admin_crud_requires_auth_and_enforces_optimistic_locking():
     created = client.post("/api/admin/identity/profiles/", payload, format="json")
     assert created.status_code == 201
     profile_id = created.json()["id"]
+    assert client.post("/api/admin/identity/profiles/", payload, format="json").status_code == 409
 
     updated = client.patch(
         f"/api/admin/identity/profiles/{profile_id}/",
