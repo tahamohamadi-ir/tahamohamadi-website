@@ -11,6 +11,23 @@ import type {
   PaginatedArticlesResponse,
   TopicDTO,
 } from "@/lib/types";
+import type { Locale } from "@/lib/i18n";
+
+/**
+ * Error returned by a non-successful public API response.
+ *
+ * Keeping the status on the error lets callers distinguish a missing public
+ * resource from an unavailable backend instead of treating both as `null`.
+ */
+export class PublicApiError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly path: string,
+  ) {
+    super(`Public API request failed with ${status}: ${path}`);
+    this.name = "PublicApiError";
+  }
+}
 
 /**
  * Resolve the base URL for API calls.
@@ -34,7 +51,7 @@ export async function fetchPublicAPI<T>(path: string): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`API error: ${response.status}`);
+    throw new PublicApiError(response.status, path);
   }
 
   return response.json() as Promise<T>;
@@ -45,7 +62,7 @@ export async function fetchPublicAPI<T>(path: string): Promise<T> {
  * Endpoint: GET /api/public/portfolio/?page=N&technologies=tag&featured=true
  */
 export async function fetchPortfolioList(
-  params: PortfolioListParams = {}
+  params: PortfolioListParams = {},
 ): Promise<PaginatedResponse<CaseStudyListItem>> {
   const searchParams = new URLSearchParams();
 
@@ -62,28 +79,24 @@ export async function fetchPortfolioList(
 
 /**
  * Fetch a published page by slug with composed sections and blocks.
- * Returns null if the page is not found or not published.
+ * Returns null only when the page is not found or not published. Network and
+ * server failures remain errors so the route can render an explicit failure
+ * state instead of confusing an unavailable backend with a missing page.
  *
  * @param slug - The page slug (e.g., "home")
  * @param locale - The locale to fetch content for ("fa" | "en")
  */
-export async function getPublicPage(
-  slug: string,
-  locale: string
-): Promise<PageDTO | null> {
+export async function getPublicPage(slug: string, locale: Locale): Promise<PageDTO | null> {
   try {
-    // Always look up by English slug (URL routing uses slug_en).
-    // The locale param is passed for potential content filtering but
-    // the view matches slug against slug_en by default.
-    const page = await fetchPublicAPI<PageDTO>(
-      `/public/pages/${slug}/?locale=en`
-    );
-    return page;
-  } catch {
-    return null;
+    return await fetchPublicAPI<PageDTO>(`/public/pages/${slug}/?locale=${locale}`);
+  } catch (error) {
+    if (error instanceof PublicApiError && error.status === 404) {
+      return null;
+    }
+
+    throw error;
   }
 }
-
 
 // ─── Blog API ──────────────────────────────────────────────────────────────────
 
@@ -99,7 +112,7 @@ export interface FetchArticlesParams {
  * Endpoint: GET /api/public/blog/articles?locale={locale}&page={n}&topic={slug}
  */
 export async function fetchArticles(
-  params: FetchArticlesParams
+  params: FetchArticlesParams,
 ): Promise<PaginatedArticlesResponse> {
   const { locale, page = 1, topic, pageSize = 9 } = params;
   const searchParams = new URLSearchParams({
@@ -113,7 +126,7 @@ export async function fetchArticles(
   }
 
   return fetchPublicAPI<PaginatedArticlesResponse>(
-    `/public/blog/articles?${searchParams.toString()}`
+    `/public/blog/articles?${searchParams.toString()}`,
   );
 }
 
