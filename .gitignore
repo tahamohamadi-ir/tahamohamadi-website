@@ -1,6 +1,7 @@
 # Python / Django
 __pycache__/
 *.py[cod]
+*$py.class
 .venv/
 venv/
 .pytest_cache/
@@ -16,18 +17,50 @@ node_modules/
 out/
 coverage/
 *.tsbuildinfo
+frontend/.next/
+frontend/out/
 
 # Environment
 .env
 .env.*
 !.env.example
 
-# Backups
+# Backups & Logs
 backups/
+*.log
 
-# Editors / OS
+# Editors & OS
 .DS_Store
 Thumbs.db
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
 
+# AI Assistants & IDE Tools
 .kiro/
-
+.agents/
+.augment/
+.claude/
+.codebuddy/
+.codewhale/
+.codex/
+.copilot/
+.continue/
+.cursor/
+.factory/
+.gemini/
+.harpo/
+.kilocode/
+.kite/
+.opencode/
+.qoder/
+.refact/
+.refract/
+.roo/
+.scribie/
+.trae/
+.warp/
+.windsurf/
+.github/prompts/
