@@ -271,7 +271,8 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | R1-02 | 🟡 | Experience/Education/Certification/Affiliation/LanguageProficiency با migration، projection عمومیِ published-only و CRUD Admin پیاده شد؛ QA مرورگر و دادهٔ واقعی باقی است. |
 | R1-03 | 🟡 | ResearchProject/ResearchInterest/Publication با migration، projection عمومیِ published-only و CRUD Admin پیاده شد؛ routeهای عمومی اختصاصی، frontend و دادهٔ تأییدشده باقی است. |
 | R1-04 | 🟡 | ResumeVariant با migration، CRUD Admin و public projection فقط برای `published + active asset` پیاده شد؛ فایل‌های واقعی و QA دانلود باقی است. |
-| R1-05 تا R1-10 | ⬜ | انجام‌نشده. |
+| R1-05 | 🟡 | `apps.siteconfig` با migration، API عمومی published-only و CRUD محافظت‌شده برای settings/navigation/redirect پیاده شد؛ اتصال Frontend و اجرای redirect باقی است. |
+| R1-06 تا R1-10 | ⬜ | انجام‌نشده. |
 
 ### R0 — تثبیت Runtime و قراردادهای شکسته
 

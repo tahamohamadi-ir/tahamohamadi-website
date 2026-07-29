@@ -21,6 +21,7 @@ urlpatterns = [
     path("public/portfolio/", include("apps.portfolio.urls_public")),
     path("public/workflow/", include("apps.workflow.urls_public")),
     path("public/identity/", include("apps.identity.urls_public")),
+    path("public/site/", include("apps.siteconfig.urls_public")),
     path("admin/", include("apps.core.urls_admin")),
     path("admin/pages/", include("apps.cms.urls_admin")),
     path("admin/media/", include("apps.media.urls_admin")),
@@ -28,4 +29,5 @@ urlpatterns = [
     path("admin/portfolio/", include("apps.portfolio.urls_admin")),
     path("admin/workflow/", include("apps.workflow.urls_admin")),
     path("admin/identity/", include("apps.identity.urls_admin")),
+    path("admin/site/", include("apps.siteconfig.urls_admin")),
 ]

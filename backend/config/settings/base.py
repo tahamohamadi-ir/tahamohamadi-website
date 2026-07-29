@@ -63,6 +63,7 @@ LOCAL_APPS = [
     "apps.portfolio",
     "apps.workflow",
     "apps.identity",
+    "apps.siteconfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

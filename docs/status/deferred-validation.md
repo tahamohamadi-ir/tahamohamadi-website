@@ -73,6 +73,14 @@
 - [ ] بارگذاری فایل‌های رزومهٔ واقعی و QA دانلود در مرورگر؛ backend فقط variant
   منتشرشده با MediaAsset فعال را public می‌کند و هیچ فایل archive/draft را برنمی‌گرداند.
 
+## R1-05 — پیکربندی سایت
+
+- [x] تست قراردادی API عمومی و اعتبارسنجی لینک/redirect در `backend/tests/test_siteconfig_api.py`
+  روی PostgreSQL Compose اجرا شد؛ migration check و `manage.py check` نیز بدون issue گذشتند.
+- [ ] اتصال Header، Footer، metadata SEO و CTA فرانت‌اند به `/api/public/site/` و QA مرورگر در هر دو locale.
+- [ ] افزودن middleware/runtime برای اعمال `RedirectRule`‌های active، همراه با جلوگیری از loop و آزمون 301/302.
+- [ ] بازبینی هم‌زمانی ایجاد رکورد singleton برای `SiteSettings`؛ guard فعلی در ViewSet است و unique constraint دیتابیسی ندارد.
+
 ## R0-09 — Sentry instrumentation
 
 - [ ] ارسال خطای آزمایشی از server و client به پروژهٔ واقعی Sentry و تأیید scrub
