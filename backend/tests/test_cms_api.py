@@ -13,6 +13,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
 from apps.cms.models import Block, Page, Section
+from apps.identity.models import ResearchProject
 
 User = get_user_model()
 
@@ -394,6 +395,35 @@ class TestPublicPageEndpoint:
         )
         assert resp.status_code == 200
         assert resp.json()["slug_en"] == published_page.slug_en
+
+    def test_collection_block_resolves_published_identity_without_ids(self, api_client, db):
+        page = Page.objects.create(
+            slug_fa="مجموعه", slug_en="identity-collection", title_fa="مجموعه", title_en="Collection",
+            page_type="custom", status="published",
+        )
+        section = Section.objects.create(page=page, ordering=0, enabled=True)
+        Block.objects.create(
+            section=section, block_type="collection", ordering=0,
+            settings={"source": "research_projects", "filter": {"featured": True}, "limit": 3, "order": "newest"},
+        )
+        ResearchProject.objects.create(
+            slug_fa="پژوهش", slug_en="research", title_fa="پژوهش", title_en="Published research",
+            featured=True, status="published",
+        )
+        ResearchProject.objects.create(
+            slug_fa="پیش‌نویس", slug_en="draft", title_fa="پیش‌نویس", title_en="Draft research",
+            featured=True, status="draft",
+        )
+
+        response = api_client.get("/api/public/pages/identity-collection/?locale=en")
+
+        assert response.status_code == 200
+        items = response.json()["sections"][0]["blocks"][0]["settings"]["items"]
+        assert items == [{
+            "slug_fa": "پژوهش", "slug_en": "research", "title": "Published research",
+            "summary": "", "methodology": "", "featured": True, "published_at": None,
+        }]
+        assert "id" not in items[0]
 
 
 # ---------------------------------------------------------------------------

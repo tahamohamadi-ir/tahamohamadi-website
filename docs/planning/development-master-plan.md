@@ -276,7 +276,7 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | R1-07 | 🟡 | Admin CRUD منابع جدید اکنون filter/search/ordering و optimistic 409 دارد؛ QA session/CSRF و صفحه‌های Admin باقی است. |
 | R1-08 | 🟡 | seed idempotent برای identity/siteconfig فقط رکوردهای draft حداقلی و بدون دادهٔ تماس/سند/asset می‌سازد؛ بازبینی و انتشار واقعی باقی است. |
 | R1-09 | 🟡 | API محافظت‌شدهٔ `seed-review` وضعیت draft و کامل‌بودن دو locale را گزارش می‌کند و auto-publish را صریحاً ممنوع می‌سازد؛ UI checklist باقی است. |
-| R1-10 | ⬜ | انجام‌نشده. |
+| R1-10 | 🟡 | collection block اکنون source/filter/limit/order محدود دارد و منابع identity منتشرشده را بدون ID خام resolve می‌کند؛ renderer و sourceهای Blog/Portfolio باقی است. |
 
 ### R0 — تثبیت Runtime و قراردادهای شکسته
 

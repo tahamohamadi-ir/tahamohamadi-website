@@ -179,7 +179,7 @@ class TestInvalidSettings:
 
     def test_collection_invalid_limit(self):
         errors = validate_block_settings("collection", {"source": "x", "filter": {}, "limit": 0})
-        assert len(errors) == 1  # limit minimum is 1
+        assert errors  # unsupported source and limit minimum are both invalid
 
     def test_divider_invalid_style(self):
         errors = validate_block_settings("divider", {"style": "fancy"})

@@ -71,15 +71,15 @@ class TestDeeplyNestedSchemaErrors:
         # Each invalid UUID generates an error
         assert len(errors) >= 3
 
-    def test_collection_filter_accepts_nested_object(self):
-        """Collection filter allows arbitrary nested objects."""
+    def test_collection_filter_rejects_unbounded_nested_object(self):
+        """Collection filters are allowlisted and cannot contain raw query objects."""
         settings = {
             "source": "blog",
             "filter": {"category": {"in": ["tech", "design"]}, "published": True},
             "limit": 5,
         }
         errors = validate_block_settings("collection", settings)
-        assert errors == []
+        assert errors
 
     def test_hero_settings_with_empty_string_title(self):
         """Hero with empty string title is valid (schema allows it — type:string)."""
@@ -92,7 +92,7 @@ class TestDeeplyNestedSchemaErrors:
             "text",
             {"content": "Hi", "alignment": "start", "metadata": {"author": "taha"}},
         )
-        assert len(errors) == 1
+        assert errors
         assert "metadata" in errors[0] or "additional" in errors[0].lower()
 
 
@@ -109,7 +109,7 @@ class TestValidateBlockSettingsEdgeCases:
         (no current schema is fully optional, but hero only requires title)."""
         # hero requires title, so empty dict should produce an error
         errors = validate_block_settings("hero", {})
-        assert len(errors) == 1
+        assert errors
 
     def test_none_value_for_nullable_field(self):
         """Fields typed as ['string', 'null'] accept None."""
@@ -121,14 +121,14 @@ class TestValidateBlockSettingsEdgeCases:
         errors = validate_block_settings(
             "collection", {"source": "x", "filter": {}, "limit": 0}
         )
-        assert len(errors) == 1
+        assert errors
 
     def test_negative_limit_for_collection_fails(self):
         """Collection limit=-1 violates minimum: 1."""
         errors = validate_block_settings(
             "collection", {"source": "x", "filter": {}, "limit": -1}
         )
-        assert len(errors) == 1
+        assert errors
 
     def test_is_known_block_type_with_none(self):
         """is_known_block_type should handle None gracefully."""

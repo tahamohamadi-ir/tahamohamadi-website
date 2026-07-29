@@ -21,6 +21,14 @@ from jsonschema import Draft7Validator, ValidationError as JsonSchemaValidationE
 # ---------------------------------------------------------------------------
 _UUID_PATTERN = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 
+_COLLECTION_FILTERS_BY_SOURCE = {
+    "portfolio": {"featured"},
+    "skills": {"category"},
+    "research_projects": {"featured"},
+    "publications": {"publication_type"},
+    "resumes": {"variant_type"},
+}
+
 # ---------------------------------------------------------------------------
 # Block schemas: maps block_type name → JSON Schema (Draft 7)
 # ---------------------------------------------------------------------------
@@ -73,9 +81,23 @@ BLOCK_SCHEMAS: dict[str, dict] = {
     "collection": {
         "type": "object",
         "properties": {
-            "source": {"type": "string"},
-            "filter": {"type": "object"},
-            "limit": {"type": "integer", "minimum": 1},
+            "source": {"type": "string", "enum": [
+                "portfolio", "blog", "posts", "publications", "research_projects",
+                "research_interests", "skills", "experience", "education", "certifications",
+                "affiliations", "languages", "resumes",
+            ]},
+            "filter": {
+                "type": "object",
+                "properties": {
+                    "featured": {"type": "boolean"},
+                    "publication_type": {"type": "string", "enum": ["article", "book", "conference", "report", "manuscript"]},
+                    "variant_type": {"type": "string", "enum": ["academic", "industry", "general"]},
+                    "category": {"type": "string", "maxLength": 100},
+                },
+                "additionalProperties": False,
+            },
+            "limit": {"type": "integer", "minimum": 1, "maximum": 12},
+            "order": {"type": "string", "enum": ["default", "newest", "oldest"]},
         },
         "required": ["source", "filter", "limit"],
         "additionalProperties": False,
@@ -258,6 +280,14 @@ def validate_block_settings(block_type: str, settings: dict) -> list[str]:
         # Build a readable path like "settings.media_ids[0]"
         path = ".".join(str(p) for p in error.absolute_path) if error.absolute_path else "(root)"
         errors.append(f"{path}: {error.message}")
+
+    if block_type == "collection" and isinstance(settings, dict):
+        source = settings.get("source")
+        requested_filter = settings.get("filter", {})
+        if isinstance(requested_filter, dict):
+            invalid_filters = set(requested_filter) - _COLLECTION_FILTERS_BY_SOURCE.get(source, set())
+            if invalid_filters:
+                errors.append(f"filter: unsupported for source '{source}': {sorted(invalid_filters)}")
 
     return errors
 

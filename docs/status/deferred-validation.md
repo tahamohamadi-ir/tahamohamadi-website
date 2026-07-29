@@ -108,6 +108,12 @@
   هر دو locale بررسی می‌کند و `automatic_publish_allowed=false` را ثابت نگه می‌دارد.
 - [ ] ساخت UI checklist در Admin و اتصال workflow انتشار گروهی؛ endpoint سرور به‌تنهایی جایگزین تأیید انسانی نیست.
 
+## R1-10 — collectionهای CMS
+
+- [x] source/filter/limit/order برای collection محدود شده و API عمومی منابع identity منتشرشده را بدون UUID/raw model
+  resolve می‌کند؛ قرارداد با pytest PostgreSQL پوشش داده شد.
+- [ ] renderer فرانت‌اند و sourceهای Blog/Portfolio هنوز باید به دادهٔ resolved متصل شوند؛ collection فعلی در UI placeholder است.
+
 ## R0-09 — Sentry instrumentation
 
 - [ ] ارسال خطای آزمایشی از server و client به پروژهٔ واقعی Sentry و تأیید scrub
@@ -138,6 +144,9 @@
   نصب ندارد؛ تا افزودن ابزار به محیط توسعه، فقط compile/test اجرا شده است.
 
 ## ریسک محیط مشترک
+
+- [ ] اجرای دوبارهٔ کل collection backend پس از commitهای R1-05 تا R1-10؛ برای سرعت فقط مجموعهٔ متمرکز
+  118 تست CMS/identity/siteconfig/seed روی PostgreSQL Compose اجرا شد. اجرای کامل 730/730 مربوط به پیش از این برش‌هاست.
 
 - [ ] ورک‌تری دارای تغییرات گستردهٔ خارج از این برش است. فقط فایل‌های task-owned
   stage و commit می‌شوند؛ build یا تست کامل ممکن است به تغییرات مستقل وابسته باشد.

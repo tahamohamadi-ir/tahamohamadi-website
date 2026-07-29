@@ -200,5 +200,5 @@ class PublicPageView(APIView):
                 content_type=PROBLEM_CONTENT_TYPE,
             )
 
-        serializer = PublicPageSerializer(page)
+        serializer = PublicPageSerializer(page, context={"locale": locale, "request": request})
         return Response(serializer.data)

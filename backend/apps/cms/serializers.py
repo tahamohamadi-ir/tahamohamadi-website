@@ -18,6 +18,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from apps.cms.block_registry import is_known_block_type, validate_block_settings
+from apps.cms.collections import resolve_identity_collection
 from apps.cms.models import Block, Page, Section
 
 
@@ -213,11 +214,22 @@ class PublicBlockSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.UUIDField(read_only=True)
+    settings = serializers.SerializerMethodField()
 
     class Meta:
         model = Block
         fields = ["id", "block_type", "settings", "ordering"]
         read_only_fields = fields
+
+    def get_settings(self, block: Block) -> dict:
+        settings = block.settings.copy()
+        if block.block_type == "collection":
+            settings["items"] = resolve_identity_collection(
+                settings,
+                self.context.get("locale", "en"),
+                self.context.get("request"),
+            )
+        return settings
 
 
 class PublicSectionSerializer(serializers.ModelSerializer):
@@ -241,8 +253,9 @@ class PublicSectionSerializer(serializers.ModelSerializer):
             block
             for block in section.blocks.all().order_by("ordering")
             if is_known_block_type(block.block_type)
+            and not validate_block_settings(block.block_type, block.settings)
         ]
-        return PublicBlockSerializer(valid_blocks, many=True).data
+        return PublicBlockSerializer(valid_blocks, many=True, context=self.context).data
 
 
 class PublicPageSerializer(serializers.ModelSerializer):
