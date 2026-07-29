@@ -16,7 +16,20 @@ RUN apt-get update && \
         zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Test image: includes backend test and lint dependencies. It is selected only
+# by the `backend-test` Compose service, never by the production runtime.
+FROM base AS test
+
+COPY backend/requirements/base.txt backend/requirements/dev.txt ./requirements/
+RUN pip install --no-cache-dir -r requirements/dev.txt
+
+COPY backend/ .
+
+CMD ["pytest"]
+
+# Production image
+FROM base AS production
+
 COPY backend/requirements/prod.txt backend/requirements/base.txt ./requirements/
 RUN pip install --no-cache-dir -r requirements/prod.txt
 

@@ -4,6 +4,7 @@
 # Usage:
 #   docker compose -f docker-compose.dev.yml up -d
 #   cd frontend && npm run dev
+#   docker compose -f docker-compose.dev.yml --profile test run --rm backend-test
 #
 # Access:
 #   http://localhost:3000  → Next.js (local, hot reload)
@@ -58,6 +59,20 @@ services:
       retries: 3
       start_period: 30s
     restart: unless-stopped
+
+  backend-test:
+    profiles: ["test"]
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.backend
+      target: test
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: ["pytest"]
+    command: []
 
 volumes:
   postgres_data:

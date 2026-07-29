@@ -12,9 +12,8 @@
 
 ## R0-05 — Blog discovery عمومی
 
-- [ ] اجرای مجموعهٔ متمرکز pytest برای endpointهای `q` و `topics/` پس از تکمیل
-  تغییرات این برش. **Blocker فعلی:** interpreter `D:\Project\Taha\tahamohamadi-website\.venv\Scripts\python.exe`
-  فاقد ماژول `pytest` است (مشاهده در 2026-07-29).
+- [x] اجرای مجموعهٔ متمرکز pytest برای endpointهای `q` و `topics/`: 17 تست در
+  `tests/test_blog_public_api.py` روی PostgreSQL Compose در 2026-07-29 پاس شد.
 - [ ] اجرای `python manage.py check` برای backend. **Blocker فعلی:** همین
   interpreter فاقد Django است و فرمان راهنمای فعال‌سازی/install محیط backend را
   برگرداند (مشاهده در 2026-07-29).
@@ -37,8 +36,8 @@
 
 ## R0-06 — Media usage endpoint
 
-- [ ] اجرای pytest متمرکز برای `backend/tests/test_media_usage_api.py` پس از
-  آماده‌شدن محیط Django؛ همان blocker محیط backend در بخش R0-05 برقرار است.
+- [x] اجرای pytest متمرکز برای `backend/tests/test_media_usage_api.py`: یک تست
+  قراردادی روی PostgreSQL Compose در 2026-07-29 پاس شد.
 - [ ] گسترش `get_media_usage` برای رفرنس‌های Blog و Portfolio. endpoint فعلی
   فقط داده‌ای را برمی‌گرداند که service موجود از CMS page blocks پیدا می‌کند؛
   این محدودیت عمداً پنهان نشده است.
@@ -52,6 +51,14 @@
   اثبات نیست.
 - [ ] اجرای build production با source-map upload در CI و بررسی warningهای
   پیکربندی Sentry.
+
+## R0-08 — Backend test runtime
+
+- [x] فرمان تکرارپذیر `docker compose -f docker-compose.dev.yml --profile test run --rm backend-test`
+  روی PostgreSQL Compose فعال شد. اجرای متمرکز Blog و Media Usage در
+  2026-07-29، 18 تست را پاس کرد.
+- [ ] اجرای collection/integration کامل backend با همان فرمان و ثبت زمان/خروجی؛
+  اجرای متمرکز جایگزین این gate نیست.
 
 ## ریسک محیط مشترک
 

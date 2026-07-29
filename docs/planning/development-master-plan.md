@@ -256,10 +256,10 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | R0-02 | ⬜ | `CustomCursor` همچنان در locale layout موجود است؛ فایل layout تغییرات مستقل دارد و نیازمند QA hydration است. |
 | R0-03 | 🟡 | locale واقعی و تفکیک 404 از failure در commit `87360f6` پیاده شد؛ browser smoke باقی است. |
 | R0-04 | ⬜ | `PublicLayout` و صفحات عمومی ownership تکراری `main` دارند؛ وابسته به تثبیت semantic Hero در R0-10 است. |
-| R0-05 | 🟡 | public topics، `q` و URL state در commit `1f8bce2` پیاده شد؛ pytest backend و browser/a11y QA باقی است. |
-| R0-06 | 🟡 | endpoint usage در commit `0905b32` فعال شد؛ service فعلاً فقط CMS page blocks را پوشش می‌دهد و تست integration backend باقی است. |
+| R0-05 | 🟡 | public topics، `q` و URL state در commit `1f8bce2` پیاده شد؛ 17 pytest مرتبط روی PostgreSQL Compose پاس شد و browser/a11y QA باقی است. |
+| R0-06 | 🟡 | endpoint usage در commit `0905b32` فعال شد و contract test آن روی PostgreSQL Compose پاس شد؛ service فعلاً فقط CMS page blocks را پوشش می‌دهد. |
 | R0-07 | ⬜ | انجام‌نشده. |
-| R0-08 | ⬜ | انجام‌نشده؛ محیط backend فعلی Django و pytest ندارد. |
+| R0-08 | 🟡 | target تست Compose با فرمان واحد فعال و 18 تست مرتبط روی PostgreSQL Compose پاس شد؛ collection/integration کامل هنوز اجرا نشده است. |
 | R0-09 | 🟡 | scrub صریح Sentry و تست واحد آن در حال پیاده‌سازی است؛ ارسال واقعی server/client به پروژهٔ Sentry نیازمند DSN غیرمحلی است. |
 | R0-10 | ⬜ | ۵ failure فعلی BlockRenderer ثبت شده؛ فایل‌های Hero/Quote تغییرات مستقل دارند و باید semantic contract را بازگردانند. |
 
