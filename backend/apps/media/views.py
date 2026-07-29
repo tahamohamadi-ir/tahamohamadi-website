@@ -26,7 +26,12 @@ from apps.media.serializers import (
     MediaAssetUpdateSerializer,
     MediaUploadSerializer,
 )
-from apps.media.services import UploadValidationError, get_orphan_media_ids, upload_media
+from apps.media.services import (
+    UploadValidationError,
+    get_media_usage,
+    get_orphan_media_ids,
+    upload_media,
+)
 
 
 class AdminMediaViewSet(ModelViewSet):
@@ -174,6 +179,16 @@ class AdminMediaViewSet(ModelViewSet):
 
         serializer = MediaAssetSerializer(asset, context={"request": request})
         return Response(serializer.data)
+
+    # ------------------------------------------------------------------
+    # Usage (custom action)
+    # ------------------------------------------------------------------
+
+    @action(detail=True, methods=["get"], url_path="usage")
+    def usage(self, request, pk=None):
+        """Return content records that currently reference this asset."""
+        asset = self.get_object()
+        return Response(get_media_usage(asset.id))
 
     # ------------------------------------------------------------------
     # Orphans report (custom action)

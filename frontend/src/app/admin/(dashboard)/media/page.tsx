@@ -101,10 +101,6 @@ async function fetchMedia(params: {
 
 async function fetchMediaUsage(id: string): Promise<UsageRecord[]> {
     const baseUrl = getApiBaseUrl();
-    // The backend doesn't have a dedicated usage endpoint per asset,
-    // so we'll use a custom approach: fetch usage from detail if available,
-    // otherwise fall back to empty. For now we call the media detail which
-    // doesn't include usage by default—so we handle gracefully.
     try {
         const res = await fetch(`${baseUrl}/api/admin/media/${id}/usage/`, {
             credentials: "include",

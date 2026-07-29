@@ -35,6 +35,16 @@
   را تغییر داده‌اند. این فایل‌های component متعلق به تغییرات موجود ورک‌تری‌اند
   و در برش سریع R0-05 دست‌کاری نشده‌اند.
 
+## R0-06 — Media usage endpoint
+
+- [ ] اجرای pytest متمرکز برای `backend/tests/test_media_usage_api.py` پس از
+  آماده‌شدن محیط Django؛ همان blocker محیط backend در بخش R0-05 برقرار است.
+- [ ] گسترش `get_media_usage` برای رفرنس‌های Blog و Portfolio. endpoint فعلی
+  فقط داده‌ای را برمی‌گرداند که service موجود از CMS page blocks پیدا می‌کند؛
+  این محدودیت عمداً پنهان نشده است.
+- [ ] اجرای integration UI با session/CSRF واقعی و بررسی نمایش usage و warning
+  archive در Admin.
+
 ## ریسک محیط مشترک
 
 - [ ] ورک‌تری دارای تغییرات گستردهٔ خارج از این برش است. فقط فایل‌های task-owned
