@@ -78,7 +78,8 @@
 - [x] تست قراردادی API عمومی و اعتبارسنجی لینک/redirect در `backend/tests/test_siteconfig_api.py`
   روی PostgreSQL Compose اجرا شد؛ migration check و `manage.py check` نیز بدون issue گذشتند.
 - [ ] اتصال Header، Footer، metadata SEO و CTA فرانت‌اند به `/api/public/site/` و QA مرورگر در هر دو locale.
-- [ ] افزودن middleware/runtime برای اعمال `RedirectRule`‌های active، همراه با جلوگیری از loop و آزمون 301/302.
+- [x] middleware برای `RedirectRule`‌های active با آزمون 301/302، جلوگیری از loop، مقصد ناسالم و روش غیر GET/HEAD
+  در PostgreSQL Compose پیاده و بررسی شد.
 - [ ] بازبینی هم‌زمانی ایجاد رکورد singleton برای `SiteSettings`؛ guard فعلی در ViewSet است و unique constraint دیتابیسی ندارد.
 
 ## R1-06 — aggregate عمومی
