@@ -38,21 +38,21 @@ Thumbs.db
 *.userosscache
 *.sln.docstates
 
-# AI Assistants & IDE Tools
-.kiro/
+# AI Assistants & Agent IDE Directories
 .agents/
 .augment/
 .claude/
 .codebuddy/
 .codewhale/
 .codex/
-.copilot/
 .continue/
+.copilot/
 .cursor/
 .factory/
 .gemini/
 .harpo/
 .kilocode/
+.kiro/
 .kite/
 .opencode/
 .qoder/
@@ -64,3 +64,4 @@ Thumbs.db
 .warp/
 .windsurf/
 .github/prompts/
+docs/now/
