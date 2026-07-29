@@ -10,7 +10,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from apps.core.exceptions import build_problem, PROBLEM_CONTENT_TYPE
 from apps.core.services import ConflictError, save_with_optimistic_lock
 
-from apps.identity.models import SiteProfile, Skill, SocialLink
+from apps.identity.models import (
+    Affiliation, Certification, Education, Experience, LanguageProficiency,
+    SiteProfile, Skill, SocialLink,
+)
 from apps.identity.serializers import (
     PublicIdentitySerializer,
     PublicSkillSerializer,
@@ -18,6 +21,16 @@ from apps.identity.serializers import (
     SiteProfileAdminSerializer,
     SkillAdminSerializer,
     SocialLinkAdminSerializer,
+    AffiliationAdminSerializer,
+    CertificationAdminSerializer,
+    EducationAdminSerializer,
+    ExperienceAdminSerializer,
+    LanguageProficiencyAdminSerializer,
+    PublicAffiliationSerializer,
+    PublicCertificationSerializer,
+    PublicEducationSerializer,
+    PublicExperienceSerializer,
+    PublicLanguageProficiencySerializer,
 )
 
 
@@ -81,6 +94,36 @@ class AdminSkillViewSet(IdentityAdminViewSet):
     search_fields = ["name_fa", "name_en", "category_fa", "category_en"]
 
 
+class AdminExperienceViewSet(IdentityAdminViewSet):
+    queryset = Experience.objects.all()
+    serializer_class = ExperienceAdminSerializer
+    search_fields = ["organization_fa", "organization_en", "title_fa", "title_en"]
+
+
+class AdminEducationViewSet(IdentityAdminViewSet):
+    queryset = Education.objects.all()
+    serializer_class = EducationAdminSerializer
+    search_fields = ["institution_fa", "institution_en", "degree_fa", "degree_en"]
+
+
+class AdminCertificationViewSet(IdentityAdminViewSet):
+    queryset = Certification.objects.all()
+    serializer_class = CertificationAdminSerializer
+    search_fields = ["title_fa", "title_en", "issuer_fa", "issuer_en"]
+
+
+class AdminAffiliationViewSet(IdentityAdminViewSet):
+    queryset = Affiliation.objects.all()
+    serializer_class = AffiliationAdminSerializer
+    search_fields = ["organization_fa", "organization_en", "role_fa", "role_en"]
+
+
+class AdminLanguageProficiencyViewSet(IdentityAdminViewSet):
+    queryset = LanguageProficiency.objects.all()
+    serializer_class = LanguageProficiencyAdminSerializer
+    search_fields = ["name_fa", "name_en"]
+
+
 class PublicIdentityView(APIView):
     permission_classes = [AllowAny]
     authentication_classes: list = []
@@ -91,7 +134,10 @@ class PublicIdentityView(APIView):
             locale = "en"
         profile = SiteProfile.objects.filter(status="published").select_related("portrait").first()
         if profile is None:
-            return Response({"profile": None, "social_links": [], "skills": []})
+            return Response({
+                "profile": None, "social_links": [], "skills": [], "experience": [],
+                "education": [], "certifications": [], "affiliations": [], "languages": [],
+            })
         context = {"locale": locale, "request": request}
         return Response({
             "profile": PublicIdentitySerializer(profile, context=context).data,
@@ -101,4 +147,9 @@ class PublicIdentityView(APIView):
             "skills": PublicSkillSerializer(
                 Skill.objects.filter(status="published"), many=True, context=context
             ).data,
+            "experience": PublicExperienceSerializer(Experience.objects.filter(status="published"), many=True, context=context).data,
+            "education": PublicEducationSerializer(Education.objects.filter(status="published"), many=True, context=context).data,
+            "certifications": PublicCertificationSerializer(Certification.objects.filter(status="published"), many=True, context=context).data,
+            "affiliations": PublicAffiliationSerializer(Affiliation.objects.filter(status="published"), many=True, context=context).data,
+            "languages": PublicLanguageProficiencySerializer(LanguageProficiency.objects.filter(status="published"), many=True, context=context).data,
         })

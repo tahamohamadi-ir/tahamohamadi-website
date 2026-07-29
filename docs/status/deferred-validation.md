@@ -56,6 +56,12 @@
 - [ ] QA مرورگر public identity در هر دو locale و تأیید محتوای واقعی؛ endpoint
   در نبود profile منتشرشده صریحاً empty state برمی‌گرداند و fallback بین localeها ندارد.
 
+## R1-02 — تجربه و صلاحیت‌ها
+
+- [ ] QA مرورگر public identity در هر دو locale، به‌ویژه timeline و نمایش تاریخ‌ها؛
+  projection backend فقط رکوردهای published را برمی‌گرداند و دادهٔ شخصی (phone/reference)
+  در مدل یا serializer عمومی وجود ندارد.
+
 ## R0-09 — Sentry instrumentation
 
 - [ ] ارسال خطای آزمایشی از server و client به پروژهٔ واقعی Sentry و تأیید scrub

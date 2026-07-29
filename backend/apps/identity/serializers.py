@@ -1,6 +1,9 @@
 from rest_framework import serializers
 
-from apps.identity.models import SiteProfile, Skill, SocialLink
+from apps.identity.models import (
+    Affiliation, Certification, Education, Experience, LanguageProficiency,
+    SiteProfile, Skill, SocialLink,
+)
 from apps.media.serializers import MediaAssetSerializer
 
 
@@ -80,3 +83,87 @@ class SocialLinkAdminSerializer(IdentityAdminSerializer):
 class SkillAdminSerializer(IdentityAdminSerializer):
     class Meta(IdentityAdminSerializer.Meta):
         model = Skill
+
+
+class ExperienceAdminSerializer(IdentityAdminSerializer):
+    class Meta(IdentityAdminSerializer.Meta):
+        model = Experience
+
+
+class EducationAdminSerializer(IdentityAdminSerializer):
+    class Meta(IdentityAdminSerializer.Meta):
+        model = Education
+
+
+class CertificationAdminSerializer(IdentityAdminSerializer):
+    class Meta(IdentityAdminSerializer.Meta):
+        model = Certification
+
+
+class AffiliationAdminSerializer(IdentityAdminSerializer):
+    class Meta(IdentityAdminSerializer.Meta):
+        model = Affiliation
+
+
+class LanguageProficiencyAdminSerializer(IdentityAdminSerializer):
+    class Meta(IdentityAdminSerializer.Meta):
+        model = LanguageProficiency
+
+
+class LocalizedPublicSerializer(serializers.ModelSerializer):
+    """Projects bilingual fields to the requested locale without fallback."""
+
+    def localized(self, instance, field):
+        return getattr(instance, f"{field}_{self.context['locale']}")
+
+
+class PublicExperienceSerializer(LocalizedPublicSerializer):
+    organization = serializers.SerializerMethodField()
+    title = serializers.SerializerMethodField()
+    summary = serializers.SerializerMethodField()
+    class Meta:
+        model = Experience
+        fields = ["organization", "title", "summary", "started_on", "ended_on"]
+    get_organization = lambda self, obj: self.localized(obj, "organization")
+    get_title = lambda self, obj: self.localized(obj, "title")
+    get_summary = lambda self, obj: self.localized(obj, "summary")
+
+
+class PublicEducationSerializer(LocalizedPublicSerializer):
+    institution = serializers.SerializerMethodField()
+    degree = serializers.SerializerMethodField()
+    field = serializers.SerializerMethodField()
+    class Meta:
+        model = Education
+        fields = ["institution", "degree", "field", "started_on", "ended_on"]
+    get_institution = lambda self, obj: self.localized(obj, "institution")
+    get_degree = lambda self, obj: self.localized(obj, "degree")
+    get_field = lambda self, obj: self.localized(obj, "field")
+
+
+class PublicCertificationSerializer(LocalizedPublicSerializer):
+    title = serializers.SerializerMethodField()
+    issuer = serializers.SerializerMethodField()
+    class Meta:
+        model = Certification
+        fields = ["title", "issuer", "credential_url", "issued_on", "expires_on"]
+    get_title = lambda self, obj: self.localized(obj, "title")
+    get_issuer = lambda self, obj: self.localized(obj, "issuer")
+
+
+class PublicAffiliationSerializer(LocalizedPublicSerializer):
+    organization = serializers.SerializerMethodField()
+    role = serializers.SerializerMethodField()
+    class Meta:
+        model = Affiliation
+        fields = ["organization", "role", "url"]
+    get_organization = lambda self, obj: self.localized(obj, "organization")
+    get_role = lambda self, obj: self.localized(obj, "role")
+
+
+class PublicLanguageProficiencySerializer(LocalizedPublicSerializer):
+    name = serializers.SerializerMethodField()
+    class Meta:
+        model = LanguageProficiency
+        fields = ["name", "proficiency"]
+    get_name = lambda self, obj: self.localized(obj, "name")

@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
-from apps.identity.models import SiteProfile, Skill, SocialLink
+from apps.identity.models import Experience, SiteProfile, Skill, SocialLink
 
 
 @pytest.mark.django_db
@@ -21,7 +21,8 @@ def test_public_identity_suppresses_drafts_and_localizes():
     assert response.json() == {
         "profile": {"name": "نام فارسی", "headline": "تیتر", "bio": "زندگینامه", "public_email": "public@example.test", "portrait": None},
         "social_links": [{"label": "گیت‌هاب", "url": "https://github.com/example"}],
-        "skills": [{"name": "پایتون", "category": "فنی"}],
+        "skills": [{"name": "پایتون", "category": "فنی"}], "experience": [],
+        "education": [], "certifications": [], "affiliations": [], "languages": [],
     }
 
 
@@ -30,7 +31,8 @@ def test_public_identity_has_explicit_empty_state_for_draft_profile():
     SiteProfile.objects.create(name_fa="draft", name_en="draft", status="draft")
 
     assert APIClient().get("/api/public/identity/").json() == {
-        "profile": None, "social_links": [], "skills": []
+        "profile": None, "social_links": [], "skills": [], "experience": [],
+        "education": [], "certifications": [], "affiliations": [], "languages": [],
     }
 
 
@@ -62,3 +64,24 @@ def test_identity_admin_crud_requires_auth_and_enforces_optimistic_locking():
     )
     assert stale.status_code == 409
     assert stale.json()["current_version"] == 2
+
+
+@pytest.mark.django_db
+def test_public_identity_includes_only_published_experience_in_requested_locale():
+    SiteProfile.objects.create(name_fa="نام", name_en="Name", status="published")
+    Experience.objects.create(
+        organization_fa="سازمان", organization_en="Organization", title_fa="نقش",
+        title_en="Role", summary_fa="خلاصه", summary_en="Summary",
+        started_on="2025-01-01", status="published",
+    )
+    Experience.objects.create(
+        organization_fa="پیش‌نویس", organization_en="Draft", title_fa="پیش‌نویس",
+        title_en="Draft", started_on="2024-01-01", status="draft",
+    )
+
+    response = APIClient().get("/api/public/identity/?locale=fa")
+
+    assert response.json()["experience"] == [{
+        "organization": "سازمان", "title": "نقش", "summary": "خلاصه",
+        "started_on": "2025-01-01", "ended_on": None,
+    }]
