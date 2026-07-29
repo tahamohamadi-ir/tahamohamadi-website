@@ -9,7 +9,7 @@ Creates:
 - Sample pages (home, about, research, contact)
 - Sample articles with topics
 - Sample case studies with technologies
-- Sample media assets (placeholder records)
+- No placeholder media records (real media must be uploaded)
 """
 
 import uuid
@@ -44,11 +44,11 @@ class Command(BaseCommand):
 
         self.stdout.write("Seeding database...")
         self._create_superuser()
-        media_assets = self._create_media_assets()
+        self._remove_broken_seed_media()
         self._create_pages()
         topics = self._create_topics()
-        self._create_articles(topics, media_assets)
-        self._create_case_studies(media_assets)
+        self._create_articles(topics, [])
+        self._create_case_studies([])
         self.stdout.write(self.style.SUCCESS("Database seeded successfully!"))
 
     def _flush(self):
@@ -78,73 +78,22 @@ class Command(BaseCommand):
         )
         self.stdout.write("  Created superuser: admin / admin123!Dev")
 
-    def _create_media_assets(self):
-        """Create placeholder media asset records."""
-        assets = []
-        media_data = [
-            {
-                "original_filename": "hero-banner.jpg",
-                "mime_type": "image/jpeg",
-                "file_size": 245000,
-                "width": 1920,
-                "height": 1080,
-                "checksum": "a1b2c3d4e5f6" + "0" * 52,
-                "alt_text_fa": "تصویر بنر اصلی سایت",
-                "alt_text_en": "Website main hero banner",
-                "caption_fa": "",
-                "caption_en": "",
-            },
-            {
-                "original_filename": "profile-photo.jpg",
-                "mime_type": "image/jpeg",
-                "file_size": 120000,
-                "width": 800,
-                "height": 800,
-                "checksum": "b2c3d4e5f6a1" + "0" * 52,
-                "alt_text_fa": "عکس پروفایل طاها محمدی",
-                "alt_text_en": "Taha Mohamadi profile photo",
-                "caption_fa": "",
-                "caption_en": "",
-            },
-            {
-                "original_filename": "research-diagram.png",
-                "mime_type": "image/png",
-                "file_size": 350000,
-                "width": 1200,
-                "height": 800,
-                "checksum": "c3d4e5f6a1b2" + "0" * 52,
-                "alt_text_fa": "نمودار تحقیقاتی",
-                "alt_text_en": "Research diagram",
-                "caption_fa": "نمودار ساختار تحقیق",
-                "caption_en": "Research structure diagram",
-            },
-            {
-                "original_filename": "project-screenshot.png",
-                "mime_type": "image/png",
-                "file_size": 480000,
-                "width": 1440,
-                "height": 900,
-                "checksum": "d4e5f6a1b2c3" + "0" * 52,
-                "alt_text_fa": "تصویر صفحه پروژه",
-                "alt_text_en": "Project screenshot",
-                "caption_fa": "",
-                "caption_en": "",
-            },
-        ]
+    def _remove_broken_seed_media(self) -> int:
+        """Remove obsolete seed records whose placeholder files do not exist.
 
-        for data in media_data:
-            asset, created = MediaAsset.objects.get_or_create(
-                checksum=data["checksum"],
-                defaults={
-                    "file": f"media/seed/{data['original_filename']}",
-                    **data,
-                },
-            )
-            assets.append(asset)
-            if created:
-                self.stdout.write(f"  Created media: {data['original_filename']}")
+        Only the historical ``media/seed/`` namespace is considered, so real
+        uploads are untouched. Foreign keys use their configured safe deletion
+        behavior (for example, featured images are set to null).
+        """
+        removed = 0
+        for asset in MediaAsset.objects.filter(file__startswith="media/seed/").iterator():
+            if not asset.file.storage.exists(asset.file.name):
+                asset.delete()
+                removed += 1
 
-        return assets
+        if removed:
+            self.stdout.write(f"  Removed {removed} broken seed media record(s).")
+        return removed
 
     def _create_pages(self):
         """Create sample CMS pages with sections and blocks."""

@@ -43,6 +43,14 @@
 - [ ] اجرای integration UI با session/CSRF واقعی و بررسی نمایش usage و warning
   archive در Admin.
 
+## R0-07 — رسانهٔ seed
+
+- [x] seed_data دیگر placeholder media تولید نمی‌کند و cleanup امن فقط رکوردهای
+  گمشدهٔ namespace تاریخی `media/seed/` را حذف می‌کند؛ `tests/test_seed_data.py`
+  در PostgreSQL Compose پاس شد.
+- [ ] بارگذاری و تأیید محتوای واقعی هم‌locale (portrait/project/publication/OG)
+  پیش از release عمومی؛ این برش عمداً هیچ asset جایگزین یا ساختگی ایجاد نمی‌کند.
+
 ## R0-09 — Sentry instrumentation
 
 - [ ] ارسال خطای آزمایشی از server و client به پروژهٔ واقعی Sentry و تأیید scrub
