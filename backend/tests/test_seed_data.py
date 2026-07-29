@@ -1,6 +1,8 @@
 """Tests for safe cleanup of obsolete development seed media."""
 
 import pytest
+from django.contrib.auth import get_user_model
+from rest_framework.test import APIClient
 
 from apps.core.management.commands.seed_data import Command
 from apps.identity.models import SiteProfile
@@ -41,3 +43,18 @@ def test_identity_and_siteconfig_seed_records_are_idempotent_and_draft_only():
     assert SiteSettings.objects.filter(status="draft").count() == 1
     assert NavigationItem.objects.filter(label_en="Home", status="draft").count() == 1
     assert not SiteProfile.objects.exclude(public_email="").exists()
+
+
+@pytest.mark.django_db
+def test_admin_seed_review_requires_auth_and_never_allows_automatic_publish():
+    Command()._create_identity_and_siteconfig_drafts()
+    client = APIClient()
+    assert client.get("/api/admin/seed-review/").status_code == 403
+
+    client.force_authenticate(get_user_model().objects.create_user(username="seed-reviewer"))
+    response = client.get("/api/admin/seed-review/")
+
+    assert response.status_code == 200
+    assert response.json()["automatic_publish_allowed"] is False
+    assert response.json()["seed_record_count"] == 3
+    assert response.json()["issues"] == []

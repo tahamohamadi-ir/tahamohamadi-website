@@ -18,6 +18,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.exceptions import problem_json_response
+from apps.core.seed_review import seed_review_report
 from apps.core.serializers import ContactMessageSerializer
 from apps.core.throttling import LoginRateThrottle
 
@@ -242,6 +243,15 @@ class AdminDashboardView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class AdminSeedReviewView(APIView):
+    """Return the manual-review gate for data created by ``seed_data``."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request) -> Response:
+        return Response(seed_review_report(), status=status.HTTP_200_OK)
 
 
 # --- Plain-Django error handlers (wired in config/urls.py) ------------------
