@@ -3,12 +3,15 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from "@sentry/nextjs";
+import { scrubSentryEvent } from "./src/lib/sentry-scrubbing";
 
 Sentry.init({
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
     // Only initialize if DSN is provided
     enabled: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
+    sendDefaultPii: false,
+    beforeSend: scrubSentryEvent,
 
     // Capture 10% of transactions for performance monitoring in production
     tracesSampleRate: 0.1,

@@ -45,6 +45,14 @@
 - [ ] اجرای integration UI با session/CSRF واقعی و بررسی نمایش usage و warning
   archive در Admin.
 
+## R0-09 — Sentry instrumentation
+
+- [ ] ارسال خطای آزمایشی از server و client به پروژهٔ واقعی Sentry و تأیید scrub
+  شدن payload در dashboard. این کار بدون DSN و دسترسی به پروژهٔ Sentry قابل
+  اثبات نیست.
+- [ ] اجرای build production با source-map upload در CI و بررسی warningهای
+  پیکربندی Sentry.
+
 ## ریسک محیط مشترک
 
 - [ ] ورک‌تری دارای تغییرات گستردهٔ خارج از این برش است. فقط فایل‌های task-owned
