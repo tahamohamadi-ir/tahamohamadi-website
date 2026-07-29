@@ -273,7 +273,8 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | R1-04 | 🟡 | ResumeVariant با migration، CRUD Admin و public projection فقط برای `published + active asset` پیاده شد؛ فایل‌های واقعی و QA دانلود باقی است. |
 | R1-05 | 🟡 | `apps.siteconfig` با migration، API عمومی published-only و CRUD محافظت‌شده برای settings/navigation/redirect پیاده شد؛ اتصال Frontend و اجرای redirect باقی است. |
 | R1-06 | 🟡 | aggregate عمومی site+identity با ETag/Cache-Control و suppress ترجمهٔ ناقص پیاده شد؛ resource endpointهای تفصیلی و اتصال Frontend باقی است. |
-| R1-07 تا R1-10 | ⬜ | انجام‌نشده. |
+| R1-07 | 🟡 | Admin CRUD منابع جدید اکنون filter/search/ordering و optimistic 409 دارد؛ QA session/CSRF و صفحه‌های Admin باقی است. |
+| R1-08 تا R1-10 | ⬜ | انجام‌نشده. |
 
 ### R0 — تثبیت Runtime و قراردادهای شکسته
 

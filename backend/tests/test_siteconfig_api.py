@@ -71,3 +71,27 @@ def test_site_aggregate_omits_incomplete_locale_records_and_supports_etag():
     assert response.json()["identity"]["profile"] is None
     assert response["Cache-Control"] == "public, max-age=60, stale-while-revalidate=300"
     assert client.get("/api/public/site/aggregate/?locale=fa", HTTP_IF_NONE_MATCH=response["ETag"]).status_code == 304
+
+
+@pytest.mark.django_db
+def test_site_config_admin_supports_filter_search_ordering_and_optimistic_locking():
+    client = APIClient()
+    user = get_user_model().objects.create_user(username="siteconfig-list-admin")
+    client.force_authenticate(user)
+    for label, ordering, status in (("Home later", 2, "published"), ("Home first", 1, "published"), ("Draft", 0, "draft")):
+        assert client.post(
+            "/api/admin/site/navigation/",
+            {"label_fa": label, "label_en": label, "href": "/en", "location": "header", "ordering": ordering, "status": status},
+            format="json",
+        ).status_code == 201
+
+    response = client.get("/api/admin/site/navigation/?status=published&search=Home&ordering=ordering")
+
+    assert response.status_code == 200
+    assert [item["label_en"] for item in response.json()["results"]] == ["Home first", "Home later"]
+    item = response.json()["results"][0]
+    updated = client.patch(
+        f"/api/admin/site/navigation/{item['id']}/", {"label_en": "Updated", "version": item["version"]}, format="json"
+    )
+    assert updated.status_code == 200
+    assert updated.json()["version"] == 2

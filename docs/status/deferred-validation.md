@@ -89,6 +89,13 @@
 - [ ] سنجش query-count و سیاست نهایی CDN/revalidation در محیط production؛ TTL اولیه 60 ثانیه با
   `stale-while-revalidate=300` است و هنوز با ترافیک واقعی اندازه‌گیری نشده است.
 
+## R1-07 — Admin CRUD
+
+- [x] منابع جدید `identity` و `siteconfig` از یک قرارداد Admin برای filter/search/ordering و optimistic
+  locking استفاده می‌کنند؛ تست متمرکز DRF آن را روی PostgreSQL Compose پوشش می‌دهد.
+- [ ] QA واقعی session/CSRF، pagination و keyboard در صفحه‌های Admin و اتصال فرم‌های Frontend؛
+  تست فعلی با `force_authenticate` فقط contract سرور را پوشش می‌دهد.
+
 ## R0-09 — Sentry instrumentation
 
 - [ ] ارسال خطای آزمایشی از server و client به پروژهٔ واقعی Sentry و تأیید scrub
