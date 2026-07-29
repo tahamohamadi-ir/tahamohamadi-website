@@ -18,6 +18,7 @@ Requirements:
 
 from __future__ import annotations
 
+import secrets
 import uuid
 from dataclasses import dataclass
 from typing import Any
@@ -940,6 +941,9 @@ def generate_preview_token(entity, locale: str, user: Any = None) -> str:
         "ct": ct.pk,
         "oid": str(entity.pk),
         "loc": locale,
+        # TimestampSigner timestamps are second-granular.  A nonce keeps
+        # independently issued tokens distinct within the same second.
+        "nonce": secrets.token_urlsafe(16),
     }
 
     token = signing.dumps(payload, salt=_PREVIEW_TOKEN_SALT)
@@ -979,8 +983,16 @@ def validate_preview_token(token: str) -> PreviewTokenData | None:
     if token in _revoked_tokens:
         return None
 
-    # Check database revocation (authoritative, survives restarts)
-    if PreviewToken.objects.filter(token=token, revoked=True).exists():
+    # The persisted record is authoritative for revocation and expiry.  This
+    # also rejects signatures for tokens that were never issued by this app.
+    token_record = PreviewToken.objects.filter(token=token).only(
+        "expires_at", "revoked"
+    ).first()
+    if (
+        token_record is None
+        or token_record.revoked
+        or token_record.expires_at <= timezone.now()
+    ):
         # Populate in-memory cache for subsequent checks
         _revoked_tokens.add(token)
         return None

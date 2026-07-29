@@ -15,6 +15,7 @@ from typing import Any
 
 from django.contrib.contenttypes.models import ContentType
 from django.core import signing
+from django.utils import timezone
 
 from apps.workflow.services import (
     PreviewTokenData,
@@ -70,8 +71,16 @@ def validate_preview_token(
             return False
         return None
 
-    # Check database revocation (authoritative)
-    if PreviewToken.objects.filter(token=token, revoked=True).exists():
+    # The persisted record is authoritative for revocation and expiry. This
+    # rejects a validly signed token that has been deleted or never issued.
+    token_record = PreviewToken.objects.filter(token=token).only(
+        "expires_at", "revoked"
+    ).first()
+    if (
+        token_record is None
+        or token_record.revoked
+        or token_record.expires_at <= timezone.now()
+    ):
         _revoked_tokens.add(token)
         if entity is not None and locale is not None:
             return False

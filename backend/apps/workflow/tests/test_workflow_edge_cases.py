@@ -726,9 +726,9 @@ class TestTranslationOutdatedLogic:
             excerpt_en="English Excerpt",
             status="draft",
         )
-        # Manually set a field to None (bypass model constraints for test)
-        Article.objects.filter(pk=article.pk).update(title_en=None)
-        article.refresh_from_db()
+        # CharField is NOT NULL in the database, but the computation must
+        # still treat an in-memory None from an integration boundary as empty.
+        article.title_en = None
 
         status = compute_translation_status(article, "en")
         # title_en is None → at least some fields empty

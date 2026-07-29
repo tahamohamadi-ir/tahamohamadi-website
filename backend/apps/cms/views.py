@@ -41,7 +41,7 @@ class AdminPageViewSet(ModelViewSet):
     - update: validates composition, uses optimistic locking via version field
     """
 
-    queryset = Page.objects.all()
+    queryset = Page.objects.all().order_by("-updated_at", "id")
     filterset_fields = ["status", "page_type"]
     search_fields = ["title_fa", "title_en", "slug_fa", "slug_en"]
     filter_backends = [DjangoFilterBackend, SearchFilter]

@@ -42,53 +42,56 @@ def process_scheduled_publishes() -> dict:
     """
     from apps.workflow.models import ScheduledPublish
 
-    now = timezone.now()
-    pending_jobs = ScheduledPublish.objects.filter(
-        status="pending",
-        scheduled_at__lte=now,
-    ).select_for_update(skip_locked=True)
-
     completed_count = 0
     failed_count = 0
 
-    for job in pending_jobs:
-        try:
-            _publish_entity(job)
-            job.status = "completed"
-            job.save(update_fields=["status"])
-            completed_count += 1
-            logger.info(
-                "Scheduled publish completed: job=%s, content_type=%s, object_id=%s",
-                job.pk,
-                job.content_type_id,
-                job.object_id,
-            )
-        except Exception as exc:
-            job.attempts += 1
-            job.last_error = str(exc)[:2000]
+    # PostgreSQL requires select_for_update() to run inside a transaction. The
+    # row locks also prevent concurrent workers from processing the same job.
+    with transaction.atomic():
+        now = timezone.now()
+        pending_jobs = ScheduledPublish.objects.filter(
+            status="pending",
+            scheduled_at__lte=now,
+        ).select_for_update(skip_locked=True)
 
-            if job.attempts >= MAX_ATTEMPTS:
-                job.status = "failed"
-                failed_count += 1
-                logger.error(
-                    "Scheduled publish failed permanently: job=%s, "
-                    "object_id=%s, attempts=%d, error=%s",
+        for job in pending_jobs:
+            try:
+                _publish_entity(job)
+                job.status = "completed"
+                job.save(update_fields=["status"])
+                completed_count += 1
+                logger.info(
+                    "Scheduled publish completed: job=%s, content_type=%s, object_id=%s",
                     job.pk,
+                    job.content_type_id,
                     job.object_id,
-                    job.attempts,
-                    exc,
                 )
-            else:
-                logger.warning(
-                    "Scheduled publish attempt failed: job=%s, "
-                    "object_id=%s, attempts=%d, error=%s",
-                    job.pk,
-                    job.object_id,
-                    job.attempts,
-                    exc,
-                )
+            except Exception as exc:
+                job.attempts += 1
+                job.last_error = str(exc)[:2000]
 
-            job.save(update_fields=["attempts", "last_error", "status"])
+                if job.attempts >= MAX_ATTEMPTS:
+                    job.status = "failed"
+                    failed_count += 1
+                    logger.error(
+                        "Scheduled publish failed permanently: job=%s, "
+                        "object_id=%s, attempts=%d, error=%s",
+                        job.pk,
+                        job.object_id,
+                        job.attempts,
+                        exc,
+                    )
+                else:
+                    logger.warning(
+                        "Scheduled publish attempt failed: job=%s, "
+                        "object_id=%s, attempts=%d, error=%s",
+                        job.pk,
+                        job.object_id,
+                        job.attempts,
+                        exc,
+                    )
+
+                job.save(update_fields=["attempts", "last_error", "status"])
 
     if completed_count or failed_count:
         logger.info(

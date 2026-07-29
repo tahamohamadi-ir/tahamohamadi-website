@@ -14,9 +14,8 @@
 
 - [x] اجرای مجموعهٔ متمرکز pytest برای endpointهای `q` و `topics/`: 17 تست در
   `tests/test_blog_public_api.py` روی PostgreSQL Compose در 2026-07-29 پاس شد.
-- [ ] اجرای `python manage.py check` برای backend. **Blocker فعلی:** همین
-  interpreter فاقد Django است و فرمان راهنمای فعال‌سازی/install محیط backend را
-  برگرداند (مشاهده در 2026-07-29).
+- [x] اجرای `python manage.py check` در runtime PostgreSQL Compose در 2026-07-29:
+  بدون issue.
 - [ ] اجرای تست واحد فرانت برای مسیرهای درخواست و سپس type-check کامل.
 - [ ] اجرای QA مرورگر برای جست‌وجو، تغییر موضوع، pagination و حفظ هم‌زمان
   پارامترهای `q` و `topic` در هر دو locale.
@@ -57,8 +56,21 @@
 - [x] فرمان تکرارپذیر `docker compose -f docker-compose.dev.yml --profile test run --rm backend-test`
   روی PostgreSQL Compose فعال شد. اجرای متمرکز Blog و Media Usage در
   2026-07-29، 18 تست را پاس کرد.
-- [ ] اجرای collection/integration کامل backend با همان فرمان و ثبت زمان/خروجی؛
-  اجرای متمرکز جایگزین این gate نیست.
+- [x] اجرای collection کامل backend با همان فرمان در 2026-07-29: 730 تست اجرا شد؛
+  پس از رفع PreviewToken، rate-limit، ScheduledPublish، قرارداد test `None` و
+  ترتیب pagination، 730/730 پاس شد.
+- [x] PreviewToken: nonce برای یکتایی و کنترل durable expiry/revoke اضافه شد؛
+  75 تست Workflow/Preview در PostgreSQL Compose پاس شد.
+- [x] rate-limit: throttleها نرخ را از تنظیمات فعال DRF می‌خوانند؛ 8 تست
+  `tests/test_rate_limiting.py` در PostgreSQL Compose پاس شد.
+- [x] translation outdated: تست `None` با قرارداد `NOT NULL` مدل سازگار شد و
+  منطق empty-field در همان مجموعهٔ 75تایی پاس شد.
+- [x] 9 failure ScheduledPublish: lock job و publish به transaction منتقل شد و
+  `apps/workflow/tests/test_scheduled_task.py` در 2026-07-29، 9/9 پاس شد.
+- [x] رفع 3 warning `UnorderedObjectListWarning` در list صفحات Admin با ترتیب
+  پایدار `-updated_at, id`؛ اجرای کامل مجدد backend آن را تأیید کرد.
+- [ ] lint backend برای فایل‌های تغییرکرده: image تست Compose فعلاً `ruff` را
+  نصب ندارد؛ تا افزودن ابزار به محیط توسعه، فقط compile/test اجرا شده است.
 
 ## ریسک محیط مشترک
 
