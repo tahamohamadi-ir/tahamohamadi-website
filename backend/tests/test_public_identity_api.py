@@ -129,3 +129,48 @@ def test_public_identity_exposes_only_published_resume_with_active_file():
     response = APIClient().get("/api/public/identity/?locale=en")
 
     assert [item["slug"] for item in response.json()["resumes"]] == ["general"]
+
+
+@pytest.mark.django_db
+def test_public_research_resources_paginate_localize_and_suppress_drafts():
+    ResearchProject.objects.create(
+        slug_fa="پژوهش", slug_en="research", title_fa="پژوهش منتشرشده", title_en="Published research",
+        status="published", featured=True,
+    )
+    ResearchProject.objects.create(
+        slug_fa="پیش‌نویس", slug_en="draft", title_fa="پیش‌نویس", title_en="Draft", status="draft",
+    )
+    client = APIClient()
+
+    listing = client.get("/api/public/identity/research-projects/?locale=fa&page_size=1")
+    detail = client.get("/api/public/identity/research-projects/research/?locale=en")
+
+    assert listing.status_code == 200
+    assert listing.json()["count"] == 1
+    assert listing.json()["results"][0]["title"] == "پژوهش منتشرشده"
+    assert detail.status_code == 200
+    assert detail.json()["title"] == "Published research"
+    assert client.get("/api/public/identity/research-projects/draft/?locale=en").status_code == 404
+
+
+@pytest.mark.django_db
+def test_publication_resources_filter_by_type_and_year_and_return_problem_404():
+    Publication.objects.create(
+        slug_fa="مقاله", slug_en="article", title_fa="مقاله", title_en="Article",
+        publication_type="article", published_on="2025-02-01", status="published",
+    )
+    Publication.objects.create(
+        slug_fa="گزارش", slug_en="report", title_fa="گزارش", title_en="Report",
+        publication_type="report", published_on="2024-02-01", status="published",
+    )
+    client = APIClient()
+
+    listing = client.get("/api/public/identity/publications/?locale=en&type=article&year=2025")
+    detail = client.get("/api/public/identity/publications/article/?locale=en")
+    missing = client.get("/api/public/identity/publications/missing/?locale=en")
+
+    assert [item["slug_en"] for item in listing.json()["results"]] == ["article"]
+    assert detail.status_code == 200
+    assert detail.json()["title"] == "Article"
+    assert missing.status_code == 404
+    assert missing.json()["status"] == 404

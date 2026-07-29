@@ -64,9 +64,10 @@
 
 ## R1-03 — پژوهش و آثار
 
-- [ ] routeهای عمومی detail/list، frontend و QA دو locale برای ResearchProject و
-  Publication؛ backend aggregate فقط رکوردهای published را برمی‌گرداند و
-  manuscript/book در وضعیت draft هرگز public نیست.
+- [x] endpointهای عمومی paginated list/detail برای ResearchProject و Publication، با suppress draft و locale
+  درخواست‌شده، روی PostgreSQL Compose تست شدند.
+- [ ] frontend و QA دو locale برای ResearchProject و Publication؛ backend aggregate و resource endpointها فقط
+  رکوردهای published را برمی‌گردانند و manuscript/book در وضعیت draft هرگز public نیست.
 
 ## R1-04 — رزومه
 
@@ -86,7 +87,7 @@
 
 - [x] aggregate `GET /api/public/site/aggregate/` برای Site و Identity با ETag، `Cache-Control` و suppress
   رکوردهای فاقد ترجمهٔ locale درخواست‌شده ساخته و با pytest روی PostgreSQL Compose بررسی شد.
-- [ ] resource endpointهای تفصیلی و اتصال مصرف‌کنندهٔ Frontend به aggregate؛ این برش فقط قرارداد backend را تثبیت می‌کند.
+- [x] resource endpointهای تفصیلی Research/Publication به aggregate افزوده شدند؛ اتصال مصرف‌کنندهٔ Frontend باقی است.
 - [ ] سنجش query-count و سیاست نهایی CDN/revalidation در محیط production؛ TTL اولیه 60 ثانیه با
   `stale-while-revalidate=300` است و هنوز با ترافیک واقعی اندازه‌گیری نشده است.
 
@@ -146,8 +147,8 @@
 
 ## ریسک محیط مشترک
 
-- [ ] اجرای دوبارهٔ کل collection backend پس از commitهای R1-05 تا R1-10؛ برای سرعت فقط مجموعهٔ متمرکز
-  118 تست CMS/identity/siteconfig/seed روی PostgreSQL Compose اجرا شد. اجرای کامل 730/730 مربوط به پیش از این برش‌هاست.
+- [ ] اجرای دوبارهٔ کل collection backend پس از commitهای R1؛ برای سرعت فقط suiteهای متمرکز
+  CMS/identity/siteconfig/seed روی PostgreSQL Compose اجرا شدند. اجرای کامل 730/730 مربوط به پیش از این برش‌هاست.
 
 - [ ] ورک‌تری دارای تغییرات گستردهٔ خارج از این برش است. فقط فایل‌های task-owned
   stage و commit می‌شوند؛ build یا تست کامل ممکن است به تغییرات مستقل وابسته باشد.
