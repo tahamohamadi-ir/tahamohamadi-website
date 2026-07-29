@@ -56,3 +56,18 @@ def test_site_config_admin_requires_auth_and_rejects_unsafe_destinations():
         {"source_path": "/old", "target_url": "https://example.test/new", "status_code": 301},
         format="json",
     ).status_code == 201
+
+
+@pytest.mark.django_db
+def test_site_aggregate_omits_incomplete_locale_records_and_supports_etag():
+    SiteSettings.objects.create(site_title_fa="", site_title_en="English", status="published")
+    NavigationItem.objects.create(label_fa="", label_en="Home", href="/en", location="header", status="published")
+
+    client = APIClient()
+    response = client.get("/api/public/site/aggregate/?locale=fa")
+
+    assert response.status_code == 200
+    assert response.json()["site"] == {"settings": None, "navigation": {"header": [], "footer": []}}
+    assert response.json()["identity"]["profile"] is None
+    assert response["Cache-Control"] == "public, max-age=60, stale-while-revalidate=300"
+    assert client.get("/api/public/site/aggregate/?locale=fa", HTTP_IF_NONE_MATCH=response["ETag"]).status_code == 304

@@ -9,6 +9,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.core.exceptions import build_problem, PROBLEM_CONTENT_TYPE
 from apps.core.services import ConflictError, save_with_optimistic_lock
+from apps.identity.public import public_identity_payload
 
 from apps.identity.models import (
     Affiliation, Certification, Education, Experience, LanguageProficiency,
@@ -164,33 +165,4 @@ class PublicIdentityView(APIView):
         locale = request.query_params.get("locale", "en")
         if locale not in {"fa", "en"}:
             locale = "en"
-        profile = SiteProfile.objects.filter(status="published").select_related("portrait").first()
-        if profile is None:
-            return Response({
-                "profile": None, "social_links": [], "skills": [], "experience": [],
-                "education": [], "certifications": [], "affiliations": [], "languages": [],
-                "research_projects": [], "research_interests": [], "publications": [], "resumes": [],
-            })
-        context = {"locale": locale, "request": request}
-        return Response({
-            "profile": PublicIdentitySerializer(profile, context=context).data,
-            "social_links": PublicSocialLinkSerializer(
-                SocialLink.objects.filter(status="published"), many=True, context=context
-            ).data,
-            "skills": PublicSkillSerializer(
-                Skill.objects.filter(status="published"), many=True, context=context
-            ).data,
-            "experience": PublicExperienceSerializer(Experience.objects.filter(status="published"), many=True, context=context).data,
-            "education": PublicEducationSerializer(Education.objects.filter(status="published"), many=True, context=context).data,
-            "certifications": PublicCertificationSerializer(Certification.objects.filter(status="published"), many=True, context=context).data,
-            "affiliations": PublicAffiliationSerializer(Affiliation.objects.filter(status="published"), many=True, context=context).data,
-            "languages": PublicLanguageProficiencySerializer(LanguageProficiency.objects.filter(status="published"), many=True, context=context).data,
-            "research_projects": PublicResearchProjectSerializer(ResearchProject.objects.filter(status="published"), many=True, context=context).data,
-            "research_interests": PublicResearchInterestSerializer(ResearchInterest.objects.filter(status="published"), many=True, context=context).data,
-            "publications": PublicPublicationSerializer(Publication.objects.filter(status="published"), many=True, context=context).data,
-            "resumes": PublicResumeVariantSerializer(
-                ResumeVariant.objects.filter(status="published", file__status="active").select_related("file"),
-                many=True,
-                context=context,
-            ).data,
-        })
+        return Response(public_identity_payload(locale, request))

@@ -9,6 +9,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.core.exceptions import PROBLEM_CONTENT_TYPE, build_problem
 from apps.core.services import ConflictError, save_with_optimistic_lock
+from apps.identity.public import public_identity_payload
 from apps.siteconfig.models import NavigationItem, RedirectRule, SiteSettings
 from apps.siteconfig.serializers import (
     NavigationItemAdminSerializer,
@@ -17,6 +18,7 @@ from apps.siteconfig.serializers import (
     RedirectRuleAdminSerializer,
     SiteConfigAdminSerializer,
 )
+from apps.siteconfig.services import conditional_public_response, public_site_payload
 
 
 class SiteConfigAdminViewSet(ModelViewSet):
@@ -78,13 +80,18 @@ class PublicSiteConfigView(APIView):
         locale = request.query_params.get("locale", "en")
         if locale not in {"fa", "en"}:
             locale = "en"
-        context = {"locale": locale, "request": request}
-        settings = SiteSettings.objects.filter(status="published").select_related("default_og_image").first()
-        navigation = NavigationItem.objects.filter(status="published")
-        return Response({
-            "settings": PublicSiteSettingsSerializer(settings, context=context).data if settings else None,
-            "navigation": {
-                "header": PublicNavigationItemSerializer(navigation.filter(location="header"), many=True, context=context).data,
-                "footer": PublicNavigationItemSerializer(navigation.filter(location="footer"), many=True, context=context).data,
-            },
+        return conditional_public_response(request, public_site_payload(locale, request))
+
+
+class PublicSiteAggregateView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes: list = []
+
+    def get(self, request):
+        locale = request.query_params.get("locale", "en")
+        if locale not in {"fa", "en"}:
+            locale = "en"
+        return conditional_public_response(request, {
+            "site": public_site_payload(locale, request),
+            "identity": public_identity_payload(locale, request),
         })

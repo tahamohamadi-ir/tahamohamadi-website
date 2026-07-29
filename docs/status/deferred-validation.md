@@ -81,6 +81,14 @@
 - [ ] افزودن middleware/runtime برای اعمال `RedirectRule`‌های active، همراه با جلوگیری از loop و آزمون 301/302.
 - [ ] بازبینی هم‌زمانی ایجاد رکورد singleton برای `SiteSettings`؛ guard فعلی در ViewSet است و unique constraint دیتابیسی ندارد.
 
+## R1-06 — aggregate عمومی
+
+- [x] aggregate `GET /api/public/site/aggregate/` برای Site و Identity با ETag، `Cache-Control` و suppress
+  رکوردهای فاقد ترجمهٔ locale درخواست‌شده ساخته و با pytest روی PostgreSQL Compose بررسی شد.
+- [ ] resource endpointهای تفصیلی و اتصال مصرف‌کنندهٔ Frontend به aggregate؛ این برش فقط قرارداد backend را تثبیت می‌کند.
+- [ ] سنجش query-count و سیاست نهایی CDN/revalidation در محیط production؛ TTL اولیه 60 ثانیه با
+  `stale-while-revalidate=300` است و هنوز با ترافیک واقعی اندازه‌گیری نشده است.
+
 ## R0-09 — Sentry instrumentation
 
 - [ ] ارسال خطای آزمایشی از server و client به پروژهٔ واقعی Sentry و تأیید scrub
