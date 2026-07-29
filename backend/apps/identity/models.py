@@ -168,3 +168,22 @@ class Publication(VersionedModel):
 
     class Meta:
         ordering = ["-published_on", "-updated_at"]
+
+
+class ResumeVariant(VersionedModel):
+    TYPES = [(kind, kind) for kind in ("academic", "industry", "general")]
+
+    slug = models.SlugField(max_length=100, unique=True)
+    label_fa = models.CharField(max_length=255)
+    label_en = models.CharField(max_length=255)
+    variant_type = models.CharField(max_length=20, choices=TYPES)
+    summary_fa = models.TextField(blank=True, default="")
+    summary_en = models.TextField(blank=True, default="")
+    file = models.ForeignKey(
+        "media.MediaAsset", on_delete=models.PROTECT, related_name="resume_variants"
+    )
+    status = models.CharField(max_length=20, default="draft")
+    ordering = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["ordering", "id"]

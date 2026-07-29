@@ -2,7 +2,8 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
-from apps.identity.models import Publication, ResearchProject, Experience, SiteProfile, Skill, SocialLink
+from apps.identity.models import Publication, ResearchProject, ResumeVariant, Experience, SiteProfile, Skill, SocialLink
+from apps.media.models import MediaAsset
 
 
 @pytest.mark.django_db
@@ -23,7 +24,7 @@ def test_public_identity_suppresses_drafts_and_localizes():
         "social_links": [{"label": "گیت‌هاب", "url": "https://github.com/example"}],
         "skills": [{"name": "پایتون", "category": "فنی"}], "experience": [],
         "education": [], "certifications": [], "affiliations": [], "languages": [],
-        "research_projects": [], "research_interests": [], "publications": [],
+        "research_projects": [], "research_interests": [], "publications": [], "resumes": [],
     }
 
 
@@ -34,7 +35,7 @@ def test_public_identity_has_explicit_empty_state_for_draft_profile():
     assert APIClient().get("/api/public/identity/").json() == {
         "profile": None, "social_links": [], "skills": [], "experience": [],
         "education": [], "certifications": [], "affiliations": [], "languages": [],
-        "research_projects": [], "research_interests": [], "publications": [],
+        "research_projects": [], "research_interests": [], "publications": [], "resumes": [],
     }
 
 
@@ -109,3 +110,22 @@ def test_public_identity_suppresses_draft_research_and_publications():
 
     assert [item["slug_en"] for item in response.json()["research_projects"]] == ["research"]
     assert [item["slug_en"] for item in response.json()["publications"]] == ["paper"]
+
+
+@pytest.mark.django_db
+def test_public_identity_exposes_only_published_resume_with_active_file():
+    SiteProfile.objects.create(name_fa="نام", name_en="Name", status="published")
+    active_file = MediaAsset.objects.create(
+        file="media/resume.pdf", original_filename="resume.pdf", mime_type="application/pdf",
+        file_size=1, checksum="c" * 64, status="active",
+    )
+    archived_file = MediaAsset.objects.create(
+        file="media/old.pdf", original_filename="old.pdf", mime_type="application/pdf",
+        file_size=1, checksum="d" * 64, status="archived",
+    )
+    ResumeVariant.objects.create(slug="general", label_fa="عمومی", label_en="General", variant_type="general", file=active_file, status="published")
+    ResumeVariant.objects.create(slug="old", label_fa="قدیمی", label_en="Old", variant_type="academic", file=archived_file, status="published")
+
+    response = APIClient().get("/api/public/identity/?locale=en")
+
+    assert [item["slug"] for item in response.json()["resumes"]] == ["general"]

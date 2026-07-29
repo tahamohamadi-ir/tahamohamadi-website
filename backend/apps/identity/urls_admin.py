@@ -12,6 +12,7 @@ from apps.identity.views import (
     AdminPublicationViewSet,
     AdminResearchInterestViewSet,
     AdminResearchProjectViewSet,
+    AdminResumeVariantViewSet,
 )
 
 router = DefaultRouter()
@@ -26,5 +27,6 @@ router.register("languages", AdminLanguageProficiencyViewSet, basename="admin-id
 router.register("research-projects", AdminResearchProjectViewSet, basename="admin-identity-research-projects")
 router.register("research-interests", AdminResearchInterestViewSet, basename="admin-identity-research-interests")
 router.register("publications", AdminPublicationViewSet, basename="admin-identity-publications")
+router.register("resumes", AdminResumeVariantViewSet, basename="admin-identity-resumes")
 
 urlpatterns = router.urls

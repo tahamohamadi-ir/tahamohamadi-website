@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from apps.identity.models import (
     Affiliation, Certification, Education, Experience, LanguageProficiency,
-    Publication, ResearchInterest, ResearchProject,
+    Publication, ResearchInterest, ResearchProject, ResumeVariant,
     SiteProfile, Skill, SocialLink,
 )
 from apps.media.serializers import MediaAssetSerializer
@@ -126,6 +126,11 @@ class PublicationAdminSerializer(IdentityAdminSerializer):
         model = Publication
 
 
+class ResumeVariantAdminSerializer(IdentityAdminSerializer):
+    class Meta(IdentityAdminSerializer.Meta):
+        model = ResumeVariant
+
+
 class LocalizedPublicSerializer(serializers.ModelSerializer):
     """Projects bilingual fields to the requested locale without fallback."""
 
@@ -215,3 +220,14 @@ class PublicPublicationSerializer(LocalizedPublicSerializer):
         fields = ["slug_fa", "slug_en", "title", "abstract", "publication_type", "citation", "doi", "isbn", "published_on"]
     get_title = lambda self, obj: self.localized(obj, "title")
     get_abstract = lambda self, obj: self.localized(obj, "abstract")
+
+
+class PublicResumeVariantSerializer(LocalizedPublicSerializer):
+    label = serializers.SerializerMethodField()
+    summary = serializers.SerializerMethodField()
+    file = MediaAssetSerializer(read_only=True)
+    class Meta:
+        model = ResumeVariant
+        fields = ["slug", "label", "summary", "variant_type", "file"]
+    get_label = lambda self, obj: self.localized(obj, "label")
+    get_summary = lambda self, obj: self.localized(obj, "summary")

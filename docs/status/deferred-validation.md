@@ -68,6 +68,11 @@
   Publication؛ backend aggregate فقط رکوردهای published را برمی‌گرداند و
   manuscript/book در وضعیت draft هرگز public نیست.
 
+## R1-04 — رزومه
+
+- [ ] بارگذاری فایل‌های رزومهٔ واقعی و QA دانلود در مرورگر؛ backend فقط variant
+  منتشرشده با MediaAsset فعال را public می‌کند و هیچ فایل archive/draft را برنمی‌گرداند.
+
 ## R0-09 — Sentry instrumentation
 
 - [ ] ارسال خطای آزمایشی از server و client به پروژهٔ واقعی Sentry و تأیید scrub

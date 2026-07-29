@@ -12,7 +12,7 @@ from apps.core.services import ConflictError, save_with_optimistic_lock
 
 from apps.identity.models import (
     Affiliation, Certification, Education, Experience, LanguageProficiency,
-    Publication, ResearchInterest, ResearchProject, SiteProfile, Skill, SocialLink,
+    Publication, ResearchInterest, ResearchProject, ResumeVariant, SiteProfile, Skill, SocialLink,
 )
 from apps.identity.serializers import (
     PublicIdentitySerializer,
@@ -37,6 +37,8 @@ from apps.identity.serializers import (
     PublicResearchProjectSerializer,
     ResearchInterestAdminSerializer,
     ResearchProjectAdminSerializer,
+    PublicResumeVariantSerializer,
+    ResumeVariantAdminSerializer,
 )
 
 
@@ -148,6 +150,12 @@ class AdminPublicationViewSet(IdentityAdminViewSet):
     search_fields = ["title_fa", "title_en", "slug_fa", "slug_en", "doi", "isbn"]
 
 
+class AdminResumeVariantViewSet(IdentityAdminViewSet):
+    queryset = ResumeVariant.objects.select_related("file").all()
+    serializer_class = ResumeVariantAdminSerializer
+    search_fields = ["slug", "label_fa", "label_en"]
+
+
 class PublicIdentityView(APIView):
     permission_classes = [AllowAny]
     authentication_classes: list = []
@@ -161,7 +169,7 @@ class PublicIdentityView(APIView):
             return Response({
                 "profile": None, "social_links": [], "skills": [], "experience": [],
                 "education": [], "certifications": [], "affiliations": [], "languages": [],
-                "research_projects": [], "research_interests": [], "publications": [],
+                "research_projects": [], "research_interests": [], "publications": [], "resumes": [],
             })
         context = {"locale": locale, "request": request}
         return Response({
@@ -180,4 +188,9 @@ class PublicIdentityView(APIView):
             "research_projects": PublicResearchProjectSerializer(ResearchProject.objects.filter(status="published"), many=True, context=context).data,
             "research_interests": PublicResearchInterestSerializer(ResearchInterest.objects.filter(status="published"), many=True, context=context).data,
             "publications": PublicPublicationSerializer(Publication.objects.filter(status="published"), many=True, context=context).data,
+            "resumes": PublicResumeVariantSerializer(
+                ResumeVariant.objects.filter(status="published", file__status="active").select_related("file"),
+                many=True,
+                context=context,
+            ).data,
         })
