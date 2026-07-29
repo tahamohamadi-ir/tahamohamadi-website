@@ -73,7 +73,7 @@ describe('useDirtyGuard', () => {
             renderHook(() => useDirtyGuard());
 
             const handler = addEventListenerSpy.mock.calls.find(
-                (call) => call[0] === 'beforeunload'
+                (call: Parameters<typeof window.addEventListener>) => call[0] === 'beforeunload'
             )?.[1] as EventListener;
 
             const event = new Event('beforeunload') as BeforeUnloadEvent;
@@ -90,7 +90,7 @@ describe('useDirtyGuard', () => {
             });
 
             const handler = addEventListenerSpy.mock.calls.find(
-                (call) => call[0] === 'beforeunload'
+                (call: Parameters<typeof window.addEventListener>) => call[0] === 'beforeunload'
             )?.[1] as EventListener;
 
             const event = new Event('beforeunload') as BeforeUnloadEvent;
