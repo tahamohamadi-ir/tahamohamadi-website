@@ -11,12 +11,14 @@ import uuid
 import pytest
 
 from apps.cms.models import Block, Page, Section
+from apps.blog.models import Article, ArticleBlock
 from apps.media.models import MediaAsset
 from apps.media.services import (
     get_media_usage,
     get_media_usage_count,
     get_orphan_media_ids,
 )
+from apps.portfolio.models import CaseStudy, CaseStudyBlock
 
 
 @pytest.fixture()
@@ -243,6 +245,50 @@ class TestGetMediaUsage:
         result = get_media_usage(media_asset.id)
         assert result[0]["title"] == "عنوان فارسی"
 
+    def test_finds_and_deduplicates_blog_references(self, media_asset, db):
+        article = Article.objects.create(
+            slug_fa="رسانه-مقاله",
+            slug_en="media-article",
+            title_fa="رسانه مقاله",
+            title_en="Media article",
+            featured_image=media_asset,
+        )
+        ArticleBlock.objects.create(
+            article=article,
+            locale="en",
+            block_type="image",
+            ordering=0,
+            content={"media_id": str(media_asset.id)},
+        )
+
+        assert get_media_usage(media_asset.id) == [
+            {"type": "article", "id": article.id, "title": "Media article"}
+        ]
+
+    def test_finds_and_deduplicates_portfolio_references(self, media_asset, db):
+        case_study = CaseStudy.objects.create(
+            slug_fa="رسانه-نمونه",
+            slug_en="media-case-study",
+            title_fa="نمونه رسانه",
+            title_en="Media case study",
+        )
+        case_study.gallery.add(media_asset)
+        CaseStudyBlock.objects.create(
+            case_study=case_study,
+            locale="en",
+            block_type="image",
+            ordering=0,
+            content={"media_ids": [str(media_asset.id)]},
+        )
+
+        assert get_media_usage(media_asset.id) == [
+            {
+                "type": "case_study",
+                "id": case_study.id,
+                "title": "Media case study",
+            }
+        ]
+
 
 # --- get_media_usage_count tests -----------------------------------------
 
@@ -327,6 +373,28 @@ class TestGetOrphanMediaIds:
         orphan_ids = get_orphan_media_ids()
         assert media_asset.id not in orphan_ids
         assert orphan_asset.id in orphan_ids
+
+    def test_blog_and_portfolio_references_are_not_orphans(
+        self, media_asset, media_asset_2, db
+    ):
+        Article.objects.create(
+            slug_fa="تصویر-مقاله",
+            slug_en="article-image",
+            title_fa="تصویر مقاله",
+            title_en="Article image",
+            featured_image=media_asset,
+        )
+        case_study = CaseStudy.objects.create(
+            slug_fa="تصویر-نمونه",
+            slug_en="case-image",
+            title_fa="تصویر نمونه",
+            title_en="Case image",
+        )
+        case_study.gallery.add(media_asset_2)
+
+        orphan_ids = get_orphan_media_ids()
+        assert media_asset.id not in orphan_ids
+        assert media_asset_2.id not in orphan_ids
 
     def test_archived_assets_excluded(self, db, section):
         """Archived assets should not appear in orphan list."""

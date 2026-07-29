@@ -262,30 +262,30 @@ def upload_media(file, user_id: str = "") -> MediaAsset:
 
 
 def get_media_usage(media_id: UUID) -> list[dict]:
-    """Track where a media asset is referenced across CMS pages.
+    """Track where a media asset is referenced across published content models.
 
     Scans CMS Block settings JSONField for occurrences of the media UUID
     in keys named 'media_id' (single reference) or 'media_ids' (list of
     references).
-
-    This function currently checks CMS blocks only. It will be extended
-    to include blog articles and portfolio case studies when those apps
-    are created.
 
     Args:
         media_id: UUID of the MediaAsset to look up.
 
     Returns:
         List of usage records, each with:
-        - type: "page" (will also include "article", "case_study" later)
-        - id: UUID of the containing page
-        - title: Human-readable title (English title of the page)
+        - type: "page", "article", or "case_study"
+        - id: UUID of the containing record
+        - title: Human-readable title (English title where available)
     """
+    from apps.blog.models import Article, ArticleBlock
     from apps.cms.models import Block
+    from apps.portfolio.models import CaseStudy, CaseStudyBlock
 
     media_id_str = str(media_id)
     usages: list[dict] = []
     seen_page_ids: set = set()
+    seen_article_ids: set = set()
+    seen_case_study_ids: set = set()
 
     # 1. Check blocks with settings.media_id == media_id_str (single ref)
     blocks_single = Block.objects.filter(
@@ -317,8 +317,55 @@ def get_media_usage(media_id: UUID) -> list[dict]:
                 "title": page.title_en or page.title_fa,
             })
 
-    # 3. Future: check blog ArticleBlock for media references
-    # 4. Future: check portfolio CaseStudy gallery for media references
+    # 3. Blog featured image and block references.
+    for article in Article.objects.filter(featured_image_id=media_id):
+        seen_article_ids.add(article.id)
+        usages.append({
+            "type": "article",
+            "id": article.id,
+            "title": article.title_en or article.title_fa,
+        })
+
+    article_blocks = ArticleBlock.objects.filter(
+        content__media_id=media_id_str
+    ).select_related("article")
+    article_block_lists = ArticleBlock.objects.filter(
+        content__media_ids__contains=[media_id_str]
+    ).select_related("article")
+    for block in (*article_blocks, *article_block_lists):
+        article = block.article
+        if article.id not in seen_article_ids:
+            seen_article_ids.add(article.id)
+            usages.append({
+                "type": "article",
+                "id": article.id,
+                "title": article.title_en or article.title_fa,
+            })
+
+    # 4. Portfolio gallery and narrative-block references.
+    for case_study in CaseStudy.objects.filter(gallery__id=media_id).distinct():
+        seen_case_study_ids.add(case_study.id)
+        usages.append({
+            "type": "case_study",
+            "id": case_study.id,
+            "title": case_study.title_en or case_study.title_fa,
+        })
+
+    case_blocks = CaseStudyBlock.objects.filter(
+        content__media_id=media_id_str
+    ).select_related("case_study")
+    case_block_lists = CaseStudyBlock.objects.filter(
+        content__media_ids__contains=[media_id_str]
+    ).select_related("case_study")
+    for block in (*case_blocks, *case_block_lists):
+        case_study = block.case_study
+        if case_study.id not in seen_case_study_ids:
+            seen_case_study_ids.add(case_study.id)
+            usages.append({
+                "type": "case_study",
+                "id": case_study.id,
+                "title": case_study.title_en or case_study.title_fa,
+            })
 
     return usages
 
@@ -341,27 +388,28 @@ def get_media_usage_count(media_id: UUID) -> int:
 def get_orphan_media_ids() -> list[UUID]:
     """Return IDs of active media assets with zero references.
 
-    Scans all active MediaAssets and checks each against CMS blocks to
+    Scans all active MediaAssets and checks each against CMS, blog, and portfolio to
     find assets that are not referenced anywhere. Useful for cleanup
     reporting (Requirement 5.7: orphan detection).
-
-    Currently only checks CMS blocks. Will be extended when blog and
-    portfolio apps are created.
 
     Returns:
         List of UUIDs for media assets that have no references.
     """
+    from apps.blog.models import Article, ArticleBlock
     from apps.cms.models import Block
+    from apps.portfolio.models import CaseStudy, CaseStudyBlock
 
     # Collect all media IDs referenced in any block settings
     referenced_ids: set[str] = set()
 
     # Query all blocks that have a media_id key in their settings
-    blocks_with_media = Block.objects.exclude(
-        settings={}
-    ).values_list("settings", flat=True)
+    block_contents = [
+        *Block.objects.exclude(settings={}).values_list("settings", flat=True),
+        *ArticleBlock.objects.exclude(content={}).values_list("content", flat=True),
+        *CaseStudyBlock.objects.exclude(content={}).values_list("content", flat=True),
+    ]
 
-    for settings in blocks_with_media:
+    for settings in block_contents:
         if not isinstance(settings, dict):
             continue
 
@@ -376,6 +424,19 @@ def get_orphan_media_ids() -> list[UUID]:
             for mid in media_ids_val:
                 if isinstance(mid, str):
                     referenced_ids.add(mid)
+
+    referenced_ids.update(
+        str(media_id)
+        for media_id in Article.objects.exclude(featured_image__isnull=True).values_list(
+            "featured_image_id", flat=True
+        )
+    )
+    referenced_ids.update(
+        str(media_id)
+        for media_id in CaseStudy.objects.values_list("gallery__id", flat=True).exclude(
+            gallery__id__isnull=True
+        )
+    )
 
     # Get all active media asset IDs
     active_asset_ids = MediaAsset.objects.filter(

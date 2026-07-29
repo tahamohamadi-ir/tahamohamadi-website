@@ -37,9 +37,9 @@
 
 - [x] اجرای pytest متمرکز برای `backend/tests/test_media_usage_api.py`: یک تست
   قراردادی روی PostgreSQL Compose در 2026-07-29 پاس شد.
-- [ ] گسترش `get_media_usage` برای رفرنس‌های Blog و Portfolio. endpoint فعلی
-  فقط داده‌ای را برمی‌گرداند که service موجود از CMS page blocks پیدا می‌کند؛
-  این محدودیت عمداً پنهان نشده است.
+- [x] `get_media_usage` و orphan detection برای CMS، featured/blockهای Blog و
+  gallery/blockهای Portfolio تکمیل شد؛ 32 تست مرتبط در PostgreSQL Compose
+  در 2026-07-29 پاس شد.
 - [ ] اجرای integration UI با session/CSRF واقعی و بررسی نمایش usage و warning
   archive در Admin.
 

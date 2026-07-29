@@ -257,7 +257,7 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | R0-03 | 🟡 | locale واقعی و تفکیک 404 از failure در commit `87360f6` پیاده شد؛ browser smoke باقی است. |
 | R0-04 | ⬜ | `PublicLayout` و صفحات عمومی ownership تکراری `main` دارند؛ وابسته به تثبیت semantic Hero در R0-10 است. |
 | R0-05 | 🟡 | public topics، `q` و URL state در commit `1f8bce2` پیاده شد؛ 17 pytest مرتبط روی PostgreSQL Compose پاس شد و browser/a11y QA باقی است. |
-| R0-06 | 🟡 | endpoint usage در commit `0905b32` فعال شد و contract test آن روی PostgreSQL Compose پاس شد؛ service فعلاً فقط CMS page blocks را پوشش می‌دهد. |
+| R0-06 | 🟡 | usage و orphan detection اکنون CMS/Blog/Portfolio را پوشش می‌دهند؛ 32 تست PostgreSQL Compose پاس شد. QA رابط Admin با session/CSRF واقعی باقی است. |
 | R0-07 | ✅ | seed دیگر placeholder media نمی‌سازد و رکوردهای شکستهٔ تاریخی `media/seed/` را فقط در صورت نبود فایل پاک‌سازی می‌کند؛ test قرارداد پاس شد. |
 | R0-08 | ✅ | target تست Compose با فرمان واحد فعال است؛ اجرای کامل مجدد در 2026-07-29، 730/730 تست PostgreSQL را پاس کرد. |
 | R0-09 | 🟡 | scrub صریح Sentry و تست واحد آن در حال پیاده‌سازی است؛ ارسال واقعی server/client به پروژهٔ Sentry نیازمند DSN غیرمحلی است. |
