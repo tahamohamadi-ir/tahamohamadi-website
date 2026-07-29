@@ -80,7 +80,7 @@
 - [ ] اتصال Header، Footer، metadata SEO و CTA فرانت‌اند به `/api/public/site/` و QA مرورگر در هر دو locale.
 - [x] middleware برای `RedirectRule`‌های active با آزمون 301/302، جلوگیری از loop، مقصد ناسالم و روش غیر GET/HEAD
   در PostgreSQL Compose پیاده و بررسی شد.
-- [ ] بازبینی هم‌زمانی ایجاد رکورد singleton برای `SiteSettings`؛ guard فعلی در ViewSet است و unique constraint دیتابیسی ندارد.
+- [x] `SiteSettings` اکنون unique singleton constraint در دیتابیس دارد و API در برخورد race، Problem Details 409 بازمی‌گرداند.
 
 ## R1-06 — aggregate عمومی
 

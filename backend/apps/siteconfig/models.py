@@ -8,6 +8,7 @@ from apps.core.models import VersionedModel
 class SiteSettings(VersionedModel):
     """The single site-wide configuration record."""
 
+    singleton = models.BooleanField(default=True, unique=True, editable=False)
     site_title_fa = models.CharField(max_length=255)
     site_title_en = models.CharField(max_length=255)
     default_title_fa = models.CharField(max_length=255, blank=True, default="")

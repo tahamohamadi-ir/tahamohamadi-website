@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from rest_framework.test import APIClient
 
 from apps.siteconfig.models import NavigationItem, SiteSettings
@@ -56,6 +57,14 @@ def test_site_config_admin_requires_auth_and_rejects_unsafe_destinations():
         {"source_path": "/old", "target_url": "https://example.test/new", "status_code": 301},
         format="json",
     ).status_code == 201
+
+
+@pytest.mark.django_db
+def test_site_settings_has_a_database_singleton_constraint():
+    SiteSettings.objects.create(site_title_fa="نخست", site_title_en="First")
+
+    with pytest.raises(IntegrityError):
+        SiteSettings.objects.create(site_title_fa="دوم", site_title_en="Second")
 
 
 @pytest.mark.django_db

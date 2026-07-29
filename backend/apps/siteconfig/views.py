@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
+from django.db import IntegrityError, transaction
+
 from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.core.exceptions import PROBLEM_CONTENT_TYPE, build_problem
@@ -56,7 +58,15 @@ class AdminSiteSettingsViewSet(SiteConfigAdminViewSet):
         if SiteSettings.objects.exists():
             problem = build_problem(status.HTTP_409_CONFLICT, "Only one site settings record may exist.", instance=request.path)
             return Response(problem, status=status.HTTP_409_CONFLICT, content_type=PROBLEM_CONTENT_TYPE)
-        return super().create(request, *args, **kwargs)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            with transaction.atomic():
+                self.perform_create(serializer)
+        except IntegrityError:
+            problem = build_problem(status.HTTP_409_CONFLICT, "Only one site settings record may exist.", instance=request.path)
+            return Response(problem, status=status.HTTP_409_CONFLICT, content_type=PROBLEM_CONTENT_TYPE)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=self.get_success_headers(serializer.data))
 
 
 class AdminNavigationItemViewSet(SiteConfigAdminViewSet):
