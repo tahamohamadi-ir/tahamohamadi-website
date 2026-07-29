@@ -12,6 +12,7 @@ Requirements: 1.3, 6.1
 
 from __future__ import annotations
 
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
@@ -231,12 +232,39 @@ class PublicArticleListView(ListAPIView):
         if topic_slug:
             qs = qs.filter(topics__slug=topic_slug)
 
-        return qs
+        query = self.request.query_params.get("q", "").strip()
+        if query:
+            qs = qs.filter(
+                Q(title_fa__icontains=query)
+                | Q(title_en__icontains=query)
+                | Q(excerpt_fa__icontains=query)
+                | Q(excerpt_en__icontains=query)
+                | Q(slug_fa__icontains=query)
+                | Q(slug_en__icontains=query)
+            )
+
+        return qs.distinct()
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context["locale"] = self.request.query_params.get("locale", "en")
         return context
+
+
+class PublicTopicListView(ListAPIView):
+    """Public endpoint: list topics used by at least one published article."""
+
+    permission_classes = [AllowAny]
+    authentication_classes: list = []
+    pagination_class = None
+    serializer_class = TopicSerializer
+
+    def get_queryset(self):
+        return (
+            Topic.objects.filter(articles__status="published")
+            .order_by("slug")
+            .distinct()
+        )
 
 
 class PublicArticleDetailView(APIView):

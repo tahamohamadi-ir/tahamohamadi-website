@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getPublicPage, PublicApiError } from "./api";
+import { fetchArticles, fetchTopics, getPublicPage, PublicApiError } from "./api";
 
 const page = {
   id: "page-1",
@@ -60,5 +60,46 @@ describe("getPublicPage", () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(networkError));
 
     await expect(getPublicPage("home", "en")).rejects.toBe(networkError);
+  });
+});
+
+describe("public blog API paths", () => {
+  beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "https://api.example.test");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  it("uses a trailing slash and preserves q in article list requests", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ count: 0, next: null, previous: null, results: [] }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchArticles({ locale: "fa", page: 2, topic: "python", q: "django" });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/api/public/blog/articles/?locale=fa&page=2&page_size=9&topic=python&q=django",
+      expect.any(Object),
+    );
+  });
+
+  it("uses the public topics endpoint with its trailing slash", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue([]),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchTopics();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/api/public/blog/topics/",
+      expect.any(Object),
+    );
   });
 });

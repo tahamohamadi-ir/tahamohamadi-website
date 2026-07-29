@@ -6,11 +6,16 @@ Provides read-only access to published articles for anonymous users.
 
 from django.urls import path
 
-from apps.blog.views import PublicArticleDetailView, PublicArticleListView
+from apps.blog.views import (
+    PublicArticleDetailView,
+    PublicArticleListView,
+    PublicTopicListView,
+)
 
 app_name = "blog-public"
 
 urlpatterns = [
     path("articles/", PublicArticleListView.as_view(), name="article-list"),
     path("articles/<path:slug>/", PublicArticleDetailView.as_view(), name="article-detail"),
+    path("topics/", PublicTopicListView.as_view(), name="topic-list"),
 ]

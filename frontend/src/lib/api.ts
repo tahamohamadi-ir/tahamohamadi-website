@@ -104,6 +104,7 @@ export interface FetchArticlesParams {
   locale: string;
   page?: number;
   topic?: string;
+  q?: string;
   pageSize?: number;
 }
 
@@ -114,7 +115,7 @@ export interface FetchArticlesParams {
 export async function fetchArticles(
   params: FetchArticlesParams,
 ): Promise<PaginatedArticlesResponse> {
-  const { locale, page = 1, topic, pageSize = 9 } = params;
+  const { locale, page = 1, topic, q, pageSize = 9 } = params;
   const searchParams = new URLSearchParams({
     locale,
     page: String(page),
@@ -124,16 +125,19 @@ export async function fetchArticles(
   if (topic) {
     searchParams.set("topic", topic);
   }
+  if (q) {
+    searchParams.set("q", q);
+  }
 
   return fetchPublicAPI<PaginatedArticlesResponse>(
-    `/public/blog/articles?${searchParams.toString()}`,
+    `/public/blog/articles/?${searchParams.toString()}`,
   );
 }
 
 /**
  * Fetch all available blog topics.
- * Endpoint: GET /api/public/blog/topics
+ * Endpoint: GET /api/public/blog/topics/
  */
 export async function fetchTopics(): Promise<TopicDTO[]> {
-  return fetchPublicAPI<TopicDTO[]>("/public/blog/topics");
+  return fetchPublicAPI<TopicDTO[]>("/public/blog/topics/");
 }

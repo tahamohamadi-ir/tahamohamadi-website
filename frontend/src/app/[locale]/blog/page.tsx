@@ -62,6 +62,8 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
         typeof resolvedSearchParams.topic === "string"
             ? resolvedSearchParams.topic
             : undefined;
+    const searchQuery =
+        typeof resolvedSearchParams.q === "string" ? resolvedSearchParams.q.trim() : undefined;
 
     // Fetch data from Django API - handle gracefully if API is unavailable
     let articles: PaginatedArticlesResponse;
@@ -73,6 +75,7 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
                 locale: validLocale,
                 page: currentPage,
                 topic: activeTopic,
+                q: searchQuery,
                 pageSize: PAGE_SIZE,
             }),
             fetchTopics(),
@@ -85,9 +88,9 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
 
     const totalPages = Math.ceil(articles.count / PAGE_SIZE);
 
-    // Pick first article as featured only on page 1 with no topic filter
+    // Pick first article as featured only on page 1 with no active filter.
     const featuredArticle =
-        currentPage === 1 && !activeTopic && articles.results.length > 0
+        currentPage === 1 && !activeTopic && !searchQuery && articles.results.length > 0
             ? articles.results[0]
             : null;
 
@@ -102,10 +105,13 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
             ? "آخرین نوشته‌ها و مقالات"
             : "Latest articles and writings";
 
-    // Build search params for pagination links (preserve topic filter)
+    // Build search params for pagination links (preserve active filters).
     const paginationSearchParams: Record<string, string> = {};
     if (activeTopic) {
         paginationSearchParams.topic = activeTopic;
+    }
+    if (searchQuery) {
+        paginationSearchParams.q = searchQuery;
     }
 
     return (
@@ -119,19 +125,37 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
             </header>
 
             {/* Topic Filter */}
+            <form className="mb-6 flex max-w-xl gap-2" action={`/${validLocale}/blog`} method="get">
+                {activeTopic && <input type="hidden" name="topic" value={activeTopic} />}
+                <label className="sr-only" htmlFor="blog-search">
+                    {validLocale === "fa" ? "جستجو در مقالات" : "Search articles"}
+                </label>
+                <input
+                    className="min-h-11 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+                    defaultValue={searchQuery}
+                    id="blog-search"
+                    name="q"
+                    placeholder={validLocale === "fa" ? "جستجو در مقالات" : "Search articles"}
+                    type="search"
+                />
+                <button className="min-h-11 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground" type="submit">
+                    {validLocale === "fa" ? "جستجو" : "Search"}
+                </button>
+            </form>
             {topics.length > 0 && (
                 <div className="mb-8">
                     <TopicFilter
                         topics={topics}
                         locale={validLocale}
                         activeTopic={activeTopic}
+                        searchQuery={searchQuery}
                     />
                 </div>
             )}
 
             {/* Empty State */}
             {articles.results.length === 0 && (
-                <BlogEmptyState locale={validLocale} hasFilter={!!activeTopic} />
+                <BlogEmptyState locale={validLocale} hasFilter={!!activeTopic || !!searchQuery} />
             )}
 
             {/* Featured Article */}

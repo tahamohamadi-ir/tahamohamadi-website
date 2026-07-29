@@ -187,6 +187,46 @@ class TestPublicArticleListFiltering:
         assert "published-article" in slugs
         assert "other-article" not in slugs
 
+    def test_list_searches_published_article_fields(
+        self, api_client, published_article, draft_article
+    ):
+        """The q parameter searches public fields without exposing drafts."""
+        resp = api_client.get("/api/public/blog/articles/?q=published")
+
+        assert resp.status_code == 200
+        data = resp.json()
+        results = data if isinstance(data, list) else data.get("results", data)
+        slugs = [article["slug_en"] for article in results]
+        assert "published-article" in slugs
+        assert "draft-blog-article" not in slugs
+
+
+# ---------------------------------------------------------------------------
+# Public Topics
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+class TestPublicTopics:
+    """Only topics used by published articles are available publicly."""
+
+    def test_list_returns_topics_for_published_articles(
+        self, api_client, published_article, topic, draft_article
+    ):
+        draft_only_topic = Topic.objects.create(
+            slug="draft-only",
+            name_fa="فقط پیش نویس",
+            name_en="Draft only",
+        )
+        draft_article.topics.add(draft_only_topic)
+
+        resp = api_client.get("/api/public/blog/topics/")
+
+        assert resp.status_code == 200
+        slugs = [item["slug"] for item in resp.json()]
+        assert topic.slug in slugs
+        assert draft_only_topic.slug not in slugs
+
 
 # ---------------------------------------------------------------------------
 # Locale Filtering (slug lookup + block filtering)
