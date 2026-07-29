@@ -22,13 +22,12 @@ coverage/
 .env.*
 !.env.example
 
+# Backups
+backups/
+
 # Editors / OS
 .DS_Store
 Thumbs.db
-
-docs/ui-ux
-docs/
-ui-ux/
 
 .kiro/
 
