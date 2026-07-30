@@ -117,7 +117,8 @@
 
 - [x] source/filter/limit/order برای collection محدود شده و API عمومی منابع identity منتشرشده را بدون UUID/raw model
   resolve می‌کند؛ قرارداد با pytest PostgreSQL پوشش داده شد.
-- [ ] renderer فرانت‌اند و sourceهای Blog/Portfolio هنوز باید به دادهٔ resolved متصل شوند؛ collection فعلی در UI placeholder است.
+- [x] sourceهای Blog/Portfolio و alias `posts` با projection published-only و بدون `id`/status/JSON خام به resolver افزوده شدند؛ renderer SSR فرانت‌اند empty collection را suppress و کارت/لینک locale-safe را نمایش می‌دهد.
+- [ ] QA مرورگر با collectionهای واقعی Blog/Portfolio/identity در fa/en، شامل مسیرهای detail، RTL/LTR و حالت empty؛ build production نیز باید با API در دسترس تکرار شود.
 
 ## R0-09 — Sentry instrumentation
 

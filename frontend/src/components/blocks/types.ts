@@ -40,10 +40,44 @@ export interface CtaSettings {
     variant?: "primary" | "secondary";
 }
 
+export type CollectionSource =
+    | "portfolio"
+    | "blog"
+    | "posts"
+    | "publications"
+    | "research_projects"
+    | "research_interests"
+    | "skills"
+    | "experience"
+    | "education"
+    | "certifications"
+    | "affiliations"
+    | "languages"
+    | "resumes";
+
+export interface CollectionItem {
+    slug_fa?: string;
+    slug_en?: string;
+    title?: string;
+    title_fa?: string;
+    title_en?: string;
+    label?: string;
+    name?: string;
+    organization?: string;
+    degree?: string;
+    summary?: string;
+    abstract?: string;
+    excerpt_fa?: string;
+    excerpt_en?: string;
+    outcome_fa?: string;
+    outcome_en?: string;
+}
+
 export interface CollectionSettings {
-    source: "portfolio" | "blog" | "publications";
+    source: CollectionSource;
     filter?: Record<string, unknown>;
     limit?: number;
+    items?: CollectionItem[];
 }
 
 export interface QuoteSettings {

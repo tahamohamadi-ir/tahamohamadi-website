@@ -1,9 +1,13 @@
 """Typed public collection projections for CMS blocks."""
 
+from apps.blog.models import Article
+from apps.blog.serializers import PublicArticleListSerializer
 from apps.identity.models import (
     Affiliation, Certification, Education, Experience, LanguageProficiency,
     Publication, ResearchInterest, ResearchProject, ResumeVariant, Skill,
 )
+from apps.portfolio.models import CaseStudy
+from apps.portfolio.serializers import PublicCaseStudyListSerializer
 from apps.identity.serializers import (
     PublicAffiliationSerializer, PublicCertificationSerializer, PublicEducationSerializer,
     PublicExperienceSerializer, PublicLanguageProficiencySerializer, PublicPublicationSerializer,
@@ -25,6 +29,20 @@ IDENTITY_COLLECTIONS = {
     "resumes": (ResumeVariant, PublicResumeVariantSerializer, "label", "ordering"),
 }
 
+CONTENT_COLLECTIONS = {
+    "portfolio": (CaseStudy, PublicCaseStudyListSerializer, "title", "published_at"),
+    "blog": (Article, PublicArticleListSerializer, "title", "published_at"),
+    # `posts` is retained as a documented CMS alias for the Blog source.
+    "posts": (Article, PublicArticleListSerializer, "title", "published_at"),
+}
+
+ALL_COLLECTIONS = {**IDENTITY_COLLECTIONS, **CONTENT_COLLECTIONS}
+
+# A collection block is a compact presentation projection. The generic public
+# list serializers include operational fields and nested data that are useful
+# on their own API endpoints but must not become raw CMS-block inputs.
+_COLLECTION_EXCLUDED_FIELDS = {"id", "status", "technologies", "topics", "featured_image"}
+
 FILTERS_BY_SOURCE = {
     "portfolio": {"featured"},
     "skills": {"category"},
@@ -35,9 +53,9 @@ FILTERS_BY_SOURCE = {
 
 
 def resolve_identity_collection(settings: dict, locale: str, request) -> list[dict]:
-    """Resolve an allowlisted collection without exposing model identifiers."""
+    """Resolve an allowlisted public collection without exposing model identifiers."""
     source = settings.get("source")
-    config = IDENTITY_COLLECTIONS.get(source)
+    config = ALL_COLLECTIONS.get(source)
     if config is None:
         return []
     model, serializer_class, localized_field, dated_field = config
@@ -55,11 +73,17 @@ def resolve_identity_collection(settings: dict, locale: str, request) -> list[di
     queryset = model.objects.filter(**filters)
     if source == "resumes":
         queryset = queryset.select_related("file")
+    elif source in {"blog", "posts"}:
+        queryset = queryset.select_related("featured_image").prefetch_related("topics")
     order = settings.get("order", "default")
     if order == "newest":
         queryset = queryset.order_by(f"-{dated_field}", "id")
     elif order == "oldest":
         queryset = queryset.order_by(dated_field, "id")
-    return serializer_class(
+    serialized_items = serializer_class(
         queryset[:settings["limit"]], many=True, context={"locale": locale, "request": request}
     ).data
+    return [
+        {key: value for key, value in item.items() if key not in _COLLECTION_EXCLUDED_FIELDS}
+        for item in serialized_items
+    ]

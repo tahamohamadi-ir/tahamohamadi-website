@@ -12,10 +12,13 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
+from apps.blog.models import Article
 from apps.cms.models import Block, Page, Section
 from apps.identity.models import ResearchProject
+from apps.portfolio.models import CaseStudy
 
 User = get_user_model()
+COLLECTION_RAW_FIELDS = {"id", "status", "technologies", "topics", "featured_image"}
 
 
 # ---------------------------------------------------------------------------
@@ -424,6 +427,49 @@ class TestPublicPageEndpoint:
             "summary": "", "methodology": "", "featured": True, "published_at": None,
         }]
         assert "id" not in items[0]
+
+    def test_collection_block_resolves_blog_and_portfolio_without_raw_fields(self, api_client, db):
+        page = Page.objects.create(
+            slug_fa="مجموعه-محتوا", slug_en="content-collections", title_fa="مجموعه", title_en="Collections",
+            page_type="custom", status="published",
+        )
+        section = Section.objects.create(page=page, ordering=0, enabled=True)
+        Block.objects.create(
+            section=section, block_type="collection", ordering=0,
+            settings={"source": "portfolio", "filter": {"featured": True}, "limit": 2, "order": "newest"},
+        )
+        Block.objects.create(
+            section=section, block_type="collection", ordering=1,
+            settings={"source": "posts", "filter": {}, "limit": 2, "order": "newest"},
+        )
+        CaseStudy.objects.create(
+            slug_fa="نمونه", slug_en="case-study", title_fa="نمونه منتشرشده", title_en="Published case study",
+            technologies=["django"], featured=True, status="published",
+        )
+        CaseStudy.objects.create(
+            slug_fa="پیش‌نویس", slug_en="draft-case-study", title_fa="پیش‌نویس", title_en="Draft case study",
+            technologies=[], featured=True, status="draft",
+        )
+        Article.objects.create(
+            slug_fa="مقاله", slug_en="article", title_fa="مقاله منتشرشده", title_en="Published article",
+            excerpt_en="A public excerpt", status="published",
+        )
+        Article.objects.create(
+            slug_fa="پیش‌نویس-مقاله", slug_en="draft-article", title_fa="پیش‌نویس", title_en="Draft article",
+            status="draft",
+        )
+
+        response = api_client.get("/api/public/pages/content-collections/?locale=en")
+
+        assert response.status_code == 200
+        portfolio_items = response.json()["sections"][0]["blocks"][0]["settings"]["items"]
+        post_items = response.json()["sections"][0]["blocks"][1]["settings"]["items"]
+        assert [item["slug_en"] for item in portfolio_items] == ["case-study"]
+        assert [item["slug_en"] for item in post_items] == ["article"]
+        assert portfolio_items[0]["title_en"] == "Published case study"
+        assert post_items[0]["excerpt_en"] == "A public excerpt"
+        assert not (COLLECTION_RAW_FIELDS & portfolio_items[0].keys())
+        assert not (COLLECTION_RAW_FIELDS & post_items[0].keys())
 
 
 # ---------------------------------------------------------------------------
