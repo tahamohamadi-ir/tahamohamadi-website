@@ -101,6 +101,11 @@
 - [x] honeypot `website` بدون ارسال ایمیل پاسخ موفق می‌دهد، throttle اختصاصی Contact فعال است و Frontend جزئیات خطای غیرمیدانی server را نمایش نمی‌دهد؛ فرم فقط پس از موفقیت تأییدشده پاک می‌شود.
 - [ ] QA واقعی CSRF/cookie و rate-limit در Docker، keyboard/aria-live در fa/en و تصمیم retention/Inbox/عدم log دادهٔ شخصی در R4-05. delivery ایمیل نیز باید با mailbox واقعی بررسی شود.
 
+## R3-09 — SEO و sitemap
+
+- [x] sitemap برای ResearchProject و Publication فقط تقاطع پاسخ‌های published و locale-complete `fa/en` را وارد می‌کند؛ alternateها دیگر به resource دارای ترجمهٔ ناقص اشاره نمی‌کنند.
+- [ ] اجرای production sitemap با API واقعی و تأیید crawler، افزودن/بازبینی JSON-LD `Person` و `CreativeWork`، OG/Twitter image و canonical/hreflang همهٔ routeهای عمومی. static sitemap و routeهای موجود نیز باید با فهرست route نهایی بازبینی شوند.
+
 ## R1-05 — پیکربندی سایت
 
 - [x] تست قراردادی API عمومی و اعتبارسنجی لینک/redirect در `backend/tests/test_siteconfig_api.py`

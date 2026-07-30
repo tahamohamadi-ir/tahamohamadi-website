@@ -30,6 +30,13 @@ interface SitemapPage {
     published_at: string | null;
 }
 
+interface SitemapIdentityResource {
+    slug_fa: string;
+    slug_en: string;
+    published_at?: string | null;
+    published_on?: string | null;
+}
+
 /**
  * Fetch all published blog articles for sitemap.
  * Iterates through all pages to collect every published article slug.
@@ -110,6 +117,56 @@ async function fetchAllCaseStudies(): Promise<SitemapCaseStudy[]> {
 }
 
 /**
+ * Fetch all publicly accessible identity resources for one locale. The caller
+ * intersects locale results before exposing hreflang alternates, so an
+ * incomplete translation can never create a sitemap URL to a 404 route.
+ */
+async function fetchAllIdentityResources(
+    resource: "research-projects" | "publications",
+    locale: "fa" | "en",
+): Promise<SitemapIdentityResource[]> {
+    const baseUrl = getApiBaseUrl();
+    const resources: SitemapIdentityResource[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+        try {
+            const response = await fetch(
+                `${baseUrl}/api/public/identity/${resource}/?locale=${locale}&page=${page}&page_size=100`,
+                { next: { revalidate: 3600 } },
+            );
+            if (!response.ok) break;
+
+            const data = await response.json();
+            const results = data.results || [];
+            resources.push(...results.map((item: SitemapIdentityResource) => ({
+                slug_fa: item.slug_fa,
+                slug_en: item.slug_en,
+                published_at: item.published_at ?? item.published_on ?? null,
+            })));
+            hasMore = data.next !== null;
+            page++;
+        } catch {
+            break;
+        }
+    }
+
+    return resources;
+}
+
+function resourcesAvailableInBothLocales(
+    farsi: SitemapIdentityResource[],
+    english: SitemapIdentityResource[],
+): SitemapIdentityResource[] {
+    const pairKey = (item: SitemapIdentityResource) => `${item.slug_fa}\u0000${item.slug_en}`;
+    const englishPairs = new Set(english.map(pairKey));
+    return farsi.filter((item) => (
+        Boolean(item.slug_fa && item.slug_en) && englishPairs.has(pairKey(item))
+    ));
+}
+
+/**
  * Fetch all published CMS pages for sitemap.
  * Uses a dedicated sitemap endpoint if available, falls back to known static pages.
  */
@@ -146,11 +203,17 @@ async function fetchAllPages(): Promise<SitemapPage[]> {
  * Requirements: 10.6
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const [articles, caseStudies, pages] = await Promise.all([
+    const [articles, caseStudies, pages, researchFa, researchEn, publicationsFa, publicationsEn] = await Promise.all([
         fetchAllArticles(),
         fetchAllCaseStudies(),
         fetchAllPages(),
+        fetchAllIdentityResources("research-projects", "fa"),
+        fetchAllIdentityResources("research-projects", "en"),
+        fetchAllIdentityResources("publications", "fa"),
+        fetchAllIdentityResources("publications", "en"),
     ]);
+    const researchProjects = resourcesAvailableInBothLocales(researchFa, researchEn);
+    const publications = resourcesAvailableInBothLocales(publicationsFa, publicationsEn);
 
     const entries: MetadataRoute.Sitemap = [];
 
@@ -237,6 +300,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                     languages: {
                         fa: `${SITE_URL}/fa/portfolio/${study.slug_fa}`,
                         en: `${SITE_URL}/en/portfolio/${study.slug_en}`,
+                    },
+                },
+            });
+        }
+    }
+
+    for (const project of researchProjects) {
+        for (const locale of locales) {
+            const slug = locale === "fa" ? project.slug_fa : project.slug_en;
+            entries.push({
+                url: `${SITE_URL}/${locale}/research/${slug}`,
+                lastModified: project.published_at ? new Date(project.published_at) : new Date(),
+                changeFrequency: "monthly",
+                priority: 0.6,
+                alternates: {
+                    languages: {
+                        fa: `${SITE_URL}/fa/research/${project.slug_fa}`,
+                        en: `${SITE_URL}/en/research/${project.slug_en}`,
+                    },
+                },
+            });
+        }
+    }
+
+    for (const publication of publications) {
+        for (const locale of locales) {
+            const slug = locale === "fa" ? publication.slug_fa : publication.slug_en;
+            entries.push({
+                url: `${SITE_URL}/${locale}/publications/${slug}`,
+                lastModified: publication.published_at ? new Date(publication.published_at) : new Date(),
+                changeFrequency: "monthly",
+                priority: 0.6,
+                alternates: {
+                    languages: {
+                        fa: `${SITE_URL}/fa/publications/${publication.slug_fa}`,
+                        en: `${SITE_URL}/en/publications/${publication.slug_en}`,
                     },
                 },
             });
