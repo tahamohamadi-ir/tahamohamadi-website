@@ -154,6 +154,13 @@
 - [ ] signature check جای `libmagic`/antivirus، decode کامل image و سیاست مقابله با polyglot را نمی‌گیرد. SVG هنوز sanitize نشده است؛ تا طراحی و آزمون sanitizer یا policy منع SVG، این مسیر باید با review امنیتی جداگانه بسته شود.
 - [ ] ایجاد thumbnail/derivative، پردازش async، retry/cleanup storage و benchmark فایل‌های مرزی هنوز وجود ندارد. upload واقعی با session/CSRF، سقف Nginx و storage production نیز باید جداگانه QA شود.
 
+## R5-01 — صف ترجمه
+
+- [x] `GET /api/admin/workflow/translation-status/` اکنون برای Page/Article/CaseStudy، status هر locale، مسیر امن ویرایش و جفت‌فیلدهای واقعیِ قابل‌ترجمه را با ترتیب پایدار می‌دهد. رابط `/admin/workflow` نیز از `adminFetch` با session/CSRF مشترک استفاده می‌کند، فیلدها را کنار هم مقایسه می‌کند و برای locale انتخاب‌شده فقط موارد نیازمند رسیدگی را نشان می‌دهد.
+- [ ] endpoint فعلاً حداکثر ۱۰۰ رکورد از هر نوع را در یک پاسخ برمی‌گرداند؛ pagination، filter و sort سمت سرور، شمارش قابل‌مشاهدهٔ truncation و سنجش کارایی روی دادهٔ production-like انجام نشده‌اند.
+- [ ] مقایسهٔ این برش فقط فیلدهای top-level تعیین‌کنندهٔ status (عنوان/خلاصه/role/outcome) را می‌بیند؛ blockهای CMS، ArticleBlock و CaseStudyBlock در compare نیستند و نباید تا تعریف قرارداد محدود و آزمون‌شده به پاسخ افزوده شوند.
+- [ ] QA واقعی login/session/CSRF، Refresh، خطا و retry، keyboard/focus در dialog، RTL/LTR و viewportهای هدف در `/admin/workflow` لازم است. Docker build تازه نیز تا رفع proxy محلی `127.0.0.1:3067` قابل اثبات نیست.
+
 ## R1-05 — پیکربندی سایت
 
 - [x] تست قراردادی API عمومی و اعتبارسنجی لینک/redirect در `backend/tests/test_siteconfig_api.py`

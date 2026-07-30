@@ -292,6 +292,7 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | R4-01 | 🟡 | `MediaUsageReference` اکنون برای مرجع‌های schema-aware CMS/Blog/Portfolio با FKهای صریح ساخته می‌شود و command تکرارپذیر `reconcile_media_usage` backfill/stale-cleanup انجام می‌دهد؛ freshness خودکار، schedule/observability و استفادهٔ عملیاتی از index هنوز باقی است. |
 | R4-03 | 🟡 | MediaPicker اکنون DTO واقعی Admin را مصرف می‌کند، search/type/status را با API هم‌راستا می‌کند، active را پیش‌فرض می‌گیرد و archived را انتخاب‌ناپذیر می‌سازد؛ اتصال یکپارچه به composer/article editor، upload واقعی و QA مرورگر باقی است. |
 | R4-04 | 🟡 | upload اکنون علاوه بر MIME اعلام‌شده، امضای واقعی JPEG/PNG/GIF/WebP/SVG/PDF/MP4 را کنترل می‌کند و فایل ناشناخته یا جعلی را رد می‌کند؛ سیاست SVG/polyglot، thumbnail/processing و آزمون عملیاتی upload باقی است. |
+| R5-01 | 🟡 | Translation Queue اکنون قرارداد Admin امن را مصرف می‌کند، فیلدهای واقعیِ هر دو locale را کنار هم نشان می‌دهد و برای هر آیتم لینک مستقیم ویرایش دارد؛ pagination/filter سمت سرور، محتوای blockها و QA مرورگر باقی است. |
 
 ### R0 — تثبیت Runtime و قراردادهای شکسته
 
@@ -378,7 +379,7 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 
 | ID | P | Size | Task | وابستگی / پذیرش |
 |---|---:|---:|---|---|
-| R5-01 | P1 | L | Translation Queue | statusهای Missing/Incomplete/Complete/Outdated، filter و compare دو locale. |
+| R5-01 | P1 | L | Translation Queue | 🟡 statusهای Missing/Incomplete/Complete/Outdated، filter و compare فیلدهای top-level دو locale و لینک ویرایش انجام شد؛ pagination/filter سمت سرور، مقایسهٔ blockها و QA باقی است. |
 | R5-02 | P1 | M | freshness tracking | تغییر source، target را Outdated می‌کند ولی ترجمه را overwrite نمی‌کند. |
 | R5-03 | P1 | L | بازسازی WorkflowPanel با shadcn Tabs/Alert/Dialog | transition مجاز، reason، permission، conflict و audit timeline. |
 | R5-04 | P1 | L | Scheduled publishing عملیاتی | timezone صریح، cancel، idempotency، retry و failure log؛ worker health قابل مشاهده. |

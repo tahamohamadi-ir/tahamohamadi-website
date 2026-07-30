@@ -1,13 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { adminFetch } from "@/lib/admin-fetch";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type TranslationStatus = "missing" | "incomplete" | "complete" | "outdated";
+
+export interface TranslationField {
+    key: string;
+    label: string;
+    en: string;
+    fa: string;
+}
 
 export interface TranslationItem {
     id: string;
@@ -17,8 +26,8 @@ export interface TranslationItem {
     status_en: TranslationStatus;
     status_fa: TranslationStatus;
     last_updated: string;
-    content_en?: string;
-    content_fa?: string;
+    action_path: string;
+    fields: TranslationField[];
 }
 
 interface TranslationQueueProps {
@@ -123,13 +132,15 @@ function SideBySideCompare({
                             <span className="text-sm font-medium">English</span>
                             <StatusBadge status={item.status_en} />
                         </div>
-                        <div className="flex-1 overflow-y-auto p-4">
-                            <h4 className="mb-3 text-base font-semibold">{item.title_en || "—"}</h4>
-                            <div className="whitespace-pre-wrap text-sm text-foreground/80">
-                                {item.content_en || (
-                                    <span className="italic text-muted-foreground">No content available</span>
-                                )}
-                            </div>
+                        <div className="flex-1 space-y-5 overflow-y-auto p-4">
+                            {item.fields.map((field) => (
+                                <section key={field.key}>
+                                    <h4 className="mb-1 text-sm font-semibold text-muted-foreground">{field.label}</h4>
+                                    <div className="whitespace-pre-wrap text-sm text-foreground/80">
+                                        {field.en || <span className="italic text-muted-foreground">No content available</span>}
+                                    </div>
+                                </section>
+                            ))}
                         </div>
                     </div>
 
@@ -139,13 +150,15 @@ function SideBySideCompare({
                             <span className="text-sm font-medium">فارسی</span>
                             <StatusBadge status={item.status_fa} />
                         </div>
-                        <div className="flex-1 overflow-y-auto p-4">
-                            <h4 className="mb-3 text-base font-semibold">{item.title_fa || "—"}</h4>
-                            <div className="whitespace-pre-wrap text-sm text-foreground/80">
-                                {item.content_fa || (
-                                    <span className="italic text-muted-foreground">محتوایی موجود نیست</span>
-                                )}
-                            </div>
+                        <div className="flex-1 space-y-5 overflow-y-auto p-4">
+                            {item.fields.map((field) => (
+                                <section key={field.key}>
+                                    <h4 className="mb-1 text-sm font-semibold text-muted-foreground">{field.label}</h4>
+                                    <div className="whitespace-pre-wrap text-sm text-foreground/80">
+                                        {field.fa || <span className="italic text-muted-foreground">محتوایی موجود نیست</span>}
+                                    </div>
+                                </section>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -184,12 +197,7 @@ export function TranslationQueue({
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(apiUrl, { credentials: "include" });
-            if (!response.ok) {
-                throw new Error(`Failed to fetch translation status: ${response.status}`);
-            }
-            const data = await response.json();
-            setItems(Array.isArray(data) ? data : data.results ?? []);
+            setItems(await adminFetch<TranslationItem[]>(apiUrl));
         } catch (err) {
             setError(err instanceof Error ? err.message : "Unknown error");
         } finally {
@@ -215,9 +223,11 @@ export function TranslationQueue({
             });
         }
 
-        // Locale filter (only show items where that locale has a non-complete status)
+        // With no explicit status, a locale filter is an actionable queue.
         if (localeFilter !== "all" && statusFilter === "all") {
-            // No extra filtering needed — locale filter only narrows the status check
+            result = result.filter((item) => (
+                localeFilter === "en" ? item.status_en : item.status_fa
+            ) !== "complete");
         }
 
         // Sort
@@ -431,6 +441,12 @@ export function TranslationQueue({
                                         >
                                             Compare
                                         </Button>
+                                        <Link
+                                            href={item.action_path}
+                                            className="ml-2 text-xs font-medium text-primary underline-offset-4 hover:underline"
+                                        >
+                                            Edit
+                                        </Link>
                                     </td>
                                 </tr>
                             ))}

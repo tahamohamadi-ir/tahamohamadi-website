@@ -649,40 +649,50 @@ class TranslationStatusView(APIView):
     """
 
     def get(self, request):
+        from apps.blog.models import Article
+        from apps.cms.models import Page
+        from apps.portfolio.models import CaseStudy
         from apps.workflow.services import compute_translation_status
-        from django.contrib.contenttypes.models import ContentType as CT
 
         items = []
 
         # Collect translation status from all content models
         content_models = [
-            ("cms", "page"),
-            ("blog", "article"),
-            ("portfolio", "casestudy"),
+            ("cms.page", Page, "/admin/pages", ("title",)),
+            ("blog.article", Article, "/admin/blog", ("title", "excerpt")),
+            (
+                "portfolio.casestudy",
+                CaseStudy,
+                "/admin/portfolio",
+                ("title", "role", "outcome"),
+            ),
         ]
 
-        for app_label, model_name in content_models:
-            try:
-                ct = CT.objects.get(app_label=app_label, model=model_name)
-                model_class = ct.model_class()
-                if model_class is None:
-                    continue
+        for content_type, model_class, action_base, field_names in content_models:
+            for entity in model_class.objects.order_by("-updated_at", "id")[:100]:
+                status_en = compute_translation_status(entity, "en")
+                status_fa = compute_translation_status(entity, "fa")
+                fields = [
+                    {
+                        "key": field_name,
+                        "label": field_name.replace("_", " ").title(),
+                        "en": getattr(entity, f"{field_name}_en", ""),
+                        "fa": getattr(entity, f"{field_name}_fa", ""),
+                    }
+                    for field_name in field_names
+                ]
 
-                for entity in model_class.objects.all()[:100]:  # Limit to 100 per type
-                    status_en = compute_translation_status(entity, "en")
-                    status_fa = compute_translation_status(entity, "fa")
-
-                    items.append({
-                        "id": str(entity.pk),
-                        "content_type": f"{app_label}.{model_name}",
-                        "title_en": getattr(entity, "title_en", ""),
-                        "title_fa": getattr(entity, "title_fa", ""),
-                        "status_en": status_en,
-                        "status_fa": status_fa,
-                        "last_updated": entity.updated_at.isoformat() if hasattr(entity, "updated_at") else "",
-                    })
-            except CT.DoesNotExist:
-                continue
+                items.append({
+                    "id": str(entity.pk),
+                    "content_type": content_type,
+                    "title_en": getattr(entity, "title_en", ""),
+                    "title_fa": getattr(entity, "title_fa", ""),
+                    "status_en": status_en,
+                    "status_fa": status_fa,
+                    "last_updated": entity.updated_at.isoformat(),
+                    "action_path": f"{action_base}/{entity.pk}",
+                    "fields": fields,
+                })
 
         return Response(items, status=status.HTTP_200_OK)
 
