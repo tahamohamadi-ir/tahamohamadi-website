@@ -96,7 +96,7 @@ describe("ContactForm", () => {
         });
     });
 
-    it("shows server error message on failed submission", async () => {
+    it("does not expose an arbitrary server error message on failed submission", async () => {
         const user = userEvent.setup();
         mockFetch
             .mockResolvedValueOnce(new Response(JSON.stringify({ csrf: "cookie-set" }), { status: 200 }))
@@ -116,8 +116,9 @@ describe("ContactForm", () => {
         await user.click(screen.getByRole("button", { name: /send message/i }));
 
         await waitFor(() => {
-            expect(screen.getByText("Rate limit exceeded")).toBeInTheDocument();
+            expect(screen.getByText("Something went wrong. Please try again.")).toBeInTheDocument();
         });
+        expect(screen.queryByText("Rate limit exceeded")).not.toBeInTheDocument();
     });
 
     it("disables button during submission (single-submit protection)", async () => {
@@ -182,5 +183,13 @@ describe("ContactForm", () => {
     it("has an accessible form label", () => {
         render(<ContactForm locale="en" />);
         expect(screen.getByRole("form", { name: /contact form/i })).toBeInTheDocument();
+    });
+
+    it("includes a non-focusable honeypot outside the normal interaction path", () => {
+        render(<ContactForm locale="en" />);
+
+        const honeypot = document.getElementById("contact-website");
+        expect(honeypot).toHaveAttribute("name", "website");
+        expect(honeypot).toHaveAttribute("tabindex", "-1");
     });
 });

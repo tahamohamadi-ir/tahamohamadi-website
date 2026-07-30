@@ -128,6 +128,7 @@ export function ContactForm({ locale }: ContactFormProps) {
     const [email, setEmail] = useState("");
     const [subject, setSubject] = useState("");
     const [message, setMessage] = useState("");
+    const [website, setWebsite] = useState("");
     const [errors, setErrors] = useState<FieldErrors>({});
     const [formStatus, setFormStatus] = useState<FormStatus>("idle");
     const [serverError, setServerError] = useState("");
@@ -175,10 +176,16 @@ export function ContactForm({ locale }: ContactFormProps) {
                         email: formData.email.trim(),
                         subject: formData.subject.trim(),
                         message: formData.message.trim(),
+                        website,
                     }),
                 });
 
                 if (response.ok) {
+                    setName("");
+                    setEmail("");
+                    setSubject("");
+                    setMessage("");
+                    setWebsite("");
                     setFormStatus("success");
                 } else {
                     const errorData = await response.json().catch(() => null);
@@ -195,9 +202,7 @@ export function ContactForm({ locale }: ContactFormProps) {
                             }
                         }
                         setErrors(serverFieldErrors);
-                    } else {
-                        setServerError(errorData?.detail || t.errorGeneral);
-                    }
+                    } else setServerError(t.errorGeneral);
                     setFormStatus("error");
                 }
             } catch {
@@ -207,7 +212,7 @@ export function ContactForm({ locale }: ContactFormProps) {
                 isSubmittingRef.current = false;
             }
         },
-        [name, email, subject, message, t]
+        [name, email, subject, message, website, t]
     );
 
     const handleReset = useCallback(() => {
@@ -215,6 +220,7 @@ export function ContactForm({ locale }: ContactFormProps) {
         setEmail("");
         setSubject("");
         setMessage("");
+        setWebsite("");
         setErrors({});
         setServerError("");
         setFormStatus("idle");
@@ -277,6 +283,19 @@ export function ContactForm({ locale }: ContactFormProps) {
                     {serverError}
                 </div>
             )}
+
+            <div className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+                <label htmlFor="contact-website">Website</label>
+                <input
+                    id="contact-website"
+                    name="website"
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                />
+            </div>
 
             {/* Name field */}
             <div>

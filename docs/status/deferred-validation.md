@@ -96,6 +96,11 @@
 - [x] fallback SSR مسیر About در نبود صفحهٔ CMS، فقط SiteProfile و Experience/Education منتشرشده و کامل در locale درخواست‌شده را از aggregate نمایش می‌دهد؛ دادهٔ locale دیگر یا محتوای ساختگی جایگزین نمی‌شود.
 - [ ] QA مرورگر `/fa/about` و `/en/about` با صفحهٔ CMS و fallback aggregate، timeline خالی/دارای داده، تاریخ‌ها، RTL/LTR، keyboard و viewportهای هدف. bio و ترتیب timeline باید با محتوای واقعی تأیید شوند.
 
+## R3-08 — فرم تماس
+
+- [x] honeypot `website` بدون ارسال ایمیل پاسخ موفق می‌دهد، throttle اختصاصی Contact فعال است و Frontend جزئیات خطای غیرمیدانی server را نمایش نمی‌دهد؛ فرم فقط پس از موفقیت تأییدشده پاک می‌شود.
+- [ ] QA واقعی CSRF/cookie و rate-limit در Docker، keyboard/aria-live در fa/en و تصمیم retention/Inbox/عدم log دادهٔ شخصی در R4-05. delivery ایمیل نیز باید با mailbox واقعی بررسی شود.
+
 ## R1-05 — پیکربندی سایت
 
 - [x] تست قراردادی API عمومی و اعتبارسنجی لینک/redirect در `backend/tests/test_siteconfig_api.py`

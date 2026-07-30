@@ -17,3 +17,4 @@ class ContactMessageSerializer(serializers.Serializer):
     email = serializers.EmailField()
     subject = serializers.CharField(min_length=2, max_length=200)
     message = serializers.CharField(min_length=10, max_length=5000)
+    website = serializers.CharField(required=False, allow_blank=True, max_length=256, trim_whitespace=True)

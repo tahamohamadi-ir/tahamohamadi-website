@@ -20,7 +20,7 @@ from rest_framework.views import APIView
 from apps.core.exceptions import problem_json_response
 from apps.core.seed_review import seed_review_report
 from apps.core.serializers import ContactMessageSerializer
-from apps.core.throttling import LoginRateThrottle
+from apps.core.throttling import ContactRateThrottle, LoginRateThrottle
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +52,11 @@ class PublicContactView(APIView):
     """
 
     permission_classes = [AllowAny]
+    throttle_classes = [ContactRateThrottle]
+
+    def get_throttles(self):
+        """Do not charge the CSRF-cookie bootstrap against message quota."""
+        return super().get_throttles() if self.request.method == "POST" else []
 
     def get(self, request: Request) -> Response:
         """Return empty response to set CSRF cookie via middleware."""
@@ -62,12 +67,15 @@ class PublicContactView(APIView):
         serializer.is_valid(raise_exception=True)
 
         data = serializer.validated_data
-        logger.info(
-            "Contact form submission from %s <%s>: %s",
-            data["name"],
-            data["email"],
-            data["subject"],
-        )
+        if data.get("website"):
+            # Honeypot submissions receive the same response, without email
+            # forwarding or personal data written to application logs.
+            return Response(
+                {"status": "sent", "message": "Your message has been received."},
+                status=status.HTTP_200_OK,
+            )
+
+        logger.info("Contact form submission accepted.")
 
         # Attempt to send email notification if email is configured
         try:

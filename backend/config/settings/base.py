@@ -229,6 +229,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "login": "5/min",
         "upload": "20/min",
+        "contact": "5/hour",
         "public_anon": "100/min",
         "public_user": "1000/min",
     },

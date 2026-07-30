@@ -45,6 +45,12 @@ class UploadRateThrottle(ConfiguredRateThrottle, UserRateThrottle):
     scope = "upload"
 
 
+class ContactRateThrottle(ConfiguredRateThrottle, AnonRateThrottle):
+    """Restrict public contact submissions independently from general API traffic."""
+
+    scope = "contact"
+
+
 class PublicAnonRateThrottle(ConfiguredRateThrottle, AnonRateThrottle):
     """Rate limit for anonymous public API requests: 100 requests per minute."""
 
