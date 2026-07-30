@@ -98,8 +98,8 @@ class AuditLoggingMiddleware:
         """Create an AuditEvent record for the mutating admin request."""
         from apps.workflow.models import AuditEvent
 
-        action = METHOD_ACTION_MAP.get(request.method, request.method.lower())
         endpoint = request.path
+        action, reason = self._audit_details(request)
         object_id = self._extract_object_id(request, response)
         content_type = self._extract_content_type(request)
 
@@ -109,7 +109,7 @@ class AuditLoggingMiddleware:
             from_status="",  # Not a state transition — generic mutation audit
             to_status=action,  # Repurpose to_status to store the action type
             user=request.user,
-            reason=f"Admin API: {request.method} {endpoint}",
+            reason=reason,
         )
 
         logger.debug(
@@ -119,6 +119,16 @@ class AuditLoggingMiddleware:
             endpoint,
             object_id,
         )
+
+    @staticmethod
+    def _audit_details(request) -> tuple[str, str]:
+        """Name known state actions so timelines remain meaningful to operators."""
+        if request.path.endswith("/mark-read/"):
+            return "read", "Contact message marked as read."
+        if request.path.endswith("/archive/") and request.path.startswith("/api/admin/contact-messages/"):
+            return "archived", "Contact message archived."
+        action = METHOD_ACTION_MAP.get(request.method, request.method.lower())
+        return action, f"Admin API: {request.method} {request.path}"
 
     def _extract_object_id(self, request, response) -> uuid.UUID | None:
         """Extract the target object ID from the request URL or response body.

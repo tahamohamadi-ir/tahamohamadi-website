@@ -7,6 +7,7 @@ import logging
 import django
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.contenttypes.models import ContentType
 from django.core.mail import send_mail
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
@@ -326,6 +327,29 @@ class AdminContactMessageViewSet(ReadOnlyModelViewSet):
             message.updated_by = request.user.get_username()
             message.save(update_fields=["status", "updated_by", "updated_at"])
         return Response(self.get_serializer(message).data)
+
+    @action(detail=True, methods=["get"])
+    def timeline(self, request, pk=None):
+        """Return an operator-readable audit timeline without object identifiers."""
+        from apps.workflow.models import AuditEvent
+
+        message = self.get_object()
+        events = AuditEvent.objects.filter(
+            content_type=ContentType.objects.get_for_model(ContactMessage),
+            object_id=message.id,
+        ).select_related("user")
+        return Response(
+            {
+                "events": [
+                    {
+                        "action": event.to_status,
+                        "actor": event.user.get_username() if event.user else "system",
+                        "timestamp": event.timestamp.isoformat(),
+                    }
+                    for event in events
+                ]
+            }
+        )
 
 
 class AdminSeedReviewView(APIView):

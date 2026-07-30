@@ -69,3 +69,21 @@ def test_admin_cannot_archive_a_new_contact_message_without_marking_it_read(
     response = admin_client.post(f"{CONTACT_MESSAGES_URL}{message_id}/archive/", format="json")
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_contact_timeline_exposes_a_human_readable_read_event_without_raw_ids(
+    api_client: APIClient, admin_client: APIClient
+):
+    assert api_client.post(PUBLIC_CONTACT_URL, PAYLOAD, format="json").status_code == status.HTTP_200_OK
+    message_id = admin_client.get(CONTACT_MESSAGES_URL).json()["results"][0]["id"]
+    assert admin_client.post(f"{CONTACT_MESSAGES_URL}{message_id}/mark-read/", format="json").status_code == status.HTTP_200_OK
+
+    response = admin_client.get(f"{CONTACT_MESSAGES_URL}{message_id}/timeline/")
+
+    assert response.status_code == status.HTTP_200_OK
+    event = response.json()["events"][0]
+    assert event["action"] == "read"
+    assert event["actor"] == "admin"
+    assert "timestamp" in event
+    assert message_id not in response.content.decode()
