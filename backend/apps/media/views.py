@@ -62,6 +62,18 @@ class AdminMediaViewSet(ModelViewSet):
             return MediaUploadSerializer
         return MediaAssetSerializer
 
+    def get_queryset(self):
+        """Support the MediaPicker's category filter without weakening MIME filters."""
+        queryset = super().get_queryset()
+        category = self.request.query_params.get("mime_type_category")
+        if category == "image":
+            return queryset.filter(mime_type__startswith="image/")
+        if category == "video":
+            return queryset.filter(mime_type__startswith="video/")
+        if category == "document":
+            return queryset.filter(mime_type="application/pdf")
+        return queryset
+
     # ------------------------------------------------------------------
     # Disable create via standard POST (use upload action instead)
     # ------------------------------------------------------------------

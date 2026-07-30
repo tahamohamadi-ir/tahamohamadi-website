@@ -142,6 +142,12 @@
 - [ ] constraint دیتابیسیِ «دقیقاً یک FK منبع» و مسیر update incremental برای هر serializer/signal اضافه نشده است. migration و اجرای backfill باید نخست با backup و حجم دادهٔ واقعی در staging سنجیده شود.
 - [ ] benchmark query/index و اجرای reconcile روی دادهٔ production-like، همراه با تست هم‌زمانی writer و reconcile، برای اثبات مقیاس‌پذیری این index باقی مانده است.
 
+## R4-03 — MediaPicker واحد
+
+- [x] MediaPicker اکنون دقیقاً DTO فعلی Admin (`file`، `original_filename`، `file_size` و alt/caption locale) را مصرف می‌کند؛ search، `mime_type_category` و `status` را به API می‌فرستد و انتخاب پیش‌فرض را به رسانهٔ active محدود می‌کند. backend categoryهای image/video/document را به MIME واقعی ترجمه می‌کند.
+- [ ] اتصال MediaPicker به composer و Article editor هنوز انجام نشده است؛ Article editor همچنان placeholder دارد و نباید تا اتصال واقعی، رسانهٔ خارجی یا UUID خام را به content منتشرشده وارد کند.
+- [ ] upload واقعی XHR با CSRF/session، progress/retry در مرورگر، keyboard/focus در nested dialog، RTL/LTR و viewportهای هدف هنوز QA نشده‌اند. Docker build تازه همچنان وابسته به رفع proxy محلی است.
+
 ## R1-05 — پیکربندی سایت
 
 - [x] تست قراردادی API عمومی و اعتبارسنجی لینک/redirect در `backend/tests/test_siteconfig_api.py`

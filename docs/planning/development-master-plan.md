@@ -290,6 +290,7 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | R4-07 | 🟡 | نخستین timeline انسانی برای ContactMessage در جزئیات Inbox ساخته شد: action، عامل و زمان بدون UUID خام نمایش داده می‌شوند؛ تعمیم name/locale و timeline به تمام منابع Admin هنوز باقی است. |
 | R4-02 | 🟡 | بایگانی رسانه اکنون در تراکنش و پس از کنترل مصرف انجام می‌شود؛ رسانهٔ ارجاع‌شده با 409 و impact واقعی بازمی‌گردد و active می‌ماند. جایگزینی کنترل‌شدهٔ CMS/Blog/Portfolio نیز تمام referenceهای شناخته‌شده را اتمیک منتقل و مبدأ را archive می‌کند؛ usage index/reconcile، آزمون هم‌زمانی و QA واقعی باقی است. |
 | R4-01 | 🟡 | `MediaUsageReference` اکنون برای مرجع‌های schema-aware CMS/Blog/Portfolio با FKهای صریح ساخته می‌شود و command تکرارپذیر `reconcile_media_usage` backfill/stale-cleanup انجام می‌دهد؛ freshness خودکار، schedule/observability و استفادهٔ عملیاتی از index هنوز باقی است. |
+| R4-03 | 🟡 | MediaPicker اکنون DTO واقعی Admin را مصرف می‌کند، search/type/status را با API هم‌راستا می‌کند، active را پیش‌فرض می‌گیرد و archived را انتخاب‌ناپذیر می‌سازد؛ اتصال یکپارچه به composer/article editor، upload واقعی و QA مرورگر باقی است. |
 
 ### R0 — تثبیت Runtime و قراردادهای شکسته
 

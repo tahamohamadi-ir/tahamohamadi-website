@@ -8,16 +8,18 @@ import type { MediaAssetDTO } from "@/lib/types/media";
 function makeAsset(overrides: Partial<MediaAssetDTO> = {}): MediaAssetDTO {
     return {
         id: "asset-1",
-        file_url: "/media/test-image.jpg",
-        filename: "test-image.jpg",
+        file: "/media/test-image.jpg",
+        original_filename: "test-image.jpg",
         mime_type: "image/jpeg",
-        size: 102400,
+        file_size: 102400,
         width: 800,
         height: 600,
-        alt_fa: "تصویر آزمایشی",
-        alt_en: "Test image",
+        alt_text_fa: "تصویر آزمایشی",
+        alt_text_en: "Test image",
         caption_fa: "",
         caption_en: "",
+        status: "active",
+        checksum: "a".repeat(64),
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
         ...overrides,
@@ -29,12 +31,12 @@ const mockMediaResponse = {
     next: null,
     previous: null,
     results: [
-        makeAsset({ id: "asset-1", filename: "photo.jpg" }),
+        makeAsset({ id: "asset-1", original_filename: "photo.jpg" }),
         makeAsset({
             id: "asset-2",
-            filename: "document.pdf",
+            original_filename: "document.pdf",
             mime_type: "application/pdf",
-            file_url: "/media/document.pdf",
+            file: "/media/document.pdf",
         }),
     ],
 };
@@ -79,7 +81,7 @@ describe("MediaPicker", () => {
         it("shows file icon for non-image assets", () => {
             const asset = makeAsset({
                 mime_type: "application/pdf",
-                filename: "doc.pdf",
+                original_filename: "doc.pdf",
             });
             render(<MediaPicker value={asset} locale="en" />);
             expect(screen.getByText("doc.pdf")).toBeInTheDocument();
@@ -92,7 +94,7 @@ describe("MediaPicker", () => {
         });
 
         it("shows file size and dimensions", () => {
-            const asset = makeAsset({ size: 102400, width: 800, height: 600 });
+            const asset = makeAsset({ file_size: 102400, width: 800, height: 600 });
             render(<MediaPicker value={asset} />);
             expect(screen.getByText("100.0 KB · 800×600")).toBeInTheDocument();
         });
@@ -122,6 +124,44 @@ describe("MediaPicker", () => {
     });
 
     describe("Dialog media browser", () => {
+        it("renders a selectable asset from the current admin media API shape", async () => {
+            fetchSpy.mockResolvedValue({
+                ok: true,
+                json: () =>
+                    Promise.resolve({
+                        count: 1,
+                        next: null,
+                        previous: null,
+                        results: [
+                            {
+                                id: "api-asset-1",
+                                file: "/media/api-image.jpg",
+                                original_filename: "api-image.jpg",
+                                mime_type: "image/jpeg",
+                                file_size: 2048,
+                                width: 100,
+                                height: 50,
+                                alt_text_fa: "تصویر API",
+                                alt_text_en: "API image",
+                                caption_fa: "",
+                                caption_en: "",
+                                status: "active",
+                                checksum: "a".repeat(64),
+                                created_at: "2026-07-30T00:00:00Z",
+                                updated_at: "2026-07-30T00:00:00Z",
+                            },
+                        ],
+                    }),
+            });
+
+            render(<MediaPicker />);
+            await userEvent.click(screen.getByText("Choose media..."));
+
+            await waitFor(() => {
+                expect(screen.getByLabelText("Select api-image.jpg")).toBeInTheDocument();
+            });
+        });
+
         it("fetches media when dialog opens", async () => {
             render(<MediaPicker />);
             await userEvent.click(screen.getByText("Choose media..."));
@@ -157,7 +197,7 @@ describe("MediaPicker", () => {
 
             await userEvent.click(screen.getByLabelText("Select photo.jpg"));
             expect(onSelect).toHaveBeenCalledWith(
-                expect.objectContaining({ id: "asset-1", filename: "photo.jpg" })
+                expect.objectContaining({ id: "asset-1", original_filename: "photo.jpg" })
             );
         });
 
@@ -190,6 +230,19 @@ describe("MediaPicker", () => {
             await waitFor(() => {
                 const lastCall = fetchSpy.mock.calls[fetchSpy.mock.calls.length - 1];
                 expect(lastCall[0]).toContain("mime_type_category=image");
+            });
+        });
+
+        it("filters the picker list by status", async () => {
+            render(<MediaPicker />);
+            await userEvent.click(screen.getByText("Choose media..."));
+
+            const statusSelect = screen.getByLabelText("Filter by status");
+            await userEvent.selectOptions(statusSelect, "archived");
+
+            await waitFor(() => {
+                const lastCall = fetchSpy.mock.calls[fetchSpy.mock.calls.length - 1];
+                expect(lastCall[0]).toContain("status=archived");
             });
         });
 
@@ -242,7 +295,7 @@ describe("MediaPicker", () => {
                         next: "page=2",
                         previous: null,
                         results: Array.from({ length: 12 }, (_, i) =>
-                            makeAsset({ id: `asset-${i}`, filename: `file-${i}.jpg` })
+                            makeAsset({ id: `asset-${i}`, original_filename: `file-${i}.jpg` })
                         ),
                     }),
             });

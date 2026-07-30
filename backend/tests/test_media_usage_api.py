@@ -209,3 +209,30 @@ def test_replace_rewrites_blog_and_portfolio_media_references(
     assert article_block.content == {"media_ids": [str(replacement.id)]}
     assert list(case_study.gallery.values_list("id", flat=True)) == [replacement.id]
     assert case_block.content == {"media_id": str(replacement.id)}
+
+
+@pytest.mark.django_db
+def test_media_list_filters_by_type_category_and_status(admin_client, media_asset):
+    MediaAsset.objects.create(
+        original_filename="active-document.pdf",
+        mime_type="application/pdf",
+        file_size=1024,
+        file="media/2026/07/active-document.pdf",
+        checksum="g" * 64,
+        status="active",
+    )
+    MediaAsset.objects.create(
+        original_filename="archived-image.jpg",
+        mime_type="image/jpeg",
+        file_size=1024,
+        file="media/2026/07/archived-image.jpg",
+        checksum="h" * 64,
+        status="archived",
+    )
+
+    response = admin_client.get("/api/admin/media/?mime_type_category=image&status=active")
+
+    assert response.status_code == 200
+    assert [asset["original_filename"] for asset in response.json()["results"]] == [
+        "referenced-image.jpg"
+    ]

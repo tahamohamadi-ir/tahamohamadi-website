@@ -5,16 +5,18 @@
 
 export interface MediaAssetDTO {
     id: string;
-    file_url: string;
-    filename: string;
+    file: string | null;
+    original_filename: string;
     mime_type: string;
-    size: number;
+    file_size: number;
     width: number | null;
     height: number | null;
-    alt_fa: string;
-    alt_en: string;
+    alt_text_fa: string;
+    alt_text_en: string;
     caption_fa: string;
     caption_en: string;
+    status: "active" | "archived";
+    checksum: string;
     created_at: string;
     updated_at: string;
 }

@@ -89,6 +89,8 @@ const FILTER_OPTIONS: { value: MediaMimeFilter; label: string }[] = [
     { value: "document", label: "Documents" },
 ];
 
+type MediaStatusFilter = "all" | "active" | "archived";
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -107,6 +109,7 @@ export function MediaPicker({
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState<MediaMimeFilter>("all");
+    const [statusFilter, setStatusFilter] = useState<MediaStatusFilter>("active");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -140,6 +143,7 @@ export function MediaPicker({
         params.set("page_size", String(pageSize));
         if (search.trim()) params.set("search", search.trim());
         if (filter !== "all") params.set("mime_type_category", filter);
+        if (statusFilter !== "all") params.set("status", statusFilter);
 
         try {
             const response = await fetch(
@@ -162,7 +166,7 @@ export function MediaPicker({
         } finally {
             setLoading(false);
         }
-    }, [page, search, filter]);
+    }, [page, search, filter, statusFilter]);
 
     // Fetch when dialog opens or search/filter/page changes
     useEffect(() => {
@@ -174,7 +178,7 @@ export function MediaPicker({
     // Reset page when search or filter changes
     useEffect(() => {
         setPage(1);
-    }, [search, filter]);
+    }, [search, filter, statusFilter]);
 
     // -------------------------------------------------------------------------
     // Upload handler
@@ -276,8 +280,8 @@ export function MediaPicker({
 
     const altText = value
         ? locale === "fa"
-            ? value.alt_fa
-            : value.alt_en
+            ? value.alt_text_fa
+            : value.alt_text_en
         : "";
 
     return (
@@ -289,8 +293,8 @@ export function MediaPicker({
                         {/* Thumbnail */}
                         {isImageMime(value.mime_type) ? (
                             <img
-                                src={value.file_url}
-                                alt={altText || value.filename}
+                                src={value.file || undefined}
+                                alt={altText || value.original_filename}
                                 className="h-16 w-16 rounded-md object-cover border border-border"
                             />
                         ) : (
@@ -301,9 +305,9 @@ export function MediaPicker({
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{value.filename}</p>
+                            <p className="text-sm font-medium truncate">{value.original_filename}</p>
                             <p className="text-xs text-muted-foreground">
-                                {formatFileSize(value.size)}
+                                {formatFileSize(value.file_size)}
                                 {value.width && value.height
                                     ? ` · ${value.width}×${value.height}`
                                     : ""}
@@ -385,6 +389,17 @@ export function MediaPicker({
                                     {opt.label}
                                 </option>
                             ))}
+                        </select>
+
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value as MediaStatusFilter)}
+                            className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            aria-label="Filter by status"
+                        >
+                            <option value="active">Active</option>
+                            <option value="archived">Archived</option>
+                            <option value="all">All statuses</option>
                         </select>
 
                         <Button
@@ -486,21 +501,26 @@ export function MediaPicker({
                                             key={asset.id}
                                             type="button"
                                             onClick={() => handleSelect(asset)}
+                                            disabled={asset.status !== "active"}
                                             className={cn(
                                                 "group relative aspect-square rounded-md border overflow-hidden transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                                                 isSelected
                                                     ? "border-primary ring-2 ring-primary/30"
                                                     : "border-border hover:border-primary/50"
                                             )}
-                                            aria-label={`Select ${asset.filename}`}
+                                            aria-label={
+                                                asset.status === "active"
+                                                    ? `Select ${asset.original_filename}`
+                                                    : `${asset.original_filename} is archived`
+                                            }
                                         >
                                             {isImageMime(asset.mime_type) ? (
                                                 <img
-                                                    src={asset.file_url}
+                                                    src={asset.file || undefined}
                                                     alt={
                                                         locale === "fa"
-                                                            ? asset.alt_fa || asset.filename
-                                                            : asset.alt_en || asset.filename
+                                                            ? asset.alt_text_fa || asset.original_filename
+                                                            : asset.alt_text_en || asset.original_filename
                                                     }
                                                     className="h-full w-full object-cover"
                                                     loading="lazy"
@@ -509,7 +529,7 @@ export function MediaPicker({
                                                 <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-muted p-2">
                                                     {getMimeIcon(asset.mime_type)}
                                                     <span className="text-[10px] text-muted-foreground text-center leading-tight truncate w-full px-1">
-                                                        {asset.filename}
+                                                        {asset.original_filename}
                                                     </span>
                                                 </div>
                                             )}
@@ -526,7 +546,7 @@ export function MediaPicker({
 
                                             {/* File size badge */}
                                             <div className="absolute bottom-1 left-1 rounded bg-black/60 px-1 py-0.5 text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                                                {formatFileSize(asset.size)}
+                                                {formatFileSize(asset.file_size)}
                                             </div>
                                         </button>
                                     );
