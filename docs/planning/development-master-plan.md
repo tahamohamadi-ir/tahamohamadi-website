@@ -286,6 +286,7 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | R3-08 | 🟡 | فرم Contact اکنون honeypot، throttle اختصاصی، خطای امن و persistence پیش از اعلان ایمیل دارد؛ Inbox API نیز در R4-05 آماده است، اما retention و QA واقعی CSRF/مرورگر باقی است. |
 | R3-09 | 🟡 | sitemap اکنون Research و Publication عمومی را فقط پس از تأیید موجودبودن در هر دو locale با alternate صحیح وارد می‌کند؛ JSON-LD و QA production همهٔ routeها باقی است. |
 | R4-05 | 🟡 | `ContactMessage` اکنون قبل از اعلان ایمیل persist می‌شود و Inbox محافظت‌شدهٔ API با list/detail، filter/search و گذار `NEW → READ → ARCHIVED` دارد؛ UI مستقل `/admin/contact` نمایش، جست‌وجو، فیلتر، pagination و actionهای مرحله‌ای را مصرف می‌کند. retention، navigation مشترک و QA واقعی باقی است. |
+| R4-06 | 🟡 | گزارش و dashboard مستقل `/admin/content-health` اکنون نقص ترجمه، alt تصویر، orphan media و schedule ناموفق را فقط از دادهٔ واقعی با لینک اقدام نشان می‌دهد؛ اسکن لینک شکسته، بهینه‌سازی حجم گزارش، navigation و QA واقعی باقی است. |
 
 ### R0 — تثبیت Runtime و قراردادهای شکسته
 

@@ -115,6 +115,13 @@
 - [ ] سیاست retention (مدت نگه‌داری، deletion قابل بازیابی یا حذف قطعی، job زمان‌بندی‌شده، backup و مجوز دسترسی) تصمیم و سپس پیاده‌سازی شود؛ در این برش هیچ حذف خودکاری انجام نشد.
 - [ ] بررسی migration روی محیط staging با backup و آزمایش migration برگشت‌پذیر، و تست واقعی mailbox برای تضمین این‌که ذخیره‌سازی پایدار حتی با خطای delivery باقی می‌ماند.
 
+## R4-06 — سلامت محتوا
+
+- [x] گزارش محافظت‌شدهٔ `/api/admin/content-health/` و صفحهٔ `/admin/content-health` فقط نقص ترجمه، alt تصویر، orphan media و schedule ناموفق را از دادهٔ جاری نشان می‌دهند؛ هر مورد به مسیر واقعی اقدام در Admin لینک دارد و UUID خام نمایش داده نمی‌شود.
+- [ ] اسکن و نگه‌داری گزارش broken-link هنوز وجود ندارد؛ dashboard عمداً برای آن مقدار یا count ساختگی نشان نمی‌دهد.
+- [ ] هر بخش گزارش حداکثر ۱۰۰ مورد را نمایش می‌دهد؛ برای مجموعه‌های بزرگ باید pagination/filter سروری، query-budget و سنجش performance افزوده شود.
+- [ ] افزودن navigation پس از تعیین وضعیت shell مشترک و QA واقعی session/CSRF، keyboard، RTL/LTR و viewportهای هدف در `/admin/content-health`.
+
 ## R1-05 — پیکربندی سایت
 
 - [x] تست قراردادی API عمومی و اعتبارسنجی لینک/redirect در `backend/tests/test_siteconfig_api.py`
