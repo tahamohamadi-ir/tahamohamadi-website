@@ -46,4 +46,42 @@ describe("AdminContactInboxPage", () => {
       { method: "POST" },
     );
   });
+
+  it("loads the next inbox page without exposing identifiers", async () => {
+    const user = userEvent.setup();
+    adminFetchMock.mockReset();
+    adminFetchMock.mockResolvedValueOnce({
+      count: 21,
+      page: 1,
+      page_size: 20,
+      total_pages: 2,
+      next: "http://testserver/api/admin/contact-messages/?page=2",
+      previous: null,
+      results: [{
+        id: "private-contact-id",
+        name: "Inbox User",
+        email: "inbox@example.com",
+        subject: "Research collaboration",
+        status: "new",
+        created_at: "2026-07-30T12:00:00Z",
+      }],
+    });
+    render(<AdminContactInboxPage />);
+
+    await waitFor(() => expect(screen.getByText("Inbox User")).toBeInTheDocument());
+    adminFetchMock.mockResolvedValueOnce({
+      count: 21,
+      page: 2,
+      page_size: 20,
+      total_pages: 2,
+      next: null,
+      previous: "http://testserver/api/admin/contact-messages/?page=1",
+      results: [],
+    });
+
+    await user.click(screen.getByRole("button", { name: "صفحه بعد" }));
+
+    await waitFor(() => expect(screen.getByText("پیامی مطابق این جست‌وجو وجود ندارد.")).toBeInTheDocument());
+    expect(adminFetchMock).toHaveBeenCalledWith("/api/admin/contact-messages/?page=2");
+  });
 });

@@ -25,7 +25,10 @@ interface ContactMessageDetail extends ContactMessageSummary {
 interface ContactMessagePage {
   count: number;
   page: number;
+  page_size: number;
   total_pages: number;
+  next: string | null;
+  previous: string | null;
   results: ContactMessageSummary[];
 }
 
@@ -43,7 +46,10 @@ export default function AdminContactInboxPage() {
   const [messages, setMessages] = useState<ContactMessageSummary[]>([]);
   const [selected, setSelected] = useState<ContactMessageDetail | null>(null);
   const [statusFilter, setStatusFilter] = useState<"" | ContactStatus>("");
-  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -53,12 +59,14 @@ export default function AdminContactInboxPage() {
     setError(null);
     const query = new URLSearchParams();
     if (statusFilter) query.set("status", statusFilter);
-    if (search.trim()) query.set("search", search.trim());
+    if (searchQuery) query.set("search", searchQuery);
+    if (page > 1) query.set("page", String(page));
     const suffix = query.size ? `?${query.toString()}` : "";
 
     try {
       const response = await adminFetch<ContactMessagePage>(`/api/admin/contact-messages/${suffix}`);
       setMessages(response.results);
+      setTotalPages(response.total_pages);
       setSelected(null);
     } catch {
       setMessages([]);
@@ -66,7 +74,7 @@ export default function AdminContactInboxPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, statusFilter]);
+  }, [page, searchQuery, statusFilter]);
 
   useEffect(() => {
     void load();
@@ -100,7 +108,8 @@ export default function AdminContactInboxPage() {
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void load();
+    setSearchQuery(searchInput.trim());
+    setPage(1);
   }
 
   return (
@@ -119,8 +128,8 @@ export default function AdminContactInboxPage() {
             <label className="sr-only" htmlFor="contact-search">جست‌وجوی پیام‌ها</label>
             <input
               id="contact-search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
               placeholder="جست‌وجو در نام، ایمیل یا موضوع"
               className="min-h-11 flex-1 rounded-md border border-input bg-background px-3 text-sm"
             />
@@ -128,7 +137,10 @@ export default function AdminContactInboxPage() {
             <select
               id="contact-status"
               value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value as "" | ContactStatus)}
+              onChange={(event) => {
+                setStatusFilter(event.target.value as "" | ContactStatus);
+                setPage(1);
+              }}
               className="min-h-11 rounded-md border border-input bg-background px-3 text-sm"
             >
               <option value="">همهٔ وضعیت‌ها</option>
@@ -179,6 +191,15 @@ export default function AdminContactInboxPage() {
                 </table>
               )}
             </CardContent>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t px-6 py-4 text-sm">
+                <span className="text-muted-foreground">صفحه {page} از {totalPages}</span>
+                <div className="flex gap-2" dir="rtl">
+                  <Button type="button" variant="outline" size="sm" onClick={() => setPage((current) => current - 1)} disabled={page === 1 || loading}>صفحه قبل</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setPage((current) => current + 1)} disabled={page === totalPages || loading}>صفحه بعد</Button>
+                </div>
+              </div>
+            )}
           </Card>
 
           <Card className="h-fit">

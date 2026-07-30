@@ -111,7 +111,7 @@
 - [x] `POST /api/public/contact/` اکنون پیام معتبرِ غیر-honeypot را پیش از تلاش fail-safe برای اعلان ایمیل در `ContactMessage` ذخیره می‌کند؛ log برنامه متن، نام یا ایمیل پیام را ثبت نمی‌کند.
 - [x] `GET /api/admin/contact-messages/` و detail فقط با session محافظت می‌شوند؛ list بدنهٔ پیام را برنمی‌گرداند، `status` و search روی name/email/subject دارد و actionهای `mark-read` و `archive` گذار `NEW → READ → ARCHIVED` را enforce می‌کنند.
 - [x] UI مستقل `/admin/contact` فهرست خلاصه، جست‌وجو/فیلتر، مشاهدهٔ detail و actionهای مرحله‌ای را مصرف می‌کند و UUID را نمایش نمی‌دهد؛ این صفحه عمداً بدون دست‌زدن به shell مشترک ساخته شد.
-- [ ] افزودن navigation پس از تعیین وضعیت shell مشترک، pagination UI و QA واقعی session/CSRF، search، keyboard و viewportهای target. نمایش پیام در UI فعلی فارسی است؛ معادل انگلیسی Admin و تست RTL/LTR همچنان نیازمند تصمیم محصول هستند.
+- [ ] افزودن navigation پس از تعیین وضعیت shell مشترک و QA واقعی session/CSRF، search، pagination، keyboard و viewportهای target. نمایش پیام در UI فعلی فارسی است؛ معادل انگلیسی Admin و تست RTL/LTR همچنان نیازمند تصمیم محصول هستند.
 - [ ] سیاست retention (مدت نگه‌داری، deletion قابل بازیابی یا حذف قطعی، job زمان‌بندی‌شده، backup و مجوز دسترسی) تصمیم و سپس پیاده‌سازی شود؛ در این برش هیچ حذف خودکاری انجام نشد.
 - [ ] بررسی migration روی محیط staging با backup و آزمایش migration برگشت‌پذیر، و تست واقعی mailbox برای تضمین این‌که ذخیره‌سازی پایدار حتی با خطای delivery باقی می‌ماند.
 
