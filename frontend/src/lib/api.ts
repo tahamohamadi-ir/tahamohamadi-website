@@ -18,6 +18,7 @@ import type {
   FetchPublicationsParams,
   PaginatedResumeVariantsResponse,
   ResumeVariantDTO,
+  PublicSiteConfigDTO,
 } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 
@@ -216,4 +217,8 @@ export async function fetchResumeVariant(
   return fetchPublicAPI<ResumeVariantDTO>(
     `/public/identity/resumes/${encodeURIComponent(slug)}/?locale=${locale}`,
   );
+}
+
+export async function fetchPublicSiteConfig(locale: Locale): Promise<PublicSiteConfigDTO> {
+  return fetchPublicAPI<PublicSiteConfigDTO>(`/public/site/?locale=${locale}`);
 }

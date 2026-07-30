@@ -1,0 +1,22 @@
+export interface PublicSiteSettingsDTO {
+  site_title: string;
+  default_title: string;
+  default_description: string;
+  public_email: string;
+  primary_cta_label: string;
+  primary_cta_url: string;
+  footer_text: string;
+}
+
+export interface PublicNavigationItemDTO {
+  label: string;
+  href: string;
+}
+
+export interface PublicSiteConfigDTO {
+  settings: PublicSiteSettingsDTO | null;
+  navigation: {
+    header: PublicNavigationItemDTO[];
+    footer: PublicNavigationItemDTO[];
+  };
+}

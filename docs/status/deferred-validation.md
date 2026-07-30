@@ -89,7 +89,8 @@
 
 - [x] تست قراردادی API عمومی و اعتبارسنجی لینک/redirect در `backend/tests/test_siteconfig_api.py`
   روی PostgreSQL Compose اجرا شد؛ migration check و `manage.py check` نیز بدون issue گذشتند.
-- [ ] اتصال Header، Footer، metadata SEO و CTA فرانت‌اند به `/api/public/site/` و QA مرورگر در هر دو locale.
+- [x] Footer SSR به `/api/public/site/` متصل شد؛ فقط متن و navigation منتشرشدهٔ CMS را نمایش می‌دهد و در نبود config، محتوای hardcode نشان نمی‌دهد.
+- [ ] اتصال Header، metadata SEO و CTA فرانت‌اند به `/api/public/site/` و QA مرورگر در هر دو locale. Header/layout دارای تغییرات مستقل stage‌نشده‌اند و در این برش دست‌نخورده ماندند.
 - [x] middleware برای `RedirectRule`‌های active با آزمون 301/302، جلوگیری از loop، مقصد ناسالم و روش غیر GET/HEAD
   در PostgreSQL Compose پیاده و بررسی شد.
 - [x] `SiteSettings` اکنون unique singleton constraint در دیتابیس دارد و API در برخورد race، Problem Details 409 بازمی‌گرداند.

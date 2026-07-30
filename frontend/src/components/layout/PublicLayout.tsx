@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/i18n";
+import { fetchPublicSiteConfig } from "@/lib/api";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 
@@ -12,7 +13,14 @@ interface PublicLayoutProps {
  * navigation header and footer. Locale-specific styling
  * (RTL/LTR, fonts) is handled at the [locale]/layout.tsx level.
  */
-export function PublicLayout({ locale, children }: PublicLayoutProps) {
+export async function PublicLayout({ locale, children }: PublicLayoutProps) {
+    let siteConfig = null;
+    try {
+        siteConfig = await fetchPublicSiteConfig(locale);
+    } catch {
+        // A missing site configuration must not be replaced with personal fallback content.
+    }
+
     return (
         <div className="flex min-h-screen flex-col">
             {/* Skip to content link for keyboard users */}
@@ -24,7 +32,7 @@ export function PublicLayout({ locale, children }: PublicLayoutProps) {
             </a>
             <Header locale={locale} />
             <main id="main-content" className="flex-1">{children}</main>
-            <Footer locale={locale} />
+            <Footer locale={locale} siteConfig={siteConfig} />
         </div>
     );
 }

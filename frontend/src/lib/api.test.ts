@@ -7,6 +7,7 @@ import {
   fetchResearchProjects,
   fetchResumeVariant,
   fetchResumeVariants,
+  fetchPublicSiteConfig,
   fetchTopics,
   getPublicPage,
   PublicApiError,
@@ -170,6 +171,18 @@ describe("public identity resource API paths", () => {
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
       "https://api.example.test/api/public/identity/resumes/general/?locale=en",
+      expect.any(Object),
+    );
+  });
+
+  it("uses the localized public site configuration path", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({}) });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchPublicSiteConfig("fa");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/api/public/site/?locale=fa",
       expect.any(Object),
     );
   });
