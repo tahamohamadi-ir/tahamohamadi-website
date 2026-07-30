@@ -50,3 +50,25 @@ class VersionedModel(TimestampedModel):
 
     class Meta:
         abstract = True
+
+
+class ContactMessage(TimestampedModel):
+    """A public contact submission retained for the protected Admin inbox."""
+
+    class Status(models.TextChoices):
+        NEW = "new", "New"
+        READ = "read", "Read"
+        ARCHIVED = "archived", "Archived"
+
+    name = models.CharField(max_length=100)
+    email = models.EmailField(max_length=254)
+    subject = models.CharField(max_length=200)
+    message = models.TextField(max_length=5000)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.NEW)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["status", "-created_at"]),
+            models.Index(fields=["email"]),
+        ]

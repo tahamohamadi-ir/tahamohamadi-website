@@ -283,8 +283,9 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | ID | وضعیت | شواهد / اقدام بعدی |
 |---|---|---|
 | R3-02 | 🟡 | fallback SSR صفحهٔ About، در نبود صفحهٔ CMS، از SiteProfile و تجربه/تحصیل منتشرشدهٔ همان locale در aggregate استفاده می‌کند؛ اولویت صفحهٔ CMS، دادهٔ واقعی و QA مرورگر باقی است. |
-| R3-08 | 🟡 | فرم Contact اکنون honeypot، throttle اختصاصی و خطای امن دارد؛ persistence، Inbox و retention به R4-05 واگذار شده و QA واقعی CSRF/مرورگر باقی است. |
+| R3-08 | 🟡 | فرم Contact اکنون honeypot، throttle اختصاصی، خطای امن و persistence پیش از اعلان ایمیل دارد؛ Inbox API نیز در R4-05 آماده است، اما retention و QA واقعی CSRF/مرورگر باقی است. |
 | R3-09 | 🟡 | sitemap اکنون Research و Publication عمومی را فقط پس از تأیید موجودبودن در هر دو locale با alternate صحیح وارد می‌کند؛ JSON-LD و QA production همهٔ routeها باقی است. |
+| R4-05 | 🟡 | `ContactMessage` اکنون قبل از اعلان ایمیل persist می‌شود و Inbox محافظت‌شدهٔ API با list/detail، filter/search و گذار `NEW → READ → ARCHIVED` دارد؛ UI، policy نگه‌داری و QA واقعی باقی است. |
 
 ### R0 — تثبیت Runtime و قراردادهای شکسته
 

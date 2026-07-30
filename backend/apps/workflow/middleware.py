@@ -170,6 +170,7 @@ class AuditLoggingMiddleware:
 
         # Map URL segments to app_label.model
         url_content_type_map = {
+            "/api/admin/contact-messages/": ("core", "contactmessage"),
             "/api/admin/pages/": ("cms", "page"),
             "/api/admin/media/": ("media", "mediaasset"),
             "/api/admin/blog/": ("blog", "article"),

@@ -12,14 +12,25 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from django.http import JsonResponse
 from rest_framework import serializers, status
+from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from apps.core.exceptions import problem_json_response
+from django_filters.rest_framework import DjangoFilterBackend
+
+from apps.core.exceptions import PROBLEM_CONTENT_TYPE, build_problem, problem_json_response
+from apps.core.models import ContactMessage
 from apps.core.seed_review import seed_review_report
-from apps.core.serializers import ContactMessageSerializer
+from apps.core.serializers import (
+    ContactMessageDetailSerializer,
+    ContactMessageInboxSerializer,
+    ContactMessageSerializer,
+    ContactMessageTransitionSerializer,
+)
 from apps.core.throttling import ContactRateThrottle, LoginRateThrottle
 
 logger = logging.getLogger(__name__)
@@ -74,6 +85,13 @@ class PublicContactView(APIView):
                 {"status": "sent", "message": "Your message has been received."},
                 status=status.HTTP_200_OK,
             )
+
+        ContactMessage.objects.create(
+            name=data["name"],
+            email=data["email"],
+            subject=data["subject"],
+            message=data["message"],
+        )
 
         logger.info("Contact form submission accepted.")
 
@@ -251,6 +269,53 @@ class AdminDashboardView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class AdminContactMessageViewSet(ReadOnlyModelViewSet):
+    """Protected inbox for persisted contact submissions."""
+
+    queryset = ContactMessage.objects.all()
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["status"]
+    search_fields = ["name", "email", "subject"]
+    ordering_fields = ["created_at", "status"]
+    ordering = ["-created_at"]
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return ContactMessageInboxSerializer
+        if self.action in {"mark_read", "archive"}:
+            return ContactMessageTransitionSerializer
+        return ContactMessageDetailSerializer
+
+    def _invalid_transition(self, request, detail: str) -> Response:
+        return Response(
+            build_problem(status.HTTP_400_BAD_REQUEST, detail, instance=request.path),
+            status=status.HTTP_400_BAD_REQUEST,
+            content_type=PROBLEM_CONTENT_TYPE,
+        )
+
+    @action(detail=True, methods=["post"], url_path="mark-read")
+    def mark_read(self, request, pk=None):
+        message = self.get_object()
+        if message.status == ContactMessage.Status.ARCHIVED:
+            return self._invalid_transition(request, "Archived contact messages cannot be marked as read.")
+        if message.status == ContactMessage.Status.NEW:
+            message.status = ContactMessage.Status.READ
+            message.updated_by = request.user.get_username()
+            message.save(update_fields=["status", "updated_by", "updated_at"])
+        return Response(self.get_serializer(message).data)
+
+    @action(detail=True, methods=["post"])
+    def archive(self, request, pk=None):
+        message = self.get_object()
+        if message.status == ContactMessage.Status.NEW:
+            return self._invalid_transition(request, "Contact messages must be marked as read before archiving.")
+        if message.status == ContactMessage.Status.READ:
+            message.status = ContactMessage.Status.ARCHIVED
+            message.updated_by = request.user.get_username()
+            message.save(update_fields=["status", "updated_by", "updated_at"])
+        return Response(self.get_serializer(message).data)
 
 
 class AdminSeedReviewView(APIView):

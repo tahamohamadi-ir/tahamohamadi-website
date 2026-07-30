@@ -99,12 +99,20 @@
 ## R3-08 — فرم تماس
 
 - [x] honeypot `website` بدون ارسال ایمیل پاسخ موفق می‌دهد، throttle اختصاصی Contact فعال است و Frontend جزئیات خطای غیرمیدانی server را نمایش نمی‌دهد؛ فرم فقط پس از موفقیت تأییدشده پاک می‌شود.
-- [ ] QA واقعی CSRF/cookie و rate-limit در Docker، keyboard/aria-live در fa/en و تصمیم retention/Inbox/عدم log دادهٔ شخصی در R4-05. delivery ایمیل نیز باید با mailbox واقعی بررسی شود.
+- [ ] QA واقعی CSRF/cookie و rate-limit در Docker، keyboard/aria-live در fa/en و تصمیم retention در R4-05. delivery ایمیل نیز باید با mailbox واقعی بررسی شود.
 
 ## R3-09 — SEO و sitemap
 
 - [x] sitemap برای ResearchProject و Publication فقط تقاطع پاسخ‌های published و locale-complete `fa/en` را وارد می‌کند؛ alternateها دیگر به resource دارای ترجمهٔ ناقص اشاره نمی‌کنند.
 - [ ] اجرای production sitemap با API واقعی و تأیید crawler، افزودن/بازبینی JSON-LD `Person` و `CreativeWork`، OG/Twitter image و canonical/hreflang همهٔ routeهای عمومی. static sitemap و routeهای موجود نیز باید با فهرست route نهایی بازبینی شوند.
+
+## R4-05 — Inbox پیام‌های تماس
+
+- [x] `POST /api/public/contact/` اکنون پیام معتبرِ غیر-honeypot را پیش از تلاش fail-safe برای اعلان ایمیل در `ContactMessage` ذخیره می‌کند؛ log برنامه متن، نام یا ایمیل پیام را ثبت نمی‌کند.
+- [x] `GET /api/admin/contact-messages/` و detail فقط با session محافظت می‌شوند؛ list بدنهٔ پیام را برنمی‌گرداند، `status` و search روی name/email/subject دارد و actionهای `mark-read` و `archive` گذار `NEW → READ → ARCHIVED` را enforce می‌کنند.
+- [ ] ساخت UI `/admin/contact`، navigation پس از تعیین وضعیت shell مشترک، و QA واقعی session/CSRF، pagination، search، keyboard و نمایش پیام در fa/en.
+- [ ] سیاست retention (مدت نگه‌داری، deletion قابل بازیابی یا حذف قطعی، job زمان‌بندی‌شده، backup و مجوز دسترسی) تصمیم و سپس پیاده‌سازی شود؛ در این برش هیچ حذف خودکاری انجام نشد.
+- [ ] بررسی migration روی محیط staging با backup و آزمایش migration برگشت‌پذیر، و تست واقعی mailbox برای تضمین این‌که ذخیره‌سازی پایدار حتی با خطای delivery باقی می‌ماند.
 
 ## R1-05 — پیکربندی سایت
 
