@@ -278,6 +278,12 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | R1-09 | 🟡 | API محافظت‌شده و UI checklist `seed-review` وضعیت draft و کامل‌بودن دو locale را گزارش می‌کنند و auto-publish را صریحاً ممنوع می‌سازند؛ QA واقعی session/CSRF و مرور انسانی باقی است. |
 | R1-10 | 🟡 | collection block اکنون source/filter/limit/order محدود دارد، identity/Blog/Portfolio منتشرشده را بدون ID یا JSON خام resolve می‌کند و renderer SSR آن را نمایش می‌دهد؛ QA مرورگر با محتوای تأییدشده باقی است. |
 
+#### وضعیت شروع R3
+
+| ID | وضعیت | شواهد / اقدام بعدی |
+|---|---|---|
+| R3-02 | 🟡 | fallback SSR صفحهٔ About، در نبود صفحهٔ CMS، از SiteProfile و تجربه/تحصیل منتشرشدهٔ همان locale در aggregate استفاده می‌کند؛ اولویت صفحهٔ CMS، دادهٔ واقعی و QA مرورگر باقی است. |
+
 ### R0 — تثبیت Runtime و قراردادهای شکسته
 
 | ID | P | Size | Task | وابستگی / پذیرش |

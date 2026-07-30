@@ -53,6 +53,22 @@ export interface ResumeVariantDTO {
 
 export type PaginatedResumeVariantsResponse = PaginatedResponse<ResumeVariantDTO>;
 
+export interface ExperienceDTO {
+  organization: string;
+  title: string;
+  summary: string;
+  started_on: string | null;
+  ended_on: string | null;
+}
+
+export interface EducationDTO {
+  institution: string;
+  degree: string;
+  field: string;
+  started_on: string | null;
+  ended_on: string | null;
+}
+
 /** A deliberately narrow public projection used by the site aggregate. */
 export interface PublicIdentityProfileDTO {
   name: string;

@@ -25,5 +25,7 @@ export interface PublicSiteAggregateDTO {
   site: PublicSiteConfigDTO;
   identity: {
     profile: import("./identity").PublicIdentityProfileDTO | null;
+    experience: import("./identity").ExperienceDTO[];
+    education: import("./identity").EducationDTO[];
   };
 }

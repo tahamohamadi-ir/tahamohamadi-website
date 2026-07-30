@@ -91,6 +91,11 @@
   منتشرشده با MediaAsset فعال را public می‌کند و هیچ فایل archive/draft را برنمی‌گرداند.
 - [ ] اجرای build production با API در دسترس و QA `fa/en`، pagination، حالت empty/error و دانلود فایل PDF/DOCX واقعی.
 
+## R3-02 — About از دادهٔ هویتی
+
+- [x] fallback SSR مسیر About در نبود صفحهٔ CMS، فقط SiteProfile و Experience/Education منتشرشده و کامل در locale درخواست‌شده را از aggregate نمایش می‌دهد؛ دادهٔ locale دیگر یا محتوای ساختگی جایگزین نمی‌شود.
+- [ ] QA مرورگر `/fa/about` و `/en/about` با صفحهٔ CMS و fallback aggregate، timeline خالی/دارای داده، تاریخ‌ها، RTL/LTR، keyboard و viewportهای هدف. bio و ترتیب timeline باید با محتوای واقعی تأیید شوند.
+
 ## R1-05 — پیکربندی سایت
 
 - [x] تست قراردادی API عمومی و اعتبارسنجی لینک/redirect در `backend/tests/test_siteconfig_api.py`
