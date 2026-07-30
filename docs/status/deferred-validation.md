@@ -126,7 +126,8 @@
 
 - [x] endpoint محافظت‌شدهٔ `/api/admin/seed-review/` رکوردهای `created_by=seed` را برای status و کامل‌بودن
   هر دو locale بررسی می‌کند و `automatic_publish_allowed=false` را ثابت نگه می‌دارد.
-- [ ] ساخت UI checklist در Admin و اتصال workflow انتشار گروهی؛ endpoint سرور به‌تنهایی جایگزین تأیید انسانی نیست.
+- [x] صفحهٔ مستقل Admin برای `seed-review`، گزارش status/locale ناقص/issueها را بدون نمایش UUID خام نشان می‌دهد، refresh دارد و هیچ action انتشار ندارد.
+- [ ] QA واقعی session/CSRF و keyboard در `/admin/seed-review/`، اضافه‌کردن لینک navigation پس از تعیین‌تکلیف shell مشترک، و مرور انسانی locale/privacy پیش از هر انتشار. انتشار گروهی همچنان خارج از این برش است.
 
 ## R1-10 — collectionهای CMS
 
