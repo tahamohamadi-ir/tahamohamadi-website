@@ -84,4 +84,29 @@ describe("AdminContactInboxPage", () => {
     await waitFor(() => expect(screen.getByText("پیامی مطابق این جست‌وجو وجود ندارد.")).toBeInTheDocument());
     expect(adminFetchMock).toHaveBeenCalledWith("/api/admin/contact-messages/?page=2");
   });
+
+  it("shows an operator-readable audit timeline after selecting a message", async () => {
+    const user = userEvent.setup();
+    render(<AdminContactInboxPage />);
+
+    await waitFor(() => expect(screen.getByText("Inbox User")).toBeInTheDocument());
+    adminFetchMock.mockResolvedValueOnce({
+      id: "private-contact-id",
+      name: "Inbox User",
+      email: "inbox@example.com",
+      subject: "Research collaboration",
+      message: "The protected message body.",
+      status: "read",
+      created_at: "2026-07-30T12:00:00Z",
+    });
+    adminFetchMock.mockResolvedValueOnce({
+      events: [{ action: "read", actor: "admin", timestamp: "2026-07-30T12:05:00Z" }],
+    });
+
+    await user.click(screen.getByRole("button", { name: /Inbox User/ }));
+
+    await waitFor(() => expect(screen.getByText("The protected message body.")).toBeInTheDocument());
+    expect(screen.getByText("خوانده شد توسط admin")).toBeInTheDocument();
+    expect(screen.queryByText("private-contact-id")).not.toBeInTheDocument();
+  });
 });

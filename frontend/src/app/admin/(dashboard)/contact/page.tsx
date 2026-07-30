@@ -22,6 +22,12 @@ interface ContactMessageDetail extends ContactMessageSummary {
   message: string;
 }
 
+interface ContactTimelineEvent {
+  action: "read" | "archived" | string;
+  actor: string;
+  timestamp: string;
+}
+
 interface ContactMessagePage {
   count: number;
   page: number;
@@ -38,6 +44,11 @@ const statusLabels: Record<ContactStatus, string> = {
   archived: "بایگانی‌شده",
 };
 
+const timelineActionLabels: Record<string, string> = {
+  read: "خوانده شد",
+  archived: "بایگانی شد",
+};
+
 function statusVariant(status: ContactStatus): "default" | "secondary" | "outline" {
   return status === "new" ? "default" : status === "read" ? "secondary" : "outline";
 }
@@ -45,6 +56,7 @@ function statusVariant(status: ContactStatus): "default" | "secondary" | "outlin
 export default function AdminContactInboxPage() {
   const [messages, setMessages] = useState<ContactMessageSummary[]>([]);
   const [selected, setSelected] = useState<ContactMessageDetail | null>(null);
+  const [timeline, setTimeline] = useState<ContactTimelineEvent[]>([]);
   const [statusFilter, setStatusFilter] = useState<"" | ContactStatus>("");
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -68,6 +80,7 @@ export default function AdminContactInboxPage() {
       setMessages(response.results);
       setTotalPages(response.total_pages);
       setSelected(null);
+      setTimeline([]);
     } catch {
       setMessages([]);
       setError("دریافت صندوق پیام‌های تماس ممکن نیست.");
@@ -83,8 +96,14 @@ export default function AdminContactInboxPage() {
   async function selectMessage(message: ContactMessageSummary) {
     setError(null);
     try {
-      setSelected(await adminFetch<ContactMessageDetail>(`/api/admin/contact-messages/${message.id}/`));
+      const [detail, audit] = await Promise.all([
+        adminFetch<ContactMessageDetail>(`/api/admin/contact-messages/${message.id}/`),
+        adminFetch<{ events: ContactTimelineEvent[] }>(`/api/admin/contact-messages/${message.id}/timeline/`),
+      ]);
+      setSelected(detail);
+      setTimeline(audit.events);
     } catch {
+      setTimeline([]);
       setError("دریافت متن پیام ممکن نیست.");
     }
   }
@@ -205,7 +224,7 @@ export default function AdminContactInboxPage() {
           <Card className="h-fit">
             <CardHeader><CardTitle>متن پیام</CardTitle></CardHeader>
             <CardContent>
-              {selected ? <div className="space-y-4 text-sm"><div><p className="font-medium">{selected.subject}</p><p className="mt-1 text-muted-foreground">{selected.name} · <span dir="ltr">{selected.email}</span></p></div><p className="whitespace-pre-wrap leading-7">{selected.message}</p></div> : <p className="text-sm text-muted-foreground">برای دیدن متن کامل، فرستنده را از فهرست انتخاب کنید.</p>}
+              {selected ? <div className="space-y-5 text-sm"><div><p className="font-medium">{selected.subject}</p><p className="mt-1 text-muted-foreground">{selected.name} · <span dir="ltr">{selected.email}</span></p></div><p className="whitespace-pre-wrap leading-7">{selected.message}</p><section className="border-t pt-4" aria-label="رخدادها"><h2 className="font-medium">رخدادها</h2>{timeline.length ? <ol className="mt-3 space-y-2">{timeline.map((event, index) => <li key={`${event.timestamp}-${index}`} className="text-muted-foreground"><span className="text-foreground">{timelineActionLabels[event.action] ?? event.action} توسط {event.actor}</span><time className="mt-1 block text-xs" dateTime={event.timestamp}>{new Intl.DateTimeFormat("fa-IR", { dateStyle: "short", timeStyle: "short" }).format(new Date(event.timestamp))}</time></li>)}</ol> : <p className="mt-2 text-muted-foreground">رخدادی برای این پیام ثبت نشده است.</p>}</section></div> : <p className="text-sm text-muted-foreground">برای دیدن متن کامل، فرستنده را از فهرست انتخاب کنید.</p>}
             </CardContent>
           </Card>
         </div>

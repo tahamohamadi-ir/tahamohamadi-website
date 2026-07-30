@@ -122,6 +122,12 @@
 - [ ] هر بخش گزارش حداکثر ۱۰۰ مورد را نمایش می‌دهد؛ برای مجموعه‌های بزرگ باید pagination/filter سروری، query-budget و سنجش performance افزوده شود.
 - [ ] افزودن navigation پس از تعیین وضعیت shell مشترک و QA واقعی session/CSRF، keyboard، RTL/LTR و viewportهای هدف در `/admin/content-health`.
 
+## R4-07 — timeline قابل‌فهم audit
+
+- [x] actionهای `mark-read` و `archive` پیام تماس با عنوان وضعیت واقعی در audit ثبت می‌شوند و timeline محافظت‌شدهٔ جزئیات، فقط action/actor/timestamp را بازمی‌گرداند؛ Inbox UUID خام را نمایش نمی‌دهد.
+- [ ] تعمیم timeline به Page/Blog/Portfolio/Media و نمایش نام/locale و لینک اقدام برای هر رویداد؛ endpoint فنی generic audit همچنان برای عیب‌یابی به `content_type` و `object_id` نیاز دارد.
+- [ ] QA واقعی session/CSRF و سازگاری رخدادهای قدیمیِ generic با timeline انسانی، همراه با keyboard و viewportهای Inbox.
+
 ## R1-05 — پیکربندی سایت
 
 - [x] تست قراردادی API عمومی و اعتبارسنجی لینک/redirect در `backend/tests/test_siteconfig_api.py`
