@@ -2,11 +2,29 @@
 
 from apps.core.exceptions import PROBLEM_CONTENT_TYPE, build_problem
 from apps.core.pagination import DefaultPageNumberPagination
-from apps.identity.models import Publication, ResearchProject, ResumeVariant
+from apps.identity.models import (
+    Affiliation,
+    Certification,
+    Education,
+    Experience,
+    LanguageProficiency,
+    Publication,
+    ResearchInterest,
+    ResearchProject,
+    ResumeVariant,
+    Skill,
+)
 from apps.identity.serializers import (
+    PublicAffiliationSerializer,
+    PublicCertificationSerializer,
+    PublicEducationSerializer,
+    PublicExperienceSerializer,
+    PublicLanguageProficiencySerializer,
     PublicPublicationSerializer,
+    PublicResearchInterestSerializer,
     PublicResearchProjectSerializer,
     PublicResumeVariantSerializer,
+    PublicSkillSerializer,
 )
 from rest_framework import status
 from rest_framework.permissions import AllowAny
@@ -17,6 +35,17 @@ from rest_framework.views import APIView
 def requested_locale(request) -> str:
     locale = request.query_params.get("locale", "en")
     return locale if locale in {"fa", "en"} else "en"
+
+
+IDENTITY_RESOURCE_LISTS = {
+    "skills": (Skill, PublicSkillSerializer, "name"),
+    "experience": (Experience, PublicExperienceSerializer, "title"),
+    "education": (Education, PublicEducationSerializer, "degree"),
+    "certifications": (Certification, PublicCertificationSerializer, "title"),
+    "affiliations": (Affiliation, PublicAffiliationSerializer, "organization"),
+    "languages": (LanguageProficiency, PublicLanguageProficiencySerializer, "name"),
+    "research-interests": (ResearchInterest, PublicResearchInterestSerializer, "name"),
+}
 
 
 class PublicResourceListView(APIView):
@@ -60,6 +89,32 @@ class PublicResourceDetailView(APIView):
             problem = build_problem(status.HTTP_404_NOT_FOUND, "Published resource not found.", instance=request.path)
             return Response(problem, status=status.HTTP_404_NOT_FOUND, content_type=PROBLEM_CONTENT_TYPE)
         return Response(self.serializer_class(instance, context={"locale": locale, "request": request}).data)
+
+
+class PublicIdentityResourceListView(APIView):
+    """Paginated, allowlisted public projections for non-slug identity resources."""
+
+    permission_classes = [AllowAny]
+    authentication_classes: list = []
+
+    def get(self, request, resource):
+        config = IDENTITY_RESOURCE_LISTS.get(resource)
+        if config is None:
+            problem = build_problem(status.HTTP_404_NOT_FOUND, "Published resource not found.", instance=request.path)
+            return Response(problem, status=status.HTTP_404_NOT_FOUND, content_type=PROBLEM_CONTENT_TYPE)
+
+        locale = requested_locale(request)
+        model, serializer_class, localized_field = config
+        queryset = model.objects.filter(status="published", **{f"{localized_field}_{locale}__gt": ""})
+        if resource == "skills":
+            category = request.query_params.get("category")
+            if category:
+                queryset = queryset.filter(**{f"category_{locale}": category})
+
+        paginator = DefaultPageNumberPagination()
+        page = paginator.paginate_queryset(queryset, request, view=self)
+        serializer = serializer_class(page, many=True, context={"locale": locale, "request": request})
+        return paginator.get_paginated_response(serializer.data)
 
 
 class PublicResearchProjectListView(PublicResourceListView):

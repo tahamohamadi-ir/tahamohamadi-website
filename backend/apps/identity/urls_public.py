@@ -3,6 +3,7 @@ from django.urls import path
 from apps.identity.public_resources import (
     PublicPublicationDetailView,
     PublicPublicationListView,
+    PublicIdentityResourceListView,
     PublicResearchProjectDetailView,
     PublicResearchProjectListView,
     PublicResumeVariantDetailView,
@@ -18,4 +19,5 @@ urlpatterns = [
     path("publications/<str:slug>/", PublicPublicationDetailView.as_view(), name="public-publication-detail"),
     path("resumes/", PublicResumeVariantListView.as_view(), name="public-resume-list"),
     path("resumes/<slug:slug>/", PublicResumeVariantDetailView.as_view(), name="public-resume-detail"),
+    path("<str:resource>/", PublicIdentityResourceListView.as_view(), name="public-identity-resource-list"),
 ]

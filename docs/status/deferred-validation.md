@@ -69,10 +69,16 @@
   projection backend فقط رکوردهای published را برمی‌گرداند و دادهٔ شخصی (phone/reference)
   در مدل یا serializer عمومی وجود ندارد.
 
+## R1-01/R1-02 — قرارداد فهرست منابع هویت
+
+- [x] endpointهای paginated allowlisted برای `skills`، `experience`، `education`، `certifications`، `affiliations` و `languages` افزوده شدند؛ فقط published و locale-complete برمی‌گردند و Skill فقط filter محدود category دارد.
+- [ ] اتصال صفحه‌های عمومی اختصاصی برای این منابع، دادهٔ منتشرشدهٔ تأییدشده و QA مرورگر در fa/en؛ تا آن زمان CMS collection تنها مصرف‌کنندهٔ عمومی موجود است.
+
 ## R1-03 — پژوهش و آثار
 
 - [x] endpointهای عمومی paginated list/detail برای ResearchProject و Publication، با suppress draft و locale
   درخواست‌شده، روی PostgreSQL Compose تست شدند.
+- [x] endpoint paginated `research-interests/` با همان suppress منتشرشده و locale-complete به قرارداد identity افزوده شد.
 - [x] صفحات SSR list/detail برای ResearchProject و Publication به endpointهای public متصل شدند؛ empty/error و
   URL-state filter/pagination برای Publications وجود دارد.
 - [ ] QA دو locale در مرورگر با دادهٔ تأییدشده؛ backend aggregate و resource endpointها فقط رکوردهای published را

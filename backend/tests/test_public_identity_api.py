@@ -3,7 +3,20 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from rest_framework.test import APIClient
 
-from apps.identity.models import Publication, ResearchProject, ResumeVariant, Experience, SiteProfile, Skill, SocialLink
+from apps.identity.models import (
+    Affiliation,
+    Certification,
+    Education,
+    Experience,
+    LanguageProficiency,
+    Publication,
+    ResearchInterest,
+    ResearchProject,
+    ResumeVariant,
+    SiteProfile,
+    Skill,
+    SocialLink,
+)
 from apps.media.models import MediaAsset
 
 
@@ -236,3 +249,50 @@ def test_publication_resources_filter_by_type_and_year_and_return_problem_404():
     assert detail.json()["title"] == "Article"
     assert missing.status_code == 404
     assert missing.json()["status"] == 404
+
+
+@pytest.mark.django_db
+def test_paginated_identity_resource_lists_are_allowlisted_localized_and_published_only():
+    Skill.objects.create(name_fa="پایتون", name_en="Python", category_fa="فنی", category_en="Technical", status="published")
+    Skill.objects.create(name_fa="ارتباط", name_en="Communication", category_fa="نرم", category_en="Soft", status="published")
+    Skill.objects.create(name_fa="پیش‌نویس", name_en="Draft", category_fa="فنی", category_en="Technical", status="draft")
+    Experience.objects.create(
+        organization_fa="سازمان", organization_en="Organization", title_fa="نقش", title_en="Role",
+        started_on="2025-01-01", status="published",
+    )
+    Education.objects.create(
+        institution_fa="دانشگاه", institution_en="University", degree_fa="کارشناسی", degree_en="Degree",
+        status="published",
+    )
+    Certification.objects.create(
+        title_fa="گواهی", title_en="Certificate", issuer_fa="صادرکننده", issuer_en="Issuer", status="published",
+    )
+    Affiliation.objects.create(organization_fa="انجمن", organization_en="Association", status="published")
+    LanguageProficiency.objects.create(name_fa="فارسی", name_en="Persian", proficiency="native", status="published")
+    ResearchInterest.objects.create(name_fa="تعامل", name_en="HCI", status="published")
+    ResearchInterest.objects.create(name_fa="", name_en="English only", status="published")
+    client = APIClient()
+
+    skills = client.get("/api/public/identity/skills/?locale=en&category=Technical&page_size=1")
+    expected_fields = {
+        "experience": ("title", "Role"),
+        "education": ("degree", "Degree"),
+        "certifications": ("title", "Certificate"),
+        "affiliations": ("organization", "Association"),
+        "languages": ("name", "Persian"),
+        "research-interests": ("name", "تعامل"),
+    }
+
+    assert skills.status_code == 200
+    assert skills.json()["count"] == 1
+    assert skills.json()["results"] == [{"name": "Python", "category": "Technical"}]
+    for resource, (field, expected) in expected_fields.items():
+        locale = "fa" if resource == "research-interests" else "en"
+        response = client.get(f"/api/public/identity/{resource}/?locale={locale}")
+        assert response.status_code == 200
+        assert response.json()["count"] == 1
+        assert response.json()["results"][0][field] == expected
+
+    missing = client.get("/api/public/identity/unknown-resource/?locale=en")
+    assert missing.status_code == 404
+    assert missing["Content-Type"].startswith("application/problem+json")
