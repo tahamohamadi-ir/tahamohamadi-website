@@ -41,11 +41,17 @@
   ذخیره‌سازی همان JSON قدیمی را نگه می‌دارد و API عمومی آن را در locale درخواست‌شده به
   تنظیمات canonical renderer تبدیل می‌کند. هیچ fallback میان‌زبانی یا migration مخربی
   انجام نشده است.
-- [ ] رفع ۵ failure در `frontend/src/components/blocks/BlockRenderer.test.tsx`.
-  اجرای کامل Vitest در 2026-07-29 نشان داد تغییرات stage‌نشدهٔ Hero/Quote
-  animation، heading معنایی، متن قابل‌دسترسی و border جهت‌دار مورد انتظار تست
-  را تغییر داده‌اند. این فایل‌های component متعلق به تغییرات موجود ورک‌تری‌اند
-  و در برش سریع R0-05 دست‌کاری نشده‌اند.
+- [x] پنج failure در `frontend/src/components/blocks/BlockRenderer.test.tsx` رفع شد:
+  Hero دارای H1 واقعی و همیشه‌خوانا است، CTA پروتکل ناامن را نمایش نمی‌دهد و Quote متن
+  پیوسته و border جهت‌دار RTL/LTR دارد. در 2026-07-30 تست متمرکز ۲۸/۲۸، کل Vitest
+  برابر ۲۷۸/۲۷۸ و production build سبز شد.
+- [ ] production build با warningهای غیرمسدودکننده پاس شد: چند `<img>` هنوز به
+  بهینه‌سازی Next Image نیاز دارند، `optimized-image.tsx` یک هشدار alt دارد و چند import/
+  متغیر بلااستفاده در Admin، animation، middleware و hookها باقی است. این هشدارها برای
+  سرعت این برش اصلاح نشدند و باید در cleanup کنترل‌شده، بدون مخفی‌کردن ruleها، بسته شوند.
+- [ ] build موفق هنگام prerender سه خط `fetch failed / ECONNREFUSED` برای API خاموش چاپ
+  می‌کند. سیاست روشن fail/empty برای routeهای SSG و خروجی log بدون ابهام باید جداگانه
+  تعیین و آزمایش شود؛ خروج صفر build فعلی به‌تنهایی سلامت دادهٔ prerender را اثبات نمی‌کند.
 - [ ] composer فعلی برای block جدید `settings: {}` می‌سازد و بنابراین همچنان می‌تواند
   422 معتبر بگیرد. defaults، فرم دوزبانه و پیام inline باید پس از تعیین قرارداد canonical
   blockها در همان تغییرات مستقل frontend یکپارچه و با QA مرورگر بررسی شود.

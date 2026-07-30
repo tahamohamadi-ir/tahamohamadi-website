@@ -261,7 +261,7 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | R0-07 | ✅ | seed دیگر placeholder media نمی‌سازد و رکوردهای شکستهٔ تاریخی `media/seed/` را فقط در صورت نبود فایل پاک‌سازی می‌کند؛ test قرارداد پاس شد. |
 | R0-08 | ✅ | target تست Compose با فرمان واحد فعال است؛ اجرای کامل مجدد در 2026-07-29، 730/730 تست PostgreSQL را پاس کرد. |
 | R0-09 | 🟡 | Sentry به `instrumentation.ts`/`instrumentation-client.ts` استاندارد Next 15 منتقل شد، scrub و global error fallback فعال‌اند و warningهای legacy build حذف شدند؛ ارسال واقعی server/client به پروژهٔ Sentry و source-map CI باقی است. |
-| R0-10 | 🟡 | bridge محدود برای Hero/Text قدیمی اضافه شد تا دادهٔ دوزبانهٔ منتشرشده render و بدون تغییر مخرب ذخیره شود؛ ۵ failure فعلی BlockRenderer و قرارداد کامل composer/schema همچنان باقی است. |
+| R0-10 | 🟡 | bridge محدود Hero/Text قدیمی فعال است؛ Hero دوباره H1 واقعی، CTA امن و Quote مرز معنایی RTL/LTR دارد. ۲۸/۲۸ تست متمرکز BlockRenderer، کل ۲۷۸/۲۷۸ Vitest و production build سبز شدند؛ defaults و فرم canonical composer و QA مرورگر باقی است. |
 
 #### وضعیت شروع R1
 

@@ -7,16 +7,20 @@ export function QuoteBlock({ data, locale }: BlockComponentProps<QuoteSettings>)
     return (
         <blockquote
             className={cn(
-                "border-primary py-4",
+                "mx-auto max-w-4xl border-primary py-6 md:py-10",
                 isRtl ? "border-r-4 pr-6" : "border-l-4 pl-6"
             )}
             dir={isRtl ? "rtl" : "ltr"}
         >
-            <p className="text-lg italic text-foreground">{data.text}</p>
+            <p className="text-xl font-medium italic leading-relaxed text-foreground md:text-3xl">
+                {data.text}
+            </p>
+
             {(data.author || data.role) && (
-                <footer className="mt-3 text-sm text-muted-foreground">
-                    {data.author && <span className="font-medium">{data.author}</span>}
-                    {data.author && data.role && <span> — </span>}
+                <footer className="mt-8 text-lg md:text-xl text-muted-foreground flex items-center gap-2">
+                    <div className="h-[2px] w-12 bg-primary/50" />
+                    {data.author && <span className="font-bold text-foreground">{data.author}</span>}
+                    {data.author && data.role && <span>—</span>}
                     {data.role && <span>{data.role}</span>}
                 </footer>
             )}

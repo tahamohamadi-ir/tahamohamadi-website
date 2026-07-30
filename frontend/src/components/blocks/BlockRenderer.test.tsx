@@ -22,6 +22,24 @@ describe("BlockRenderer", () => {
             expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Welcome");
         });
 
+        it("does not render a Hero CTA with an unsafe URL", () => {
+            const block: BlockDTO = {
+                id: "unsafe-hero",
+                block_type: "hero",
+                settings: {
+                    title: "Safe content",
+                    cta_label: "Unsafe action",
+                    cta_url: "javascript:alert(1)",
+                },
+                ordering: 0,
+            };
+
+            render(<BlockRenderer block={block} locale="en" />);
+
+            expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Safe content");
+            expect(screen.queryByRole("link", { name: "Unsafe action" })).not.toBeInTheDocument();
+        });
+
         it("renders TextBlock for block_type='text'", () => {
             const block: BlockDTO = {
                 id: "2",

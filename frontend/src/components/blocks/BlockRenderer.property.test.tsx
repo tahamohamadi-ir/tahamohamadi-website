@@ -92,7 +92,10 @@ function cmsSettingsForType(blockType: string): Record<string, unknown> {
         case "cta":
             return { label: "Click", url: "/test" };
         case "collection":
-            return { source: "blog" };
+            return {
+                source: "blog",
+                items: [{ slug_en: "sample-post", title_en: "Sample post" }],
+            };
         case "quote":
             return { text: "A quote" };
         case "divider":
