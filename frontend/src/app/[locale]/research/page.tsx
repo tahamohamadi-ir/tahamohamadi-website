@@ -1,98 +1,96 @@
-import { notFound } from "next/navigation";
+import Link from "next/link";
 import type { Metadata } from "next";
-import { getPublicPage } from "@/lib/api";
+import { notFound } from "next/navigation";
+import { Pagination } from "@/components/blog/Pagination";
+import { fetchResearchProjects } from "@/lib/api";
 import { isValidLocale, SITE_URL, type Locale } from "@/lib/i18n";
-import { BlockRenderer } from "@/components/blocks/BlockRenderer";
+import type { PaginatedResearchProjectsResponse } from "@/lib/types";
 
 interface ResearchPageProps {
-    params: Promise<{ locale: string }>;
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
-export async function generateMetadata({
-    params,
-}: ResearchPageProps): Promise<Metadata> {
-    const { locale } = await params;
-    if (!isValidLocale(locale)) return {};
+const copy = {
+  fa: {
+    title: "پژوهش",
+    description: "پروژه‌ها و فعالیت‌های پژوهشی منتشرشده",
+    empty: "هنوز پروژهٔ پژوهشی منتشر نشده است.",
+    error: "دریافت پروژه‌های پژوهشی در حال حاضر ممکن نیست.",
+    method: "روش",
+    featured: "برجسته",
+  },
+  en: {
+    title: "Research",
+    description: "Published research projects and activities",
+    empty: "No research projects have been published yet.",
+    error: "Research projects are temporarily unavailable.",
+    method: "Methodology",
+    featured: "Featured",
+  },
+} as const;
 
-    const page = await getPublicPage("research", locale);
-
-    const title = locale === "fa" ? "پژوهش" : "Research";
-    const description =
-        locale === "fa"
-            ? "علایق پژوهشی، حوزه‌های تحقیقاتی و زمینه‌های تمرکز طاها محمدی"
-            : "Research interests, focus areas and academic pursuits of Taha Mohamadi";
-
-    const pageTitle = page
-        ? locale === "fa"
-            ? page.title_fa
-            : page.title_en
-        : title;
-
-    return {
-        title: pageTitle,
-        description,
-        alternates: {
-            canonical: `/${locale}/research`,
-            languages: {
-                fa: "/fa/research",
-                en: "/en/research",
-            },
-        },
-        openGraph: {
-            title: pageTitle,
-            description,
-            url: `${SITE_URL}/${locale}/research`,
-            type: "website",
-        },
-    };
+function parsePage(value?: string): number {
+  const page = Number(value);
+  return Number.isInteger(page) && page > 0 ? page : 1;
 }
 
-/**
- * Research page — research interests and focus areas rendered via SSR.
- *
- * Fetches composed page content from Django CMS (page slug: "research").
- * Renders blocks using BlockRenderer for research focus, publications highlights.
- * Exactly one H1 per page. No cross-locale fallback.
- */
-export default async function ResearchPage({ params }: ResearchPageProps) {
-    const { locale: localeParam } = await params;
+export async function generateMetadata({ params }: ResearchPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isValidLocale(locale)) return {};
+  const text = copy[locale];
+  return {
+    title: text.title,
+    description: text.description,
+    alternates: { canonical: `/${locale}/research`, languages: { fa: "/fa/research", en: "/en/research" } },
+    openGraph: { title: text.title, description: text.description, url: `${SITE_URL}/${locale}/research`, type: "website" },
+  };
+}
 
-    if (!isValidLocale(localeParam)) {
-        notFound();
-    }
+export default async function ResearchPage({ params, searchParams }: ResearchPageProps) {
+  const { locale: localeParam } = await params;
+  const { page } = await searchParams;
+  if (!isValidLocale(localeParam)) notFound();
+  const locale: Locale = localeParam;
+  const text = copy[locale];
+  let data: PaginatedResearchProjectsResponse | null = null;
 
-    const locale: Locale = localeParam;
-    const page = await getPublicPage("research", locale);
+  try {
+    data = await fetchResearchProjects({ locale, page: parsePage(page) });
+  } catch {
+    data = null;
+  }
 
-    if (!page) {
-        notFound();
-    }
-
-    const pageTitle = locale === "fa" ? page.title_fa : page.title_en;
-
-    return (
-        <main>
-            <h1 className="sr-only">{pageTitle}</h1>
-            {page.sections
-                .filter((section) => section.enabled)
-                .sort((a, b) => a.ordering - b.ordering)
-                .map((section) => (
-                    <section
-                        key={section.id}
-                        className={`layout-${section.layout}`}
-                    >
-                        {section.blocks
-                            .sort((a, b) => a.ordering - b.ordering)
-                            .map((block) => (
-                                <BlockRenderer
-                                    key={block.id}
-                                    block={block}
-                                    locale={locale}
-                                    context="cms"
-                                />
-                            ))}
-                    </section>
-                ))}
-        </main>
-    );
+  return (
+    <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
+      <header className="mx-auto mb-10 max-w-3xl text-center">
+        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{text.title}</h1>
+        <p className="mt-3 text-lg text-muted-foreground">{text.description}</p>
+      </header>
+      {data === null ? (
+        <p role="alert" className="mx-auto max-w-2xl rounded-lg border border-destructive/30 p-5 text-center text-destructive">{text.error}</p>
+      ) : data.results.length === 0 ? (
+        <p className="py-16 text-center text-lg text-muted-foreground">{text.empty}</p>
+      ) : (
+        <>
+          <div className="mx-auto grid max-w-5xl gap-5 md:grid-cols-2">
+            {data.results.map((project) => {
+              const slug = locale === "fa" ? project.slug_fa : project.slug_en;
+              return (
+                <article key={slug} className="rounded-lg border border-border bg-card p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <h2 className="text-xl font-semibold"><Link className="hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" href={`/${locale}/research/${slug}`}>{project.title}</Link></h2>
+                    {project.featured && <span className="shrink-0 text-sm text-muted-foreground">{text.featured}</span>}
+                  </div>
+                  {project.summary && <p className="mt-3 text-muted-foreground">{project.summary}</p>}
+                  {project.methodology && <p className="mt-4 text-sm"><span className="font-medium">{text.method}: </span>{project.methodology}</p>}
+                </article>
+              );
+            })}
+          </div>
+          <div className="mt-10"><Pagination currentPage={data.page} totalPages={data.total_pages} locale={locale} basePath={`/${locale}/research`} /></div>
+        </>
+      )}
+    </div>
+  );
 }

@@ -10,6 +10,12 @@ import type {
   PageDTO,
   PaginatedArticlesResponse,
   TopicDTO,
+  PaginatedResearchProjectsResponse,
+  PaginatedPublicationsResponse,
+  ResearchProjectDTO,
+  PublicationDTO,
+  FetchIdentityResourceParams,
+  FetchPublicationsParams,
 } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 
@@ -140,4 +146,50 @@ export async function fetchArticles(
  */
 export async function fetchTopics(): Promise<TopicDTO[]> {
   return fetchPublicAPI<TopicDTO[]>("/public/blog/topics/");
+}
+
+export async function fetchResearchProjects(
+  params: FetchIdentityResourceParams,
+): Promise<PaginatedResearchProjectsResponse> {
+  const searchParams = new URLSearchParams({
+    locale: params.locale,
+    page: String(params.page ?? 1),
+    page_size: String(params.pageSize ?? 12),
+  });
+  return fetchPublicAPI<PaginatedResearchProjectsResponse>(
+    `/public/identity/research-projects/?${searchParams.toString()}`,
+  );
+}
+
+export async function fetchResearchProject(
+  slug: string,
+  locale: Locale,
+): Promise<ResearchProjectDTO> {
+  return fetchPublicAPI<ResearchProjectDTO>(
+    `/public/identity/research-projects/${encodeURIComponent(slug)}/?locale=${locale}`,
+  );
+}
+
+export async function fetchPublications(
+  params: FetchPublicationsParams,
+): Promise<PaginatedPublicationsResponse> {
+  const searchParams = new URLSearchParams({
+    locale: params.locale,
+    page: String(params.page ?? 1),
+    page_size: String(params.pageSize ?? 12),
+  });
+  if (params.type) searchParams.set("type", params.type);
+  if (params.year) searchParams.set("year", params.year);
+  return fetchPublicAPI<PaginatedPublicationsResponse>(
+    `/public/identity/publications/?${searchParams.toString()}`,
+  );
+}
+
+export async function fetchPublication(
+  slug: string,
+  locale: Locale,
+): Promise<PublicationDTO> {
+  return fetchPublicAPI<PublicationDTO>(
+    `/public/identity/publications/${encodeURIComponent(slug)}/?locale=${locale}`,
+  );
 }

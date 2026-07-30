@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { fetchArticles, fetchTopics, getPublicPage, PublicApiError } from "./api";
+import {
+  fetchArticles,
+  fetchPublications,
+  fetchResearchProject,
+  fetchResearchProjects,
+  fetchTopics,
+  getPublicPage,
+  PublicApiError,
+} from "./api";
 
 const page = {
   id: "page-1",
@@ -99,6 +107,48 @@ describe("public blog API paths", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.example.test/api/public/blog/topics/",
+      expect.any(Object),
+    );
+  });
+});
+
+describe("public identity resource API paths", () => {
+  beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "https://api.example.test");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  it("preserves locale, pagination and publication filters", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({}) });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchResearchProjects({ locale: "fa", page: 2, pageSize: 6 });
+    await fetchPublications({ locale: "en", type: "article", year: "2025" });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "https://api.example.test/api/public/identity/research-projects/?locale=fa&page=2&page_size=6",
+      expect.any(Object),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "https://api.example.test/api/public/identity/publications/?locale=en&page=1&page_size=12&type=article&year=2025",
+      expect.any(Object),
+    );
+  });
+
+  it("encodes a localized detail slug", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({}) });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchResearchProject("پژوهش نمونه", "fa");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/api/public/identity/research-projects/%D9%BE%DA%98%D9%88%D9%87%D8%B4%20%D9%86%D9%85%D9%88%D9%86%D9%87/?locale=fa",
       expect.any(Object),
     );
   });

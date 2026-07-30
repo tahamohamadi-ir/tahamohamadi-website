@@ -67,8 +67,10 @@
 
 - [x] endpointهای عمومی paginated list/detail برای ResearchProject و Publication، با suppress draft و locale
   درخواست‌شده، روی PostgreSQL Compose تست شدند.
-- [ ] frontend و QA دو locale برای ResearchProject و Publication؛ backend aggregate و resource endpointها فقط
-  رکوردهای published را برمی‌گردانند و manuscript/book در وضعیت draft هرگز public نیست.
+- [x] صفحات SSR list/detail برای ResearchProject و Publication به endpointهای public متصل شدند؛ empty/error و
+  URL-state filter/pagination برای Publications وجود دارد.
+- [ ] QA دو locale در مرورگر با دادهٔ تأییدشده؛ backend aggregate و resource endpointها فقط رکوردهای published را
+  برمی‌گردانند و manuscript/book در وضعیت draft هرگز public نیست.
 
 ## R1-04 — رزومه
 
