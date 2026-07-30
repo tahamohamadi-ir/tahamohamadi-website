@@ -106,6 +106,7 @@
 - [x] aggregate `GET /api/public/site/aggregate/` برای Site و Identity با ETag، `Cache-Control` و suppress
   رکوردهای فاقد ترجمهٔ locale درخواست‌شده ساخته و با pytest روی PostgreSQL Compose بررسی شد.
 - [x] resource endpointهای تفصیلی Research/Publication به aggregate افزوده شدند؛ اتصال مصرف‌کنندهٔ Frontend باقی است.
+- [x] Frontend یک client typed برای aggregate دارد و fallback صفحهٔ SSR Resume، فقط headline منتشرشدهٔ همان locale را مصرف می‌کند؛ در failure یا نبود profile، متن محلیِ خود صفحه حفظ می‌شود.
 - [ ] سنجش query-count و سیاست نهایی CDN/revalidation در محیط production؛ TTL اولیه 60 ثانیه با
   `stale-while-revalidate=300` است و هنوز با ترافیک واقعی اندازه‌گیری نشده است.
 

@@ -20,3 +20,10 @@ export interface PublicSiteConfigDTO {
     footer: PublicNavigationItemDTO[];
   };
 }
+
+export interface PublicSiteAggregateDTO {
+  site: PublicSiteConfigDTO;
+  identity: {
+    profile: import("./identity").PublicIdentityProfileDTO | null;
+  };
+}

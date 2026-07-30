@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import { Pagination } from "@/components/blog/Pagination";
-import { fetchResumeVariants, getPublicPage } from "@/lib/api";
+import { fetchPublicSiteAggregate, fetchResumeVariants, getPublicPage } from "@/lib/api";
 import { isValidLocale, SITE_URL, type Locale } from "@/lib/i18n";
 import type { PageDTO, PaginatedResumeVariantsResponse } from "@/lib/types";
 
@@ -71,14 +71,16 @@ export default async function ResumePage({ params, searchParams }: ResumePagePro
 
   const locale: Locale = localeParam;
   const text = copy[locale];
-  const [pageResult, variantsResult] = await Promise.allSettled([
+  const [pageResult, variantsResult, aggregateResult] = await Promise.allSettled([
     getPublicPage("resume", locale),
     fetchResumeVariants({ locale, page: parsePage(pageParam) }),
+    fetchPublicSiteAggregate(locale),
   ]);
   const page = pageResult.status === "fulfilled" ? pageResult.value : null;
   const variants: PaginatedResumeVariantsResponse | null = variantsResult.status === "fulfilled"
     ? variantsResult.value
     : null;
+  const profile = aggregateResult.status === "fulfilled" ? aggregateResult.value.identity.profile : null;
   const pageTitle = page ? (locale === "fa" ? page.title_fa : page.title_en) : text.title;
 
   return (
@@ -100,7 +102,7 @@ export default async function ResumePage({ params, searchParams }: ResumePagePro
       ) : (
         <header className="mx-auto mb-10 max-w-3xl text-center">
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{text.title}</h1>
-          <p className="mt-3 text-lg text-muted-foreground">{text.description}</p>
+          <p className="mt-3 text-lg text-muted-foreground">{profile?.headline || text.description}</p>
         </header>
       )}
 

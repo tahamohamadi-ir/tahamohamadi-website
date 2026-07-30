@@ -19,6 +19,7 @@ import type {
   PaginatedResumeVariantsResponse,
   ResumeVariantDTO,
   PublicSiteConfigDTO,
+  PublicSiteAggregateDTO,
 } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 
@@ -221,4 +222,13 @@ export async function fetchResumeVariant(
 
 export async function fetchPublicSiteConfig(locale: Locale): Promise<PublicSiteConfigDTO> {
   return fetchPublicAPI<PublicSiteConfigDTO>(`/public/site/?locale=${locale}`);
+}
+
+/**
+ * Fetch the cacheable site and identity aggregate for a single locale.
+ * Consumers must not substitute data from the other locale when a localized
+ * record is absent: the backend intentionally omits incomplete records.
+ */
+export async function fetchPublicSiteAggregate(locale: Locale): Promise<PublicSiteAggregateDTO> {
+  return fetchPublicAPI<PublicSiteAggregateDTO>(`/public/site/aggregate/?locale=${locale}`);
 }

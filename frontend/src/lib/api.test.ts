@@ -8,6 +8,7 @@ import {
   fetchResumeVariant,
   fetchResumeVariants,
   fetchPublicSiteConfig,
+  fetchPublicSiteAggregate,
   fetchTopics,
   getPublicPage,
   PublicApiError,
@@ -183,6 +184,18 @@ describe("public identity resource API paths", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.example.test/api/public/site/?locale=fa",
+      expect.any(Object),
+    );
+  });
+
+  it("uses the cacheable localized site aggregate path", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({}) });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchPublicSiteAggregate("en");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/api/public/site/aggregate/?locale=en",
       expect.any(Object),
     );
   });

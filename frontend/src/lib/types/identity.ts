@@ -52,3 +52,28 @@ export interface ResumeVariantDTO {
 }
 
 export type PaginatedResumeVariantsResponse = PaginatedResponse<ResumeVariantDTO>;
+
+/** A deliberately narrow public projection used by the site aggregate. */
+export interface PublicIdentityProfileDTO {
+  name: string;
+  headline: string;
+  bio: string;
+  public_email: string;
+  portrait: {
+    id: string;
+    file: string | null;
+    original_filename: string;
+    mime_type: string;
+    file_size: number;
+    width: number | null;
+    height: number | null;
+    alt_text_fa: string;
+    alt_text_en: string;
+    caption_fa: string;
+    caption_en: string;
+    status: string;
+    checksum: string;
+    created_at: string;
+    updated_at: string;
+  } | null;
+}
