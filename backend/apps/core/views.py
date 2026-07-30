@@ -23,6 +23,7 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.core.exceptions import PROBLEM_CONTENT_TYPE, build_problem, problem_json_response
+from apps.core.content_health import content_health_report
 from apps.core.models import ContactMessage
 from apps.core.seed_review import seed_review_report
 from apps.core.serializers import (
@@ -269,6 +270,15 @@ class AdminDashboardView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class AdminContentHealthView(APIView):
+    """Report actionable health findings computed from current stored data."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request) -> Response:
+        return Response(content_health_report(), status=status.HTTP_200_OK)
 
 
 class AdminContactMessageViewSet(ReadOnlyModelViewSet):

@@ -5,6 +5,7 @@ from rest_framework.routers import DefaultRouter
 
 from apps.core.views import (
     AdminContactMessageViewSet,
+    AdminContentHealthView,
     AdminDashboardView,
     AdminHealthView,
     AdminSeedReviewView,
@@ -19,6 +20,7 @@ router.register("contact-messages", AdminContactMessageViewSet, basename="admin-
 
 urlpatterns = [
     path("health/", AdminHealthView.as_view(), name="health"),
+    path("content-health/", AdminContentHealthView.as_view(), name="content-health"),
     path("dashboard/", AdminDashboardView.as_view(), name="dashboard"),
     path("seed-review/", AdminSeedReviewView.as_view(), name="seed-review"),
     path("login/", SessionLoginView.as_view(), name="login"),
