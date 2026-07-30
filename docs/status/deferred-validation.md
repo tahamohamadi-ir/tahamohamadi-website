@@ -135,6 +135,13 @@
 - [ ] R4-01 یعنی `MediaUsageReference`، backfill/reconcile job و index schema-based هنوز وجود ندارد؛ تا قبل از آن replacement فقط قراردادهای منبعِ شناخته‌شده را پوشش می‌دهد و تضمین کامل در برابر reference جدیدِ ناشناخته یا نویسندهٔ هم‌زمان ندارد.
 - [ ] QA واقعی session/CSRF و مرورگر برای سه حالت لازم است: رسانهٔ used باید با 409 فعال بماند، replacement باید مصرف‌ها را منتقل و مبدأ را archive کند، و رسانهٔ unreferenced باید بایگانی شود. build تازهٔ Docker در این برش به‌علت proxy محلیِ خاموش روی `127.0.0.1:3067` اجرا نشد؛ تست backend با image موجود و mount کد جاری انجام شد.
 
+## R4-01 — index و reconcile مصرف رسانه
+
+- [x] مدل `MediaUsageReference` با FKهای صریح برای CMS block، Article، ArticleBlock، CaseStudy و CaseStudyBlock، کلید یکتای media/source/field و indexهای owner/source اضافه شد. `python manage.py reconcile_media_usage` این index را در تراکنش از referenceهای شناخته‌شده بازسازی و stale rowها را حذف می‌کند.
+- [ ] command هنوز schedule/lock/metric/alert ندارد و در جریان‌های bulk import یا تغییر مستقیم داده خودکار اجرا نمی‌شود؛ تا تعیین freshness SLO، عملیات روزمره هنوز `get_media_usage` و orphan scanner مستقیم را منبع حقیقت می‌دانند.
+- [ ] constraint دیتابیسیِ «دقیقاً یک FK منبع» و مسیر update incremental برای هر serializer/signal اضافه نشده است. migration و اجرای backfill باید نخست با backup و حجم دادهٔ واقعی در staging سنجیده شود.
+- [ ] benchmark query/index و اجرای reconcile روی دادهٔ production-like، همراه با تست هم‌زمانی writer و reconcile، برای اثبات مقیاس‌پذیری این index باقی مانده است.
+
 ## R1-05 — پیکربندی سایت
 
 - [x] تست قراردادی API عمومی و اعتبارسنجی لینک/redirect در `backend/tests/test_siteconfig_api.py`

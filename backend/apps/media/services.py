@@ -21,9 +21,10 @@ from datetime import datetime
 from uuid import UUID
 
 from django.core.files.storage import default_storage
+from django.db import transaction
 from PIL import Image
 
-from apps.media.models import MediaAsset
+from apps.media.models import MediaAsset, MediaUsageReference
 
 logger = logging.getLogger(__name__)
 
@@ -383,6 +384,148 @@ def get_media_usage_count(media_id: UUID) -> int:
         Integer count of distinct content items referencing this asset.
     """
     return len(get_media_usage(media_id))
+
+
+def reconcile_media_usage_references() -> int:
+    """Rebuild the durable index from every supported media reference shape.
+
+    The function is intentionally idempotent: it removes stale index rows and
+    recreates only references to media that still exists. Call it from the
+    management command after bulk imports or before an operational audit.
+    """
+    from apps.blog.models import Article, ArticleBlock
+    from apps.cms.models import Block
+    from apps.portfolio.models import CaseStudy, CaseStudyBlock
+
+    known_media_ids = set(MediaAsset.objects.values_list("id", flat=True))
+    references: list[MediaUsageReference] = []
+    seen: set[tuple] = set()
+
+    def add_reference(
+        media_id: str,
+        source_type: str,
+        source_id: UUID,
+        owner_type: str,
+        owner_id: UUID,
+        reference_field: str,
+        **source,
+    ) -> None:
+        try:
+            resolved_media_id = UUID(str(media_id))
+        except (TypeError, ValueError):
+            return
+        if resolved_media_id not in known_media_ids:
+            return
+        key = (resolved_media_id, source_type, source_id, reference_field)
+        if key in seen:
+            return
+        seen.add(key)
+        references.append(
+            MediaUsageReference(
+                media_id=resolved_media_id,
+                source_type=source_type,
+                source_id=source_id,
+                owner_type=owner_type,
+                owner_id=owner_id,
+                reference_field=reference_field,
+                **source,
+            )
+        )
+
+    for block in Block.objects.select_related("section__page"):
+        settings = block.settings if isinstance(block.settings, dict) else {}
+        page = block.section.page
+        add_reference(
+            settings.get("media_id"),
+            "cms_block",
+            block.id,
+            "page",
+            page.id,
+            "settings.media_id",
+            cms_block=block,
+        )
+        for media_id in settings.get("media_ids", []) if isinstance(settings.get("media_ids"), list) else []:
+            add_reference(
+                media_id,
+                "cms_block",
+                block.id,
+                "page",
+                page.id,
+                "settings.media_ids",
+                cms_block=block,
+            )
+
+    for article in Article.objects.exclude(featured_image__isnull=True):
+        add_reference(
+            str(article.featured_image_id),
+            "article",
+            article.id,
+            "article",
+            article.id,
+            "featured_image",
+            article=article,
+        )
+
+    for block in ArticleBlock.objects.select_related("article"):
+        content = block.content if isinstance(block.content, dict) else {}
+        add_reference(
+            content.get("media_id"),
+            "article_block",
+            block.id,
+            "article",
+            block.article_id,
+            "content.media_id",
+            article_block=block,
+        )
+        for media_id in content.get("media_ids", []) if isinstance(content.get("media_ids"), list) else []:
+            add_reference(
+                media_id,
+                "article_block",
+                block.id,
+                "article",
+                block.article_id,
+                "content.media_ids",
+                article_block=block,
+            )
+
+    for case_study in CaseStudy.objects.prefetch_related("gallery"):
+        for media in case_study.gallery.all():
+            add_reference(
+                str(media.id),
+                "case_study",
+                case_study.id,
+                "case_study",
+                case_study.id,
+                "gallery",
+                case_study=case_study,
+            )
+
+    for block in CaseStudyBlock.objects.select_related("case_study"):
+        content = block.content if isinstance(block.content, dict) else {}
+        add_reference(
+            content.get("media_id"),
+            "case_study_block",
+            block.id,
+            "case_study",
+            block.case_study_id,
+            "content.media_id",
+            case_study_block=block,
+        )
+        for media_id in content.get("media_ids", []) if isinstance(content.get("media_ids"), list) else []:
+            add_reference(
+                media_id,
+                "case_study_block",
+                block.id,
+                "case_study",
+                block.case_study_id,
+                "content.media_ids",
+                case_study_block=block,
+            )
+
+    with transaction.atomic():
+        MediaUsageReference.objects.all().delete()
+        MediaUsageReference.objects.bulk_create(references, batch_size=500)
+    return len(references)
 
 
 def replace_media_references(source_media_id: UUID, replacement_media_id: UUID) -> int:

@@ -40,3 +40,89 @@ class MediaAsset(TimestampedModel):
 
     def __str__(self) -> str:
         return f"{self.original_filename} ({self.mime_type})"
+
+
+class MediaUsageReference(models.Model):
+    """Indexed, schema-aware reference from content to a media asset.
+
+    JSON-backed blocks retain their typed payloads, while this table gives
+    media operations a durable, queryable index. The concrete nullable foreign
+    keys preserve referential integrity for every supported source kind.
+    """
+
+    SOURCE_TYPES = (
+        ("cms_block", "CMS block"),
+        ("article", "Article featured image"),
+        ("article_block", "Article block"),
+        ("case_study", "Case study gallery"),
+        ("case_study_block", "Case study block"),
+    )
+    OWNER_TYPES = (
+        ("page", "Page"),
+        ("article", "Article"),
+        ("case_study", "Case study"),
+    )
+
+    media = models.ForeignKey(
+        MediaAsset,
+        on_delete=models.CASCADE,
+        related_name="usage_references",
+    )
+    source_type = models.CharField(max_length=32, choices=SOURCE_TYPES)
+    source_id = models.UUIDField()
+    owner_type = models.CharField(max_length=32, choices=OWNER_TYPES)
+    owner_id = models.UUIDField()
+    reference_field = models.CharField(max_length=64)
+    cms_block = models.ForeignKey(
+        "cms.Block",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="media_usage_references",
+    )
+    article = models.ForeignKey(
+        "blog.Article",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="media_usage_references",
+    )
+    article_block = models.ForeignKey(
+        "blog.ArticleBlock",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="media_usage_references",
+    )
+    case_study = models.ForeignKey(
+        "portfolio.CaseStudy",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="media_usage_references",
+    )
+    case_study_block = models.ForeignKey(
+        "portfolio.CaseStudyBlock",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="media_usage_references",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["media", "source_type", "source_id", "reference_field"],
+                name="media_usage_reference_unique_source_field",
+            )
+        ]
+        indexes = [
+            models.Index(
+                fields=["media", "owner_type", "owner_id"],
+                name="media_media_media_i_5f8956_idx",
+            ),
+            models.Index(
+                fields=["source_type", "source_id"],
+                name="media_media_source__be1ba4_idx",
+            ),
+        ]
