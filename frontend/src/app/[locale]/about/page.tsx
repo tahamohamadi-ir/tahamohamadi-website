@@ -71,7 +71,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
     const pageTitle = locale === "fa" ? page.title_fa : page.title_en;
 
     return (
-        <main>
+        <div>
             <h1 className="sr-only">{pageTitle}</h1>
             {page.sections
                 .filter((section) => section.enabled)
@@ -93,6 +93,6 @@ export default async function AboutPage({ params }: AboutPageProps) {
                             ))}
                     </section>
                 ))}
-        </main>
+        </div>
     );
 }

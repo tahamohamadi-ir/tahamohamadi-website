@@ -255,7 +255,7 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | R0-01 | 🟡 | محدودهٔ فایل‌های task-owned برای هر commit حفظ شده است؛ baseline کلی هنوز به‌علت ورک‌تری بسیار dirty و `git diff --check` قرمز، قابل بستن نیست. |
 | R0-02 | ⬜ | `CustomCursor` همچنان در locale layout موجود است؛ فایل layout تغییرات مستقل دارد و نیازمند QA hydration است. |
 | R0-03 | 🟡 | locale واقعی و تفکیک 404 از failure در commit `87360f6` پیاده شد؛ browser smoke باقی است. |
-| R0-04 | ⬜ | `PublicLayout` و صفحات عمومی ownership تکراری `main` دارند؛ وابسته به تثبیت semantic Hero در R0-10 است. |
+| R0-04 | 🟡 | `PublicLayout` اکنون تنها `main#main-content` را دارد و Home/About/Contact/Resume child main ندارند؛ Home بدون CMS دیگر identity ساختگی نشان نمی‌دهد. شمارش نهایی H1 و QA دادهٔ واقعی وابسته به R0-10 است. |
 | R0-05 | 🟡 | public topics، `q` و URL state در commit `1f8bce2` پیاده شد؛ 17 pytest مرتبط روی PostgreSQL Compose پاس شد و browser/a11y QA باقی است. |
 | R0-06 | 🟡 | usage و orphan detection اکنون CMS/Blog/Portfolio را پوشش می‌دهند؛ 32 تست PostgreSQL Compose پاس شد. QA رابط Admin با session/CSRF واقعی باقی است. |
 | R0-07 | ✅ | seed دیگر placeholder media نمی‌سازد و رکوردهای شکستهٔ تاریخی `media/seed/` را فقط در صورت نبود فایل پاک‌سازی می‌کند؛ test قرارداد پاس شد. |

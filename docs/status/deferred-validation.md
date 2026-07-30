@@ -10,6 +10,12 @@
 - [ ] اجرای smoke مرورگر برای مسیرهای `/fa` و `/en` با backend در دسترس و
   backend قطع‌شده؛ این برش فقط تست واحد API دارد.
 
+## R0-04 — ownership عمومی
+
+- [x] PublicLayout تنها مالک `main#main-content` است؛ Home/About/Contact/Resume دیگر nested main تولید نمی‌کنند و یک test قراردادی source آن را پوشش می‌دهد.
+- [ ] QA مرورگر `/fa` و `/en` با CMS Home منتشرشده؛ یک H1 واقعی برای هر صفحه و نبود section خالی باید همراه با semantic Hero در R0-10 تأیید شود.
+- [ ] بررسی 375/768/1024/1440، RTL/LTR، keyboard skip-link و reduced-motion با backend در دسترس.
+
 ## R0-05 — Blog discovery عمومی
 
 - [x] اجرای مجموعهٔ متمرکز pytest برای endpointهای `q` و `topics/`: 17 تست در
