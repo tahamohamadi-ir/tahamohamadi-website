@@ -10,6 +10,7 @@ are applied globally.
 
 from __future__ import annotations
 
+from django.db import transaction
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
@@ -132,23 +133,38 @@ class AdminMediaViewSet(ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="archive")
     def archive(self, request, pk=None):
-        """Set asset status to 'archived'."""
-        asset = self.get_object()
+        """Archive only unreferenced media, returning the usage impact otherwise."""
+        with transaction.atomic():
+            asset = MediaAsset.objects.select_for_update().get(pk=pk)
 
-        if asset.status == "archived":
-            problem = build_problem(
-                status.HTTP_400_BAD_REQUEST,
-                "Asset is already archived.",
-                instance=request.path,
-            )
-            return Response(
-                problem,
-                status=status.HTTP_400_BAD_REQUEST,
-                content_type=PROBLEM_CONTENT_TYPE,
-            )
+            if asset.status == "archived":
+                problem = build_problem(
+                    status.HTTP_400_BAD_REQUEST,
+                    "Asset is already archived.",
+                    instance=request.path,
+                )
+                return Response(
+                    problem,
+                    status=status.HTTP_400_BAD_REQUEST,
+                    content_type=PROBLEM_CONTENT_TYPE,
+                )
 
-        asset.status = "archived"
-        asset.save(update_fields=["status", "updated_at"])
+            usage = get_media_usage(asset.id)
+            if usage:
+                problem = build_problem(
+                    status.HTTP_409_CONFLICT,
+                    "Referenced media cannot be archived. Review its usage before replacing or removing references.",
+                    instance=request.path,
+                    extra={"usage_count": len(usage), "usage": usage},
+                )
+                return Response(
+                    problem,
+                    status=status.HTTP_409_CONFLICT,
+                    content_type=PROBLEM_CONTENT_TYPE,
+                )
+
+            asset.status = "archived"
+            asset.save(update_fields=["status", "updated_at"])
 
         serializer = MediaAssetSerializer(asset, context={"request": request})
         return Response(serializer.data)

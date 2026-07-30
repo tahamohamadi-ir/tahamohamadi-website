@@ -288,6 +288,7 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | R4-05 | 🟡 | `ContactMessage` اکنون قبل از اعلان ایمیل persist می‌شود و Inbox محافظت‌شدهٔ API با list/detail، filter/search و گذار `NEW → READ → ARCHIVED` دارد؛ UI مستقل `/admin/contact` نمایش، جست‌وجو، فیلتر، pagination و actionهای مرحله‌ای را مصرف می‌کند. retention، navigation مشترک و QA واقعی باقی است. |
 | R4-06 | 🟡 | گزارش و dashboard مستقل `/admin/content-health` اکنون نقص ترجمه، alt تصویر، orphan media و schedule ناموفق را فقط از دادهٔ واقعی با لینک اقدام نشان می‌دهد؛ اسکن لینک شکسته، بهینه‌سازی حجم گزارش، navigation و QA واقعی باقی است. |
 | R4-07 | 🟡 | نخستین timeline انسانی برای ContactMessage در جزئیات Inbox ساخته شد: action، عامل و زمان بدون UUID خام نمایش داده می‌شوند؛ تعمیم name/locale و timeline به تمام منابع Admin هنوز باقی است. |
+| R4-02 | 🟡 | بایگانی رسانه اکنون در تراکنش و پس از کنترل مصرف انجام می‌شود؛ رسانهٔ ارجاع‌شده با 409 و impact واقعی بازمی‌گردد و active می‌ماند. جریان جایگزینی کنترل‌شده، بازنویسی referenceها، audit و QA واقعی باقی است. |
 
 ### R0 — تثبیت Runtime و قراردادهای شکسته
 

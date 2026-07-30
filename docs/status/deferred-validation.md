@@ -128,6 +128,12 @@
 - [ ] تعمیم timeline به Page/Blog/Portfolio/Media و نمایش نام/locale و لینک اقدام برای هر رویداد؛ endpoint فنی generic audit همچنان برای عیب‌یابی به `content_type` و `object_id` نیاز دارد.
 - [ ] QA واقعی session/CSRF و سازگاری رخدادهای قدیمیِ generic با timeline انسانی، همراه با keyboard و viewportهای Inbox.
 
+## R4-02 — بایگانی و جایگزینی امن رسانه
+
+- [x] `POST /api/admin/media/{id}/archive/` اکنون رسانهٔ referenced را در یک تراکنش قفل می‌کند، وضعیت active را حفظ می‌کند و `409` همراه با `usage_count` و فهرست impact واقعی برمی‌گرداند؛ بنابراین درخواست هم‌زمان نمی‌تواند میان بررسی مصرف و بایگانی، محتوای عمومی را بشکند.
+- [ ] جریان controlled replacement، بازنویسی اتمیک تمام referenceها، rollback، و audit انسانی برای جایگزینی/بایگانی هنوز پیاده‌سازی نشده‌اند؛ UI فعلی usage را پیش از درخواست نشان می‌دهد، اما تجربهٔ کامل جایگزینی ندارد.
+- [ ] QA واقعی session/CSRF و مرورگر برای دو حالت لازم است: رسانهٔ used باید با 409 فعال بماند و رسانهٔ unreferenced باید بایگانی شود. این برش فقط تست API کنترل‌شده را اجرا کرده است.
+
 ## R1-05 — پیکربندی سایت
 
 - [x] تست قراردادی API عمومی و اعتبارسنجی لینک/redirect در `backend/tests/test_siteconfig_api.py`
