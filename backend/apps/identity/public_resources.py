@@ -2,8 +2,12 @@
 
 from apps.core.exceptions import PROBLEM_CONTENT_TYPE, build_problem
 from apps.core.pagination import DefaultPageNumberPagination
-from apps.identity.models import Publication, ResearchProject
-from apps.identity.serializers import PublicPublicationSerializer, PublicResearchProjectSerializer
+from apps.identity.models import Publication, ResearchProject, ResumeVariant
+from apps.identity.serializers import (
+    PublicPublicationSerializer,
+    PublicResearchProjectSerializer,
+    PublicResumeVariantSerializer,
+)
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -85,3 +89,30 @@ class PublicPublicationListView(PublicResourceListView):
 class PublicPublicationDetailView(PublicResourceDetailView):
     model = Publication
     serializer_class = PublicPublicationSerializer
+
+
+class PublicResumeVariantListView(PublicResourceListView):
+    model = ResumeVariant
+    serializer_class = PublicResumeVariantSerializer
+    localized_field = "label"
+
+    def get_queryset(self, locale):
+        return super().get_queryset(locale).filter(file__status="active").select_related("file")
+
+
+class PublicResumeVariantDetailView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes: list = []
+
+    def get(self, request, slug):
+        locale = requested_locale(request)
+        instance = ResumeVariant.objects.filter(
+            slug=slug,
+            status="published",
+            file__status="active",
+            **{f"label_{locale}__gt": ""},
+        ).select_related("file").first()
+        if instance is None:
+            problem = build_problem(status.HTTP_404_NOT_FOUND, "Published resource not found.", instance=request.path)
+            return Response(problem, status=status.HTTP_404_NOT_FOUND, content_type=PROBLEM_CONTENT_TYPE)
+        return Response(PublicResumeVariantSerializer(instance, context={"locale": locale, "request": request}).data)

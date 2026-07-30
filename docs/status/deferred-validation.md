@@ -74,8 +74,10 @@
 
 ## R1-04 — رزومه
 
+- [x] endpointهای عمومی list/detail و صفحهٔ SSR Resume به variantهای `published + active asset` متصل شدند؛ پاسخ فایل فقط URL، نام، MIME و حجم را برمی‌گرداند و metadata داخلی media را expose نمی‌کند.
 - [ ] بارگذاری فایل‌های رزومهٔ واقعی و QA دانلود در مرورگر؛ backend فقط variant
   منتشرشده با MediaAsset فعال را public می‌کند و هیچ فایل archive/draft را برنمی‌گرداند.
+- [ ] اجرای build production با API در دسترس و QA `fa/en`، pagination، حالت empty/error و دانلود فایل PDF/DOCX واقعی.
 
 ## R1-05 — پیکربندی سایت
 

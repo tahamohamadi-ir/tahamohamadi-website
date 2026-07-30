@@ -5,6 +5,8 @@ import {
   fetchPublications,
   fetchResearchProject,
   fetchResearchProjects,
+  fetchResumeVariant,
+  fetchResumeVariants,
   fetchTopics,
   getPublicPage,
   PublicApiError,
@@ -149,6 +151,25 @@ describe("public identity resource API paths", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.example.test/api/public/identity/research-projects/%D9%BE%DA%98%D9%88%D9%87%D8%B4%20%D9%86%D9%85%D9%88%D9%86%D9%87/?locale=fa",
+      expect.any(Object),
+    );
+  });
+
+  it("uses the published resume list and detail paths", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({}) });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchResumeVariants({ locale: "fa", page: 2, pageSize: 3 });
+    await fetchResumeVariant("general", "en");
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "https://api.example.test/api/public/identity/resumes/?locale=fa&page=2&page_size=3",
+      expect.any(Object),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "https://api.example.test/api/public/identity/resumes/general/?locale=en",
       expect.any(Object),
     );
   });

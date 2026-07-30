@@ -270,7 +270,7 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | R1-01 | 🟡 | مدل‌ها، migration، projection عمومیِ published-only و Admin CRUD با optimistic 409 پیاده شد؛ public viewport QA و محتوای واقعی باقی است. |
 | R1-02 | 🟡 | Experience/Education/Certification/Affiliation/LanguageProficiency با migration، projection عمومیِ published-only و CRUD Admin پیاده شد؛ QA مرورگر و دادهٔ واقعی باقی است. |
 | R1-03 | 🟡 | ResearchProject/ResearchInterest/Publication با migration، projection published-only، CRUD Admin، list/detail عمومی و صفحات SSR Research/Publication پیاده شد؛ دادهٔ تأییدشده و QA مرورگر باقی است. |
-| R1-04 | 🟡 | ResumeVariant با migration، CRUD Admin و public projection فقط برای `published + active asset` پیاده شد؛ فایل‌های واقعی و QA دانلود باقی است. |
+| R1-04 | 🟡 | ResumeVariant با migration، CRUD Admin، endpointهای عمومی list/detail و صفحهٔ SSR قابل دانلود فقط برای `published + active asset` پیاده شد؛ فایل‌های واقعی و QA دانلود باقی است. |
 | R1-05 | 🟡 | `apps.siteconfig` با migration، API عمومی published-only، CRUD محافظت‌شده و middleware redirect امن پیاده شد؛ اتصال Frontend و QA مرورگر باقی است. |
 | R1-06 | 🟡 | aggregate عمومی site+identity با ETag/Cache-Control و suppress ترجمهٔ ناقص پیاده شد؛ resource endpointهای تفصیلی و اتصال Frontend باقی است. |
 | R1-07 | 🟡 | Admin CRUD منابع جدید اکنون filter/search/ordering و optimistic 409 دارد؛ QA session/CSRF و صفحه‌های Admin باقی است. |

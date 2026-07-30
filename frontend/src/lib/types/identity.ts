@@ -35,3 +35,20 @@ export interface FetchPublicationsParams extends FetchIdentityResourceParams {
   type?: PublicationDTO["publication_type"];
   year?: string;
 }
+
+export interface PublicResumeFileDTO {
+  file: string | null;
+  original_filename: string;
+  mime_type: string;
+  file_size: number;
+}
+
+export interface ResumeVariantDTO {
+  slug: string;
+  label: string;
+  summary: string;
+  variant_type: "academic" | "industry" | "general";
+  file: PublicResumeFileDTO;
+}
+
+export type PaginatedResumeVariantsResponse = PaginatedResponse<ResumeVariantDTO>;

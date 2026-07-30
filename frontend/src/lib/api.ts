@@ -16,6 +16,8 @@ import type {
   PublicationDTO,
   FetchIdentityResourceParams,
   FetchPublicationsParams,
+  PaginatedResumeVariantsResponse,
+  ResumeVariantDTO,
 } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 
@@ -191,5 +193,27 @@ export async function fetchPublication(
 ): Promise<PublicationDTO> {
   return fetchPublicAPI<PublicationDTO>(
     `/public/identity/publications/${encodeURIComponent(slug)}/?locale=${locale}`,
+  );
+}
+
+export async function fetchResumeVariants(
+  params: FetchIdentityResourceParams,
+): Promise<PaginatedResumeVariantsResponse> {
+  const searchParams = new URLSearchParams({
+    locale: params.locale,
+    page: String(params.page ?? 1),
+    page_size: String(params.pageSize ?? 12),
+  });
+  return fetchPublicAPI<PaginatedResumeVariantsResponse>(
+    `/public/identity/resumes/?${searchParams.toString()}`,
+  );
+}
+
+export async function fetchResumeVariant(
+  slug: string,
+  locale: Locale,
+): Promise<ResumeVariantDTO> {
+  return fetchPublicAPI<ResumeVariantDTO>(
+    `/public/identity/resumes/${encodeURIComponent(slug)}/?locale=${locale}`,
   );
 }

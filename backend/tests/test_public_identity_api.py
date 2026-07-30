@@ -138,6 +138,59 @@ def test_public_identity_exposes_only_published_resume_with_active_file():
     response = APIClient().get("/api/public/identity/?locale=en")
 
     assert [item["slug"] for item in response.json()["resumes"]] == ["general"]
+    assert set(response.json()["resumes"][0]["file"]) == {
+        "file", "original_filename", "mime_type", "file_size",
+    }
+
+
+@pytest.mark.django_db
+def test_public_resume_resources_require_published_active_file_and_requested_locale():
+    active_file = MediaAsset.objects.create(
+        file="media/general.pdf", original_filename="general.pdf", mime_type="application/pdf",
+        file_size=42, checksum="e" * 64, status="active",
+    )
+    inactive_file = MediaAsset.objects.create(
+        file="media/archived.pdf", original_filename="archived.pdf", mime_type="application/pdf",
+        file_size=42, checksum="f" * 64, status="archived",
+    )
+    ResumeVariant.objects.create(
+        slug="general", label_fa="عمومی", label_en="General", summary_en="Public summary",
+        variant_type="general", file=active_file, status="published", ordering=0,
+    )
+    ResumeVariant.objects.create(
+        slug="archived", label_fa="قدیمی", label_en="Archived", variant_type="academic",
+        file=inactive_file, status="published", ordering=1,
+    )
+    ResumeVariant.objects.create(
+        slug="draft", label_fa="پیش‌نویس", label_en="Draft", variant_type="industry",
+        file=active_file, status="draft", ordering=2,
+    )
+    ResumeVariant.objects.create(
+        slug="missing-farsi", label_fa="", label_en="English only", variant_type="academic",
+        file=active_file, status="published", ordering=3,
+    )
+    client = APIClient()
+
+    listing = client.get("/api/public/identity/resumes/?locale=en")
+    detail = client.get("/api/public/identity/resumes/general/?locale=en")
+
+    assert listing.status_code == 200
+    assert [item["slug"] for item in listing.json()["results"]] == ["general", "missing-farsi"]
+    assert detail.status_code == 200
+    assert detail.json() == {
+        "slug": "general",
+        "label": "General",
+        "summary": "Public summary",
+        "variant_type": "general",
+        "file": {
+            "file": "http://testserver/media/media/general.pdf",
+            "original_filename": "general.pdf",
+            "mime_type": "application/pdf",
+            "file_size": 42,
+        },
+    }
+    assert client.get("/api/public/identity/resumes/archived/?locale=en").status_code == 404
+    assert client.get("/api/public/identity/resumes/missing-farsi/?locale=fa").status_code == 404
 
 
 @pytest.mark.django_db

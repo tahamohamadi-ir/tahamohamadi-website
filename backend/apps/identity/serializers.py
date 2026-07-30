@@ -5,6 +5,7 @@ from apps.identity.models import (
     Publication, ResearchInterest, ResearchProject, ResumeVariant,
     SiteProfile, Skill, SocialLink,
 )
+from apps.media.models import MediaAsset
 from apps.media.serializers import MediaAssetSerializer
 
 
@@ -222,10 +223,27 @@ class PublicPublicationSerializer(LocalizedPublicSerializer):
     get_abstract = lambda self, obj: self.localized(obj, "abstract")
 
 
+class PublicResumeFileSerializer(serializers.ModelSerializer):
+    """Minimal public metadata for a downloadable, active resume file."""
+
+    file = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MediaAsset
+        fields = ["file", "original_filename", "mime_type", "file_size"]
+        read_only_fields = fields
+
+    def get_file(self, obj):
+        if not obj.file:
+            return None
+        request = self.context.get("request")
+        return request.build_absolute_uri(obj.file.url) if request else obj.file.url
+
+
 class PublicResumeVariantSerializer(LocalizedPublicSerializer):
     label = serializers.SerializerMethodField()
     summary = serializers.SerializerMethodField()
-    file = MediaAssetSerializer(read_only=True)
+    file = PublicResumeFileSerializer(read_only=True)
     class Meta:
         model = ResumeVariant
         fields = ["slug", "label", "summary", "variant_type", "file"]

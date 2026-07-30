@@ -5,6 +5,8 @@ from apps.identity.public_resources import (
     PublicPublicationListView,
     PublicResearchProjectDetailView,
     PublicResearchProjectListView,
+    PublicResumeVariantDetailView,
+    PublicResumeVariantListView,
 )
 from apps.identity.views import PublicIdentityView
 
@@ -14,4 +16,6 @@ urlpatterns = [
     path("research-projects/<str:slug>/", PublicResearchProjectDetailView.as_view(), name="public-research-project-detail"),
     path("publications/", PublicPublicationListView.as_view(), name="public-publication-list"),
     path("publications/<str:slug>/", PublicPublicationDetailView.as_view(), name="public-publication-detail"),
+    path("resumes/", PublicResumeVariantListView.as_view(), name="public-resume-list"),
+    path("resumes/<slug:slug>/", PublicResumeVariantDetailView.as_view(), name="public-resume-detail"),
 ]
