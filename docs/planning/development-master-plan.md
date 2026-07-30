@@ -260,7 +260,7 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | R0-06 | 🟡 | usage و orphan detection اکنون CMS/Blog/Portfolio را پوشش می‌دهند؛ 32 تست PostgreSQL Compose پاس شد. QA رابط Admin با session/CSRF واقعی باقی است. |
 | R0-07 | ✅ | seed دیگر placeholder media نمی‌سازد و رکوردهای شکستهٔ تاریخی `media/seed/` را فقط در صورت نبود فایل پاک‌سازی می‌کند؛ test قرارداد پاس شد. |
 | R0-08 | ✅ | target تست Compose با فرمان واحد فعال است؛ اجرای کامل مجدد در 2026-07-29، 730/730 تست PostgreSQL را پاس کرد. |
-| R0-09 | 🟡 | scrub صریح Sentry و تست واحد آن در حال پیاده‌سازی است؛ ارسال واقعی server/client به پروژهٔ Sentry نیازمند DSN غیرمحلی است. |
+| R0-09 | 🟡 | Sentry به `instrumentation.ts`/`instrumentation-client.ts` استاندارد Next 15 منتقل شد، scrub و global error fallback فعال‌اند و warningهای legacy build حذف شدند؛ ارسال واقعی server/client به پروژهٔ Sentry و source-map CI باقی است. |
 | R0-10 | ⬜ | ۵ failure فعلی BlockRenderer ثبت شده؛ فایل‌های Hero/Quote تغییرات مستقل دارند و باید semantic contract را بازگردانند. |
 
 #### وضعیت شروع R1

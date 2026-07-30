@@ -124,11 +124,11 @@
 
 ## R0-09 — Sentry instrumentation
 
+- [x] initializerهای legacy به `instrumentation.ts`، runtime-specific initializerها و `instrumentation-client.ts` منتقل شدند؛ `onRequestError`، `onRouterTransitionStart` و global error fallback فعال‌اند. build 2026-07-30 دیگر warningهای config قدیمی Sentry را نشان نداد.
 - [ ] ارسال خطای آزمایشی از server و client به پروژهٔ واقعی Sentry و تأیید scrub
   شدن payload در dashboard. این کار بدون DSN و دسترسی به پروژهٔ Sentry قابل
   اثبات نیست.
-- [ ] اجرای build production با source-map upload در CI و بررسی warningهای
-  پیکربندی Sentry.
+- [ ] اجرای build production با source-map upload در CI؛ build محلی 2026-07-30 پس از compile/type-check در prerender `/fa/about` به‌علت API خاموش (`ECONNREFUSED`) متوقف شد، نه به‌علت Sentry.
 
 ## R0-08 — Backend test runtime
 
