@@ -6,6 +6,10 @@
 
 ## R0-03 — قرارداد `getPublicPage`
 
+- [x] Home با `page_type=home` بازیابی می‌شود، نه اسلاگ وابسته به locale. مسیرهای
+  ثابت فارسی مانند `/fa/about` ابتدا مالکیت `slug_fa` را بررسی و فقط در نبود کامل آن
+  از `slug_en` منتشرشده استفاده می‌کنند؛ متن و blockها همچنان فقط برای locale درخواست‌شده
+  projection می‌شوند. ۲۰ تست integration صفحه در PostgreSQL Compose سبز است.
 - [ ] اجرای build کامل Next.js پس از یکپارچه‌سازی تغییرات درخت کاری موجود.
 - [ ] اجرای smoke مرورگر برای مسیرهای `/fa` و `/en` با backend در دسترس و
   backend قطع‌شده؛ این برش فقط تست واحد API دارد.
@@ -33,11 +37,21 @@
 
 ## R0-10 — BlockRenderer semantics
 
+- [x] bridge سازگاری فقط شکل دقیق Hero/Text دوزبانهٔ قدیمی را می‌پذیرد؛ Admin در
+  ذخیره‌سازی همان JSON قدیمی را نگه می‌دارد و API عمومی آن را در locale درخواست‌شده به
+  تنظیمات canonical renderer تبدیل می‌کند. هیچ fallback میان‌زبانی یا migration مخربی
+  انجام نشده است.
 - [ ] رفع ۵ failure در `frontend/src/components/blocks/BlockRenderer.test.tsx`.
   اجرای کامل Vitest در 2026-07-29 نشان داد تغییرات stage‌نشدهٔ Hero/Quote
   animation، heading معنایی، متن قابل‌دسترسی و border جهت‌دار مورد انتظار تست
   را تغییر داده‌اند. این فایل‌های component متعلق به تغییرات موجود ورک‌تری‌اند
   و در برش سریع R0-05 دست‌کاری نشده‌اند.
+- [ ] composer فعلی برای block جدید `settings: {}` می‌سازد و بنابراین همچنان می‌تواند
+  422 معتبر بگیرد. defaults، فرم دوزبانه و پیام inline باید پس از تعیین قرارداد canonical
+  blockها در همان تغییرات مستقل frontend یکپارچه و با QA مرورگر بررسی شود.
+- [ ] سیاست اجرای migration در compose معمولی تعریف نشده است. migrationهای عقب‌افتادهٔ
+  دیتابیس محلی در 2026-07-30 به‌صورت دستی اعمال شد؛ پیش از محیط مشترک باید backup، job یا
+  startup policy امن و smoke پس از migration تعیین شود.
 
 ## R0-06 — Media usage endpoint
 

@@ -254,14 +254,14 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 |---|---|---|
 | R0-01 | 🟡 | محدودهٔ فایل‌های task-owned برای هر commit حفظ شده است؛ baseline کلی هنوز به‌علت ورک‌تری بسیار dirty و `git diff --check` قرمز، قابل بستن نیست. |
 | R0-02 | ⬜ | `CustomCursor` همچنان در locale layout موجود است؛ فایل layout تغییرات مستقل دارد و نیازمند QA hydration است. |
-| R0-03 | 🟡 | locale واقعی و تفکیک 404 از failure در commit `87360f6` پیاده شد؛ browser smoke باقی است. |
+| R0-03 | 🟡 | locale واقعی و تفکیک 404 از failure در commit `87360f6` پیاده شد؛ Home اکنون با `page_type=home` و مسیرهای ثابت فارسی مانند `/fa/about` با اولویت اسلاگ فارسی resolve می‌شوند. projection دادهٔ legacy نیز فقط در locale درخواست‌شده انجام می‌شود؛ browser smoke باقی است. |
 | R0-04 | 🟡 | `PublicLayout` اکنون تنها `main#main-content` را دارد و Home/About/Contact/Resume child main ندارند؛ Home بدون CMS دیگر identity ساختگی نشان نمی‌دهد. شمارش نهایی H1 و QA دادهٔ واقعی وابسته به R0-10 است. |
 | R0-05 | 🟡 | public topics، `q` و URL state در commit `1f8bce2` پیاده شد؛ 17 pytest مرتبط روی PostgreSQL Compose پاس شد و browser/a11y QA باقی است. |
 | R0-06 | 🟡 | usage و orphan detection اکنون CMS/Blog/Portfolio را پوشش می‌دهند؛ 32 تست PostgreSQL Compose پاس شد. QA رابط Admin با session/CSRF واقعی باقی است. |
 | R0-07 | ✅ | seed دیگر placeholder media نمی‌سازد و رکوردهای شکستهٔ تاریخی `media/seed/` را فقط در صورت نبود فایل پاک‌سازی می‌کند؛ test قرارداد پاس شد. |
 | R0-08 | ✅ | target تست Compose با فرمان واحد فعال است؛ اجرای کامل مجدد در 2026-07-29، 730/730 تست PostgreSQL را پاس کرد. |
 | R0-09 | 🟡 | Sentry به `instrumentation.ts`/`instrumentation-client.ts` استاندارد Next 15 منتقل شد، scrub و global error fallback فعال‌اند و warningهای legacy build حذف شدند؛ ارسال واقعی server/client به پروژهٔ Sentry و source-map CI باقی است. |
-| R0-10 | ⬜ | ۵ failure فعلی BlockRenderer ثبت شده؛ فایل‌های Hero/Quote تغییرات مستقل دارند و باید semantic contract را بازگردانند. |
+| R0-10 | 🟡 | bridge محدود برای Hero/Text قدیمی اضافه شد تا دادهٔ دوزبانهٔ منتشرشده render و بدون تغییر مخرب ذخیره شود؛ ۵ failure فعلی BlockRenderer و قرارداد کامل composer/schema همچنان باقی است. |
 
 #### وضعیت شروع R1
 

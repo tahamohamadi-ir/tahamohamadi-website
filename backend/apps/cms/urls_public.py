@@ -6,10 +6,11 @@ Provides read-only access to published pages for anonymous users.
 
 from django.urls import path
 
-from apps.cms.views import PublicPageView
+from apps.cms.views import PublicHomePageView, PublicPageView
 
 app_name = "cms-public"
 
 urlpatterns = [
+    path("home/", PublicHomePageView.as_view(), name="home"),
     path("<path:slug>/", PublicPageView.as_view(), name="page-detail"),
 ]

@@ -382,6 +382,161 @@ class TestPublicPageEndpoint:
         data = response.json()
         assert data["slug_en"] == "published-page"
 
+    def test_public_home_uses_page_type_instead_of_a_locale_slug(
+        self, api_client: APIClient, db
+    ):
+        """The locale root must work when Home has different locale slugs."""
+        home = Page.objects.create(
+            slug_fa="صفحه-نخست",
+            slug_en="landing-page",
+            title_fa="خانه",
+            title_en="Home",
+            page_type="home",
+            status="published",
+        )
+
+        response = api_client.get(f"{PUBLIC_PAGES_URL}home/", {"locale": "fa"})
+
+        assert response.status_code == 200
+        assert response.json()["slug_fa"] == home.slug_fa
+
+    def test_persian_route_can_resolve_a_canonical_english_page_slug(
+        self, api_client: APIClient, db
+    ):
+        """Static /fa routes use canonical paths without losing Persian content."""
+        about = Page.objects.create(
+            slug_fa="درباره-من",
+            slug_en="about",
+            title_fa="درباره من",
+            title_en="About",
+            page_type="about",
+            status="published",
+        )
+
+        response = api_client.get(f"{PUBLIC_PAGES_URL}about/", {"locale": "fa"})
+
+        assert response.status_code == 200
+        assert response.json()["id"] == str(about.id)
+        assert response.json()["title_fa"] == "درباره من"
+
+    def test_public_home_renders_legacy_localized_blocks_in_requested_locale(
+        self, api_client: APIClient, db
+    ):
+        """Removing legacy localization would make published Home blank again."""
+        home = Page.objects.create(
+            slug_fa="خانه-نمونه",
+            slug_en="sample-home",
+            title_fa="خانه",
+            title_en="Home",
+            page_type="home",
+            status="published",
+        )
+        section = Section.objects.create(
+            page=home, ordering=0, enabled=True, layout="hero"
+        )
+        Block.objects.create(
+            section=section,
+            block_type="hero",
+            settings={
+                "heading_fa": "عنوان فارسی",
+                "heading_en": "English heading",
+                "subheading_fa": "زیرعنوان فارسی",
+                "subheading_en": "English subheading",
+                "cta_text_fa": "بیشتر بدانید",
+                "cta_text_en": "Learn more",
+                "cta_link": "/about",
+            },
+            ordering=0,
+        )
+        Block.objects.create(
+            section=section,
+            block_type="text",
+            settings={
+                "body_fa": "متن فارسی",
+                "body_en": "English body",
+            },
+            ordering=1,
+        )
+
+        fa_response = api_client.get(f"{PUBLIC_PAGES_URL}home/", {"locale": "fa"})
+        en_response = api_client.get(f"{PUBLIC_PAGES_URL}home/", {"locale": "en"})
+
+        assert fa_response.status_code == 200
+        fa_blocks = fa_response.json()["sections"][0]["blocks"]
+        assert [(block["block_type"], block["ordering"]) for block in fa_blocks] == [
+            ("hero", 0),
+            ("text", 1),
+        ]
+        assert fa_blocks[0]["settings"] == {
+            "title": "عنوان فارسی",
+            "subtitle": "زیرعنوان فارسی",
+            "cta_label": "بیشتر بدانید",
+            "cta_url": "/about",
+        }
+        assert fa_blocks[1]["settings"] == {"content": "متن فارسی", "alignment": "start"}
+
+        en_blocks = en_response.json()["sections"][0]["blocks"]
+        assert en_blocks[0]["settings"]["title"] == "English heading"
+        assert en_blocks[1]["settings"]["content"] == "English body"
+
+    def test_admin_can_save_registered_legacy_localized_blocks(
+        self, admin_client: APIClient, db
+    ):
+        """Rejecting these stored legacy blocks makes the editor unable to save."""
+        page = Page.objects.create(
+            slug_fa="صفحه-قدیمی",
+            slug_en="legacy-page",
+            title_fa="صفحه قدیمی",
+            title_en="Legacy page",
+            page_type="custom",
+            status="draft",
+        )
+        section = Section.objects.create(
+            page=page, ordering=0, enabled=True, layout="hero"
+        )
+        legacy_settings = {
+            "heading_fa": "عنوان فارسی",
+            "heading_en": "English heading",
+            "subheading_fa": "زیرعنوان فارسی",
+            "subheading_en": "English subheading",
+            "cta_text_fa": "بیشتر بدانید",
+            "cta_text_en": "Learn more",
+            "cta_link": "/about",
+        }
+        Block.objects.create(
+            section=section,
+            block_type="hero",
+            settings=legacy_settings,
+            ordering=0,
+        )
+
+        response = admin_client.put(
+            f"{ADMIN_PAGES_URL}{page.id}/",
+            {
+                "slug_fa": page.slug_fa,
+                "slug_en": page.slug_en,
+                "title_fa": page.title_fa,
+                "title_en": page.title_en,
+                "page_type": page.page_type,
+                "status": page.status,
+                "version": page.version,
+                "sections": [{
+                    "ordering": 0,
+                    "enabled": True,
+                    "layout": "hero",
+                    "blocks": [{
+                        "block_type": "hero",
+                        "settings": legacy_settings,
+                        "ordering": 0,
+                    }],
+                }],
+            },
+            format="json",
+        )
+
+        assert response.status_code == 200
+        assert response.json()["sections"][0]["blocks"][0]["settings"] == legacy_settings
+
     def test_public_page_returns_404_for_draft(self, api_client: APIClient, db):
         """Draft page → 404."""
         Page.objects.create(

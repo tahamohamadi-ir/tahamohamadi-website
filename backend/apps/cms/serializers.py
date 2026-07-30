@@ -17,7 +17,11 @@ from __future__ import annotations
 from django.db import transaction
 from rest_framework import serializers
 
-from apps.cms.block_registry import is_known_block_type, validate_block_settings
+from apps.cms.block_registry import (
+    is_known_block_type,
+    public_block_settings,
+    validate_block_settings,
+)
 from apps.cms.collections import resolve_identity_collection
 from apps.cms.models import Block, Page, Section
 
@@ -222,7 +226,11 @@ class PublicBlockSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
     def get_settings(self, block: Block) -> dict:
-        settings = block.settings.copy()
+        settings = public_block_settings(
+            block.block_type,
+            block.settings,
+            self.context.get("locale", "en"),
+        )
         if block.block_type == "collection":
             settings["items"] = resolve_identity_collection(
                 settings,
@@ -287,4 +295,8 @@ class PublicPageSerializer(serializers.ModelSerializer):
     def get_sections(self, page: Page) -> list[dict]:
         """Return only enabled sections, ordered by ordering."""
         enabled_sections = page.sections.filter(enabled=True).order_by("ordering")
-        return PublicSectionSerializer(enabled_sections, many=True).data
+        return PublicSectionSerializer(
+            enabled_sections,
+            many=True,
+            context=self.context,
+        ).data

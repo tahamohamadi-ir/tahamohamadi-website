@@ -185,8 +185,43 @@ class PublicPageView(APIView):
 
         if locale == "fa":
             page = Page.objects.filter(slug_fa=slug, status="published").first()
+            if not page and not Page.objects.filter(slug_fa=slug).exists():
+                # Public routes such as /fa/about have canonical English path
+                # segments.  A real Persian slug always wins, including a
+                # non-public one, so this cannot leak a different page.
+                page = Page.objects.filter(slug_en=slug, status="published").first()
         else:
             page = Page.objects.filter(slug_en=slug, status="published").first()
+
+        if not page:
+            problem = build_problem(
+                status.HTTP_404_NOT_FOUND,
+                "Page not found or not published.",
+                instance=request.path,
+            )
+            return Response(
+                problem,
+                status=status.HTTP_404_NOT_FOUND,
+                content_type=PROBLEM_CONTENT_TYPE,
+            )
+
+        serializer = PublicPageSerializer(page, context={"locale": locale, "request": request})
+        return Response(serializer.data)
+
+
+class PublicHomePageView(PublicPageView):
+    """Public endpoint for the locale-root Home composition.
+
+    Home is identified by its content type, not by a locale-specific slug.
+    """
+
+    def get(self, request):
+        locale = request.query_params.get("locale", "en")
+        page = (
+            Page.objects.filter(page_type="home", status="published")
+            .order_by("-updated_at", "id")
+            .first()
+        )
 
         if not page:
             problem = build_problem(

@@ -253,6 +253,56 @@ _VALIDATORS: dict[str, Draft7Validator] = {
 }
 
 
+def is_legacy_localized_settings(block_type: str, settings: dict) -> bool:
+    """Recognize the two bilingual CMS settings shapes stored before v2.
+
+    This is deliberately narrow: it keeps existing published content editable
+    while the public serializer can project the requested locale without
+    falling back to the other language.
+    """
+    if not isinstance(settings, dict):
+        return False
+
+    if block_type == "hero":
+        allowed = {
+            "heading_fa", "heading_en", "subheading_fa", "subheading_en",
+            "cta_text_fa", "cta_text_en", "cta_link",
+        }
+        required = {"heading_fa", "heading_en"}
+        return set(settings).issubset(allowed) and required.issubset(settings) and all(
+            isinstance(settings[name], str) for name in required
+        )
+
+    if block_type == "text":
+        return set(settings) == {"body_fa", "body_en"} and all(
+            isinstance(settings[name], str) for name in ("body_fa", "body_en")
+        )
+
+    return False
+
+
+def public_block_settings(block_type: str, settings: dict, locale: str) -> dict:
+    """Return canonical renderer settings for the requested locale only."""
+    if not is_legacy_localized_settings(block_type, settings):
+        return settings.copy()
+
+    if block_type == "hero":
+        result = {
+            "title": settings[f"heading_{locale}"],
+            "cta_url": settings.get("cta_link"),
+        }
+        for legacy_name, canonical_name in (
+            (f"subheading_{locale}", "subtitle"),
+            (f"cta_text_{locale}", "cta_label"),
+        ):
+            value = settings.get(legacy_name)
+            if value:
+                result[canonical_name] = value
+        return result
+
+    return {"content": settings[f"body_{locale}"], "alignment": "start"}
+
+
 def validate_block_settings(block_type: str, settings: dict) -> list[str]:
     """Validate block settings against the registered schema for block_type.
 
@@ -288,6 +338,9 @@ def validate_block_settings(block_type: str, settings: dict) -> list[str]:
             invalid_filters = set(requested_filter) - _COLLECTION_FILTERS_BY_SOURCE.get(source, set())
             if invalid_filters:
                 errors.append(f"filter: unsupported for source '{source}': {sorted(invalid_filters)}")
+
+    if errors and is_legacy_localized_settings(block_type, settings):
+        return []
 
     return errors
 
