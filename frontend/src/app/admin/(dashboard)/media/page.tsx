@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { MediaPicker } from "@/components/admin/media/MediaPicker";
+import type { MediaAssetDTO } from "@/lib/types/media";
 import {
     Grid3X3,
     List,
@@ -149,6 +151,21 @@ async function archiveMedia(id: string): Promise<MediaAsset> {
         headers: { "Content-Type": "application/json" },
     });
     if (!res.ok) throw new Error(`Archive failed: ${res.status}`);
+    return res.json();
+}
+
+async function replaceMedia(
+    id: string,
+    replacementMediaId: string,
+): Promise<{ archived_asset: MediaAsset; replacement_asset: MediaAsset; replaced_usage_count: number }> {
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/api/admin/media/${id}/replace/`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ replacement_media_id: replacementMediaId }),
+    });
+    if (!res.ok) throw new Error(`Replacement failed: ${res.status}`);
     return res.json();
 }
 
@@ -301,10 +318,8 @@ export default function MediaLibraryPage() {
     async function handleArchive(asset: MediaAsset) {
         const usageData = await fetchMediaUsage(asset.id);
         if (usageData.length > 0) {
-            const confirmed = window.confirm(
-                `This asset is used in ${usageData.length} place(s). Are you sure you want to archive it?`,
-            );
-            if (!confirmed) return;
+            setError("This asset is in use. Open it and replace all usages before archiving.");
+            return;
         }
         try {
             const updated = await archiveMedia(asset.id);
@@ -314,6 +329,26 @@ export default function MediaLibraryPage() {
             if (selectedAsset?.id === updated.id) setSelectedAsset(updated);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Archive failed");
+        }
+    }
+
+    async function handleReplace(asset: MediaAsset, replacementMediaId: string) {
+        setSaving(true);
+        try {
+            const result = await replaceMedia(asset.id, replacementMediaId);
+            setAssets((prev) =>
+                prev.map((item) =>
+                    item.id === result.archived_asset.id ? result.archived_asset : item,
+                ),
+            );
+            if (selectedAsset?.id === result.archived_asset.id) {
+                setSelectedAsset(result.archived_asset);
+                setUsage([]);
+            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Replacement failed");
+        } finally {
+            setSaving(false);
         }
     }
 
@@ -666,6 +701,7 @@ export default function MediaLibraryPage() {
                             saving={saving}
                             onSave={handleSaveMetadata}
                             onArchive={() => handleArchive(selectedAsset)}
+                            onReplace={(replacementMediaId) => handleReplace(selectedAsset, replacementMediaId)}
                             onUnarchive={() => handleUnarchive(selectedAsset)}
                         />
                     )}
@@ -685,6 +721,7 @@ function MediaDetailPanel({
     saving,
     onSave,
     onArchive,
+    onReplace,
     onUnarchive,
 }: {
     asset: MediaAsset;
@@ -692,12 +729,14 @@ function MediaDetailPanel({
     saving: boolean;
     onSave: (data: { alt_text_fa: string; alt_text_en: string; caption_fa: string; caption_en: string }) => void;
     onArchive: () => void;
+    onReplace: (replacementMediaId: string) => void;
     onUnarchive: () => void;
 }) {
     const [altFa, setAltFa] = useState(asset.alt_text_fa);
     const [altEn, setAltEn] = useState(asset.alt_text_en);
     const [captionFa, setCaptionFa] = useState(asset.caption_fa);
     const [captionEn, setCaptionEn] = useState(asset.caption_en);
+    const [replacement, setReplacement] = useState<MediaAssetDTO | null>(null);
 
     // Sync form when asset changes
     useEffect(() => {
@@ -841,10 +880,36 @@ function MediaDetailPanel({
             {/* Archive / Unarchive Action */}
             <div className="border-t pt-4">
                 {asset.status === "active" ? (
-                    <Button variant="destructive" onClick={onArchive}>
-                        <Archive className="mr-2 h-4 w-4" />
-                        Archive Asset
-                    </Button>
+                    usage.length > 0 ? (
+                        <div className="space-y-3">
+                            <div>
+                                <h3 className="text-sm font-semibold">Replace all usages</h3>
+                                <p className="text-sm text-[hsl(var(--muted-foreground))]">
+                                    Choose an active replacement. The current asset will be archived only after every listed usage moves successfully.
+                                </p>
+                            </div>
+                            <MediaPicker
+                                value={replacement}
+                                onSelect={(candidate) => {
+                                    if (candidate.id !== asset.id) setReplacement(candidate);
+                                }}
+                                onClear={() => setReplacement(null)}
+                            />
+                            <Button
+                                variant="destructive"
+                                onClick={() => replacement && onReplace(replacement.id)}
+                                disabled={saving || !replacement}
+                            >
+                                <Archive className="mr-2 h-4 w-4" />
+                                Replace and archive source
+                            </Button>
+                        </div>
+                    ) : (
+                        <Button variant="destructive" onClick={onArchive}>
+                            <Archive className="mr-2 h-4 w-4" />
+                            Archive Asset
+                        </Button>
+                    )
                 ) : (
                     <Button variant="outline" onClick={onUnarchive}>
                         <RotateCcw className="mr-2 h-4 w-4" />

@@ -127,6 +127,8 @@ class AuditLoggingMiddleware:
             return "read", "Contact message marked as read."
         if request.path.endswith("/archive/") and request.path.startswith("/api/admin/contact-messages/"):
             return "archived", "Contact message archived."
+        if request.path.endswith("/replace/") and request.path.startswith("/api/admin/media/"):
+            return "replaced", "Media asset references replaced and source archived."
         action = METHOD_ACTION_MAP.get(request.method, request.method.lower())
         return action, f"Admin API: {request.method} {request.path}"
 

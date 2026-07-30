@@ -31,6 +31,7 @@ from apps.media.services import (
     UploadValidationError,
     get_media_usage,
     get_orphan_media_ids,
+    replace_media_references,
     upload_media,
 )
 
@@ -195,6 +196,78 @@ class AdminMediaViewSet(ModelViewSet):
 
         serializer = MediaAssetSerializer(asset, context={"request": request})
         return Response(serializer.data)
+
+    @action(detail=True, methods=["post"], url_path="replace")
+    def replace(self, request, pk=None):
+        """Replace every known reference, then archive the source asset."""
+        replacement_id = request.data.get("replacement_media_id")
+        if not replacement_id:
+            problem = build_problem(
+                status.HTTP_400_BAD_REQUEST,
+                "replacement_media_id is required.",
+                instance=request.path,
+            )
+            return Response(
+                problem,
+                status=status.HTTP_400_BAD_REQUEST,
+                content_type=PROBLEM_CONTENT_TYPE,
+            )
+
+        with transaction.atomic():
+            asset_ids = sorted([str(pk), str(replacement_id)])
+            assets = {
+                str(asset.id): asset
+                for asset in MediaAsset.objects.select_for_update().filter(id__in=asset_ids)
+            }
+            source = assets.get(str(pk))
+            replacement = assets.get(str(replacement_id))
+            if source is None or replacement is None:
+                problem = build_problem(
+                    status.HTTP_404_NOT_FOUND,
+                    "Media asset was not found.",
+                    instance=request.path,
+                )
+                return Response(
+                    problem,
+                    status=status.HTTP_404_NOT_FOUND,
+                    content_type=PROBLEM_CONTENT_TYPE,
+                )
+            if source.id == replacement.id:
+                problem = build_problem(
+                    status.HTTP_400_BAD_REQUEST,
+                    "A media asset cannot replace itself.",
+                    instance=request.path,
+                )
+                return Response(
+                    problem,
+                    status=status.HTTP_400_BAD_REQUEST,
+                    content_type=PROBLEM_CONTENT_TYPE,
+                )
+            if source.status != "active" or replacement.status != "active":
+                problem = build_problem(
+                    status.HTTP_400_BAD_REQUEST,
+                    "Both source and replacement media must be active.",
+                    instance=request.path,
+                )
+                return Response(
+                    problem,
+                    status=status.HTTP_400_BAD_REQUEST,
+                    content_type=PROBLEM_CONTENT_TYPE,
+                )
+
+            replaced_usage_count = replace_media_references(source.id, replacement.id)
+            if get_media_usage(source.id):
+                raise RuntimeError("Media replacement left unresolved references.")
+            source.status = "archived"
+            source.save(update_fields=["status", "updated_at"])
+
+        return Response(
+            {
+                "archived_asset": MediaAssetSerializer(source, context={"request": request}).data,
+                "replacement_asset": MediaAssetSerializer(replacement, context={"request": request}).data,
+                "replaced_usage_count": replaced_usage_count,
+            }
+        )
 
     # ------------------------------------------------------------------
     # Usage (custom action)

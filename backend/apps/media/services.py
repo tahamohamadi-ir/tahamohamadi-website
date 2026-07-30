@@ -385,6 +385,84 @@ def get_media_usage_count(media_id: UUID) -> int:
     return len(get_media_usage(media_id))
 
 
+def replace_media_references(source_media_id: UUID, replacement_media_id: UUID) -> int:
+    """Rewrite every known media reference and return affected content count.
+
+    The caller owns the surrounding transaction and locks both media assets.
+    This function locks every content row it changes, so a failed replacement
+    leaves the old asset and all references untouched.
+    """
+    from apps.blog.models import Article, ArticleBlock
+    from apps.cms.models import Block
+    from apps.portfolio.models import CaseStudy, CaseStudyBlock
+
+    source_id = str(source_media_id)
+    replacement_id = str(replacement_media_id)
+    impacted_count = len(get_media_usage(source_media_id))
+
+    def replace_json_reference(content: dict) -> dict:
+        updated = dict(content)
+        if updated.get("media_id") == source_id:
+            updated["media_id"] = replacement_id
+        if isinstance(updated.get("media_ids"), list):
+            updated["media_ids"] = [
+                replacement_id if media_id == source_id else media_id
+                for media_id in updated["media_ids"]
+            ]
+        return updated
+
+    cms_blocks = Block.objects.select_for_update().filter(settings__media_id=source_id)
+    cms_blocks = list(cms_blocks) + list(
+        Block.objects.select_for_update().filter(settings__media_ids__contains=[source_id])
+    )
+    seen_block_ids: set = set()
+    for block in cms_blocks:
+        if block.id in seen_block_ids:
+            continue
+        seen_block_ids.add(block.id)
+        block.settings = replace_json_reference(block.settings)
+        block.save(update_fields=["settings"])
+
+    articles = Article.objects.select_for_update().filter(featured_image_id=source_media_id)
+    for article in articles:
+        article.featured_image_id = replacement_media_id
+        article.save(update_fields=["featured_image", "updated_at"])
+
+    article_blocks = ArticleBlock.objects.select_for_update().filter(content__media_id=source_id)
+    article_blocks = list(article_blocks) + list(
+        ArticleBlock.objects.select_for_update().filter(content__media_ids__contains=[source_id])
+    )
+    seen_article_block_ids: set = set()
+    for block in article_blocks:
+        if block.id in seen_article_block_ids:
+            continue
+        seen_article_block_ids.add(block.id)
+        block.content = replace_json_reference(block.content)
+        block.save(update_fields=["content"])
+
+    case_study_ids = set(
+        CaseStudy.objects.filter(gallery__id=source_media_id).values_list("id", flat=True)
+    )
+    case_studies = CaseStudy.objects.select_for_update().filter(id__in=case_study_ids)
+    for case_study in case_studies:
+        case_study.gallery.remove(source_media_id)
+        case_study.gallery.add(replacement_media_id)
+
+    case_blocks = CaseStudyBlock.objects.select_for_update().filter(content__media_id=source_id)
+    case_blocks = list(case_blocks) + list(
+        CaseStudyBlock.objects.select_for_update().filter(content__media_ids__contains=[source_id])
+    )
+    seen_case_block_ids: set = set()
+    for block in case_blocks:
+        if block.id in seen_case_block_ids:
+            continue
+        seen_case_block_ids.add(block.id)
+        block.content = replace_json_reference(block.content)
+        block.save(update_fields=["content"])
+
+    return impacted_count
+
+
 def get_orphan_media_ids() -> list[UUID]:
     """Return IDs of active media assets with zero references.
 

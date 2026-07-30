@@ -131,8 +131,9 @@
 ## R4-02 — بایگانی و جایگزینی امن رسانه
 
 - [x] `POST /api/admin/media/{id}/archive/` اکنون رسانهٔ referenced را در یک تراکنش قفل می‌کند، وضعیت active را حفظ می‌کند و `409` همراه با `usage_count` و فهرست impact واقعی برمی‌گرداند؛ بنابراین درخواست هم‌زمان نمی‌تواند میان بررسی مصرف و بایگانی، محتوای عمومی را بشکند.
-- [ ] جریان controlled replacement، بازنویسی اتمیک تمام referenceها، rollback، و audit انسانی برای جایگزینی/بایگانی هنوز پیاده‌سازی نشده‌اند؛ UI فعلی usage را پیش از درخواست نشان می‌دهد، اما تجربهٔ کامل جایگزینی ندارد.
-- [ ] QA واقعی session/CSRF و مرورگر برای دو حالت لازم است: رسانهٔ used باید با 409 فعال بماند و رسانهٔ unreferenced باید بایگانی شود. این برش فقط تست API کنترل‌شده را اجرا کرده است.
+- [x] `POST /api/admin/media/{id}/replace/` اکنون replacement فعال را بدون UUID خام در UI انتخاب می‌کند، referenceهای شناخته‌شدهٔ CMS/Blog/Portfolio (شامل FK، gallery و `media_id`/`media_ids`) را در یک تراکنش بازنویسی می‌کند و فقط پس از موفقیت کامل مبدأ را archive می‌کند. middleware نیز رخداد `replaced` را در audit ثبت می‌کند.
+- [ ] R4-01 یعنی `MediaUsageReference`، backfill/reconcile job و index schema-based هنوز وجود ندارد؛ تا قبل از آن replacement فقط قراردادهای منبعِ شناخته‌شده را پوشش می‌دهد و تضمین کامل در برابر reference جدیدِ ناشناخته یا نویسندهٔ هم‌زمان ندارد.
+- [ ] QA واقعی session/CSRF و مرورگر برای سه حالت لازم است: رسانهٔ used باید با 409 فعال بماند، replacement باید مصرف‌ها را منتقل و مبدأ را archive کند، و رسانهٔ unreferenced باید بایگانی شود. build تازهٔ Docker در این برش به‌علت proxy محلیِ خاموش روی `127.0.0.1:3067` اجرا نشد؛ تست backend با image موجود و mount کد جاری انجام شد.
 
 ## R1-05 — پیکربندی سایت
 
