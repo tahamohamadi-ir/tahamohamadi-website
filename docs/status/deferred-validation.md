@@ -148,6 +148,12 @@
 - [ ] اتصال MediaPicker به composer و Article editor هنوز انجام نشده است؛ Article editor همچنان placeholder دارد و نباید تا اتصال واقعی، رسانهٔ خارجی یا UUID خام را به content منتشرشده وارد کند.
 - [ ] upload واقعی XHR با CSRF/session، progress/retry در مرورگر، keyboard/focus در nested dialog، RTL/LTR و viewportهای هدف هنوز QA نشده‌اند. Docker build تازه همچنان وابسته به رفع proxy محلی است.
 
+## R4-04 — validation و پردازش رسانه
+
+- [x] validation علاوه بر `content_type` ارسالی، signature محتوای JPEG/PNG/GIF/WebP/SVG/PDF/MP4 را کنترل می‌کند، stream را برای hash/storage reset می‌کند و محتوای ناشناخته یا MIME جعلی را رد می‌کند.
+- [ ] signature check جای `libmagic`/antivirus، decode کامل image و سیاست مقابله با polyglot را نمی‌گیرد. SVG هنوز sanitize نشده است؛ تا طراحی و آزمون sanitizer یا policy منع SVG، این مسیر باید با review امنیتی جداگانه بسته شود.
+- [ ] ایجاد thumbnail/derivative، پردازش async، retry/cleanup storage و benchmark فایل‌های مرزی هنوز وجود ندارد. upload واقعی با session/CSRF، سقف Nginx و storage production نیز باید جداگانه QA شود.
+
 ## R1-05 — پیکربندی سایت
 
 - [x] تست قراردادی API عمومی و اعتبارسنجی لینک/redirect در `backend/tests/test_siteconfig_api.py`

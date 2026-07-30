@@ -65,6 +65,35 @@ class UploadValidationError(Exception):
 # --- Validation ----------------------------------------------------------
 
 
+def detect_upload_mime_type(file) -> str | None:
+    """Identify an allowed upload type from its content signature.
+
+    Browser-provided ``content_type`` is advisory only. This lightweight
+    detector covers the deliberately small upload allow-list and always resets
+    the stream for subsequent hashing and storage.
+    """
+    try:
+        prefix = file.read(512)
+    finally:
+        file.seek(0)
+
+    if prefix.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if prefix.startswith(b"\x89PNG"):
+        return "image/png"
+    if prefix.startswith((b"GIF87a", b"GIF89a")):
+        return "image/gif"
+    if prefix.startswith(b"RIFF") and prefix[8:12] == b"WEBP":
+        return "image/webp"
+    if prefix.startswith(b"%PDF-"):
+        return "application/pdf"
+    if len(prefix) >= 12 and prefix[4:8] == b"ftyp":
+        return "video/mp4"
+    if prefix.lstrip(b"\xef\xbb\xbf \t\r\n").startswith(b"<svg"):
+        return "image/svg+xml"
+    return None
+
+
 def validate_upload(file) -> list[str]:
     """Validate MIME type, file extension, and file size.
 
@@ -82,6 +111,15 @@ def validate_upload(file) -> list[str]:
         errors.append(
             f"MIME type '{mime_type}' is not allowed. "
             f"Allowed types: {', '.join(sorted(ALLOWED_MIME_TYPES.keys()))}"
+        )
+
+    detected_mime_type = detect_upload_mime_type(file)
+    if detected_mime_type is None:
+        errors.append("File content could not be verified as an allowed media type.")
+    elif detected_mime_type != mime_type:
+        errors.append(
+            f"Declared MIME type '{mime_type}' does not match detected content "
+            f"'{detected_mime_type}'."
         )
 
     # Extension check

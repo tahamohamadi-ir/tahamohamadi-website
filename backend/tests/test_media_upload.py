@@ -87,6 +87,19 @@ def test_validate_upload_rejects_mismatched_extension():
     assert "does not match" in errors[0]
 
 
+def test_validate_upload_rejects_a_declared_jpeg_with_pdf_content():
+    """The client-declared MIME type must not override the file signature."""
+    file = SimpleUploadedFile(
+        name="disguised.jpg",
+        content=b"%PDF-1.7\nnot actually a JPEG",
+        content_type="image/jpeg",
+    )
+
+    errors = validate_upload(file)
+
+    assert any("does not match detected content" in error for error in errors)
+
+
 # --- compute_checksum tests ----------------------------------------------
 
 
