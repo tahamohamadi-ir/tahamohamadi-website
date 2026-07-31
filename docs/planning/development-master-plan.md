@@ -253,9 +253,9 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | ID | وضعیت | شواهد / اقدام بعدی |
 |---|---|---|
 | R0-01 | 🟡 | محدودهٔ فایل‌های task-owned برای هر commit حفظ شده است؛ baseline کلی هنوز به‌علت ورک‌تری بسیار dirty و `git diff --check` قرمز، قابل بستن نیست. |
-| R0-02 | ⬜ | `CustomCursor` همچنان در locale layout موجود است؛ فایل layout تغییرات مستقل دارد و نیازمند QA hydration است. |
-| R0-03 | 🟡 | locale واقعی و تفکیک 404 از failure در commit `87360f6` پیاده شد؛ Home اکنون با `page_type=home` و مسیرهای ثابت فارسی مانند `/fa/about` با اولویت اسلاگ فارسی resolve می‌شوند. projection دادهٔ legacy نیز فقط در locale درخواست‌شده انجام می‌شود؛ browser smoke باقی است. |
-| R0-04 | 🟡 | `PublicLayout` اکنون تنها `main#main-content` را دارد و Home/About/Contact/Resume child main ندارند؛ Home بدون CMS دیگر identity ساختگی نشان نمی‌دهد. شمارش نهایی H1 و QA دادهٔ واقعی وابسته به R0-10 است. |
+| R0-02 | ✅ | `CustomCursor` و smooth-scroll غیرضروری از locale layout حذف شدند؛ QA زندهٔ 375 و 1440 بدون hydration mismatch انجام شد. |
+| R0-03 | 🟡 | locale واقعی و تفکیک 404 از failure پیاده شد؛ Home با `page_type=home` و CTAهای داخلی با prefix زبان resolve می‌شوند. smoke زندهٔ `/fa`، `/en` و `/en/about` پاس شد؛ حالت backend قطع‌شده باقی است. |
+| R0-04 | 🟡 | `PublicLayout` تنها مالک `main#main-content` است؛ Home منتشرشده در fa/en دقیقاً یک H1 دارد و سکشن‌های API عمومی بدون وابستگی به فیلد Admin `enabled` رندر می‌شوند. QAهای 375 و 1440 پاس شد؛ viewportهای میانی و screen reader باقی‌اند. |
 | R0-05 | 🟡 | public topics، `q` و URL state در commit `1f8bce2` پیاده شد؛ 17 pytest مرتبط روی PostgreSQL Compose پاس شد و browser/a11y QA باقی است. |
 | R0-06 | 🟡 | usage و orphan detection اکنون CMS/Blog/Portfolio را پوشش می‌دهند؛ 32 تست PostgreSQL Compose پاس شد. QA رابط Admin با session/CSRF واقعی باقی است. |
 | R0-07 | ✅ | seed دیگر placeholder media نمی‌سازد و رکوردهای شکستهٔ تاریخی `media/seed/` را فقط در صورت نبود فایل پاک‌سازی می‌کند؛ test قرارداد پاس شد. |
@@ -347,7 +347,7 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 
 | ID | P | Size | Task | وابستگی / پذیرش |
 |---|---:|---:|---|---|
-| R3-01 | P1 | L | پیاده‌سازی Home editorial از blockهای CMS و دادهٔ identity | ترتیب هشت‌بخشی پیشنهادی قابل تغییر؛ یک H1؛ data/CTA/media واقعی. |
+| R3-01 | P1 | L | 🟡 Home editorial از blockهای CMS و دادهٔ منتشرشده | Hero/Text واقعی، یک H1، RTL/LTR، responsive، CTA locale-safe و header داده‌محور تکمیل شد؛ شش بخش داده‌محور دیگر تا انتشار دادهٔ identity/collection عمداً suppress هستند. |
 | R3-02 | P1 | M | About با روایت حرفه‌ای چندرشته‌ای و timeline مدیریت‌پذیر | متن از SiteProfile؛ تجربه/تحصیل از مدل؛ no hardcode. |
 | R3-03 | P1 | L | Portfolio list/detail و Case Study template | مسئله، نقش، روش، محدودیت، نتیجه، فناوری، gallery و related؛ نتیجهٔ ساختگی ممنوع. |
 | R3-04 | P1 | L | Research list/detail و evidence mapping | پروژه، سؤال، روش، وضعیت، خروجی و publication مرتبط؛ draft suppress. |

@@ -10,15 +10,23 @@
   ثابت فارسی مانند `/fa/about` ابتدا مالکیت `slug_fa` را بررسی و فقط در نبود کامل آن
   از `slug_en` منتشرشده استفاده می‌کنند؛ متن و blockها همچنان فقط برای locale درخواست‌شده
   projection می‌شوند. ۲۰ تست integration صفحه در PostgreSQL Compose سبز است.
-- [ ] اجرای build کامل Next.js پس از یکپارچه‌سازی تغییرات درخت کاری موجود.
-- [ ] اجرای smoke مرورگر برای مسیرهای `/fa` و `/en` با backend در دسترس و
-  backend قطع‌شده؛ این برش فقط تست واحد API دارد.
+- [x] build کامل Next.js در 2026-07-30 پس از compile، type-check و تولید 34 مسیر سبز شد.
+- [x] smoke مرورگر `/fa`، `/en` و CTA به `/en/about` با backend در دسترس پاس شد.
+- [ ] رفتار تفکیک failure از 404 با backend عمداً قطع‌شده هنوز در مرورگر smoke نشده است.
 
 ## R0-04 — ownership عمومی
 
 - [x] PublicLayout تنها مالک `main#main-content` است؛ Home/About/Contact/Resume دیگر nested main تولید نمی‌کنند و یک test قراردادی source آن را پوشش می‌دهد.
-- [ ] QA مرورگر `/fa` و `/en` با CMS Home منتشرشده؛ یک H1 واقعی برای هر صفحه و نبود section خالی باید همراه با semantic Hero در R0-10 تأیید شود.
-- [ ] بررسی 375/768/1024/1440، RTL/LTR، keyboard skip-link و reduced-motion با backend در دسترس.
+- [x] QA مرورگر `/fa` و `/en` با CMS Home منتشرشده در 1440 و `/en` در 375 انجام شد؛ هر locale یک H1 واقعی دارد و Hero/Text همان locale نمایش داده می‌شود.
+- [x] منوی موبایل، active navigation، حفظ مسیر در language switcher و CTA داخلی locale-safe بررسی شدند؛ خطای hydration ناشی از cursor نیز حذف شد.
+- [ ] بررسی مستقل 768 و 1024، screen reader، keyboard skip-link و reduced-motion باقی است.
+
+## R3-01 — Landing editorial
+
+- [x] کانسپت desktop/mobile با ImageGen ساخته و با خروجی واقعی در پنج محور header، typography، CTA، architectural grid و intro band مقایسه شد.
+- [x] 44 تست متمرکز frontend و build کامل Next.js پاس شدند؛ QA زندهٔ RTL/LTR و موبایل نیز انجام شد.
+- [ ] aggregate فعلی هیچ identity/portfolio/publication/blog collection منتشرشده‌ای ندارد؛ بنابراین evidence pillars، selected work، research، publications، experience و latest writing طبق قرارداد بدون placeholder suppress مانده‌اند و پس از ورود دادهٔ تأییدشده باید فعال و QA شوند.
+- [ ] `docker compose up -d --build` به‌علت timeout در TLS handshake دریافت token ناشناس Docker Hub برای imageهای پایه کامل نشد. QA با image موجود و mount کد backend جاری در پورت موقت و Next dev محلی انجام شد؛ rebuild نهایی Docker باید پس از پایداری دسترسی registry تکرار شود.
 
 ## R0-05 — Blog discovery عمومی
 

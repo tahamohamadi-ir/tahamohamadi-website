@@ -1,60 +1,106 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { Locale } from "@/lib/i18n";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 interface HeaderProps {
-    locale: Locale;
+  locale: Locale;
+  brandName: string | null;
 }
 
 const navLinks = {
-    fa: [
-        { href: "/fa", label: "خانه" },
-        { href: "/fa/blog", label: "بلاگ" },
-        { href: "/fa/portfolio", label: "نمونه‌کارها" },
-        { href: "/fa/about", label: "درباره" },
-        { href: "/fa/contact", label: "تماس" },
-    ],
-    en: [
-        { href: "/en", label: "Home" },
-        { href: "/en/blog", label: "Blog" },
-        { href: "/en/portfolio", label: "Portfolio" },
-        { href: "/en/about", label: "About" },
-        { href: "/en/contact", label: "Contact" },
-    ],
+  fa: [
+    { href: "/fa", label: "خانه" },
+    { href: "/fa/blog", label: "بلاگ" },
+    { href: "/fa/portfolio", label: "نمونه‌کارها" },
+    { href: "/fa/about", label: "درباره" },
+    { href: "/fa/contact", label: "تماس" },
+  ],
+  en: [
+    { href: "/en", label: "Home" },
+    { href: "/en/blog", label: "Blog" },
+    { href: "/en/portfolio", label: "Portfolio" },
+    { href: "/en/about", label: "About" },
+    { href: "/en/contact", label: "Contact" },
+  ],
 };
 
-export function Header({ locale }: HeaderProps) {
-    const links = navLinks[locale];
+export function Header({ locale, brandName }: HeaderProps) {
+  const pathname = usePathname();
+  const links = navLinks[locale];
+  const navigationLabel = locale === "fa" ? "ناوبری اصلی" : "Main navigation";
+  const menuLabel = locale === "fa" ? "فهرست" : "Menu";
+  const isActive = (href: string) =>
+    href === `/${locale}` ? pathname === href : pathname.startsWith(`${href}/`) || pathname === href;
 
-    return (
-        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-                <Link
-                    href={`/${locale}`}
-                    className="text-xl font-bold tracking-tight"
-                    aria-label={locale === "fa" ? "صفحه اصلی" : "Home"}
-                >
-                    {locale === "fa" ? "طاها محمدی" : "Taha Mohamadi"}
-                </Link>
+  const navigation = (mobile = false) => (
+    <nav aria-label={mobile ? `${navigationLabel} — ${menuLabel}` : navigationLabel}>
+      <ul className={mobile ? "flex flex-col" : "flex items-center gap-7 lg:gap-9"}>
+        {links.map((link) => {
+          const active = isActive(link.href);
+          return (
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                aria-current={active ? "page" : undefined}
+                className={
+                  mobile
+                    ? "block border-b border-black/10 px-5 py-4 text-base font-medium last:border-b-0"
+                    : `relative block py-7 text-sm font-medium transition-colors hover:text-[#1746e0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1746e0] ${
+                        active
+                          ? "text-[#1746e0] after:absolute after:inset-x-0 after:bottom-[18px] after:h-0.5 after:bg-[#1746e0]"
+                          : "text-black"
+                      }`
+                }
+              >
+                {link.label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
 
-                <nav aria-label={locale === "fa" ? "ناوبری اصلی" : "Main navigation"}>
-                    <ul className="hidden items-center gap-1 md:flex">
-                        {links.map((link) => (
-                            <li key={link.href}>
-                                <Link
-                                    href={link.href}
-                                    className="inline-flex min-h-[44px] items-center rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                >
-                                    {link.label}
-                                </Link>
-                            </li>
-                        ))}
-                        <li>
-                            <LanguageSwitcher locale={locale} />
-                        </li>
-                    </ul>
-                </nav>
+  return (
+    <header className="relative z-50 w-full border-b border-black/10 bg-white text-black">
+      <div className="mx-auto grid min-h-16 w-full max-w-[1440px] grid-cols-[1fr_auto] items-center gap-4 px-5 sm:px-8 md:min-h-[76px] md:grid-cols-[1fr_auto_1fr] lg:px-12">
+        <div className="min-w-0">
+          {brandName && (
+            <Link
+              href={`/${locale}`}
+              className="block truncate text-base font-bold tracking-[-0.025em] sm:text-lg"
+            >
+              {brandName}
+            </Link>
+          )}
+        </div>
+
+        <div className="hidden md:block">{navigation()}</div>
+
+        <div className="flex items-center justify-end gap-2 sm:gap-3">
+          <details className="group relative md:hidden">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 border border-black/15 px-3 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+              <span aria-hidden="true" className="grid gap-1">
+                <span className="block h-px w-4 bg-black" />
+                <span className="block h-px w-4 bg-black" />
+                <span className="block h-px w-4 bg-black" />
+              </span>
+              {menuLabel}
+            </summary>
+            <div
+              className={`absolute top-[calc(100%+10px)] w-64 border border-black/15 bg-white shadow-[0_16px_40px_rgba(0,0,0,0.10)] ${
+                locale === "fa" ? "left-0" : "right-0"
+              }`}
+            >
+              {navigation(true)}
             </div>
-        </header>
-    );
+          </details>
+          <LanguageSwitcher locale={locale} />
+        </div>
+      </div>
+    </header>
+  );
 }

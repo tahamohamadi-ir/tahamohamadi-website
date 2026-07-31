@@ -39,18 +39,24 @@ export default async function HomePage({ params }: HomePageProps) {
   if (!page) notFound();
 
   return (
-    <div>
+    <div className="home-landing bg-white text-black">
       {page.sections
-        .filter((section) => section.enabled)
         .sort((a, b) => a.ordering - b.ordering)
         .map((section) => (
-          <section key={section.id} className={`layout-${section.layout}`}>
+          <div
+            key={section.id}
+            className={
+              section.layout === "grid"
+                ? "layout-grid border-y border-black/10 bg-[#f5f5f2] px-5 py-16 sm:px-8 md:py-24 lg:px-12 [&_.prose]:mx-auto [&_.prose]:max-w-[1120px] [&_.prose]:border-s-2 [&_.prose]:border-[#1746e0] [&_.prose]:ps-7 [&_.prose]:text-start [&_.prose]:text-xl [&_.prose]:font-medium [&_.prose]:leading-9 [&_.prose]:text-black sm:[&_.prose]:ps-10 sm:[&_.prose]:text-2xl md:[&_.prose]:text-3xl md:[&_.prose]:leading-[1.45]"
+                : `layout-${section.layout}`
+            }
+          >
             {section.blocks
               .sort((a, b) => a.ordering - b.ordering)
               .map((block) => (
                 <BlockRenderer key={block.id} block={block} locale={locale} context="cms" />
               ))}
-          </section>
+          </div>
         ))}
     </div>
   );

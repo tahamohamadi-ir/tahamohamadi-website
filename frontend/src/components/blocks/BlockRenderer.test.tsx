@@ -40,6 +40,23 @@ describe("BlockRenderer", () => {
             expect(screen.queryByRole("link", { name: "Unsafe action" })).not.toBeInTheDocument();
         });
 
+        it("keeps an internal Hero CTA inside the active locale", () => {
+            const block: BlockDTO = {
+                id: "localized-hero",
+                block_type: "hero",
+                settings: {
+                    title: "طاها محمدی",
+                    cta_label: "درباره من",
+                    cta_url: "/about",
+                },
+                ordering: 0,
+            };
+
+            render(<BlockRenderer block={block} locale="fa" />);
+
+            expect(screen.getByRole("link", { name: "درباره من" })).toHaveAttribute("href", "/fa/about");
+        });
+
         it("renders TextBlock for block_type='text'", () => {
             const block: BlockDTO = {
                 id: "2",
