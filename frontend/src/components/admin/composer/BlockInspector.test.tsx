@@ -77,6 +77,32 @@ describe("BlockInspector", () => {
             expect(screen.getByLabelText("CTA URL")).toBeInTheDocument();
         });
 
+        it("renders every bilingual legacy hero field without mixing schemas", () => {
+            const block = makeBlock({
+                block_type: "hero",
+                settings: {
+                    heading_fa: "عنوان فارسی",
+                    heading_en: "English title",
+                    subheading_fa: "زیرعنوان",
+                    subheading_en: "Subtitle",
+                    cta_text_fa: "بیشتر",
+                    cta_text_en: "More",
+                    cta_link: "/about",
+                    media_id: null,
+                },
+            });
+            render(
+                <BlockInspector block={block} onChange={vi.fn()} onDelete={vi.fn()} onClose={vi.fn()} />,
+            );
+
+            expect(screen.getByLabelText("Title — فارسی")).toHaveValue("عنوان فارسی");
+            expect(screen.getByLabelText("Title — English")).toHaveValue("English title");
+            expect(screen.getByLabelText("CTA text — فارسی")).toHaveValue("بیشتر");
+            expect(screen.getByLabelText("CTA text — English")).toHaveValue("More");
+            expect(screen.getByLabelText("CTA URL")).toHaveValue("/about");
+            expect(screen.getByLabelText("Media ID")).toHaveValue("");
+        });
+
         it("calls onChange with updated settings on input change", () => {
             const onChange = vi.fn();
             const block = makeBlock({
@@ -113,6 +139,20 @@ describe("BlockInspector", () => {
             );
             expect(screen.getByLabelText("Content")).toHaveValue("Hello world");
             expect(screen.getByLabelText("Alignment")).toHaveValue("center");
+        });
+
+        it("renders independent Persian and English content for localized text", () => {
+            const block = makeBlock({
+                block_type: "text",
+                settings: { body_fa: "متن فارسی", body_en: "English body", alignment: "end" },
+            });
+            render(
+                <BlockInspector block={block} onChange={vi.fn()} onDelete={vi.fn()} onClose={vi.fn()} />,
+            );
+
+            expect(screen.getByLabelText("Content — فارسی")).toHaveValue("متن فارسی");
+            expect(screen.getByLabelText("Content — English")).toHaveValue("English body");
+            expect(screen.getByLabelText("Alignment")).toHaveValue("end");
         });
     });
 
@@ -178,10 +218,10 @@ describe("BlockInspector", () => {
     });
 
     describe("Quote editor", () => {
-        it("renders text, author, and source fields", () => {
+        it("renders only schema-backed text and attribution fields", () => {
             const block = makeBlock({
                 block_type: "quote",
-                settings: { text: "A wise quote", author: "Author", source: "Book" },
+                settings: { text: "A wise quote", attribution: "Author — Book" },
             });
             render(
                 <BlockInspector
@@ -192,8 +232,7 @@ describe("BlockInspector", () => {
                 />,
             );
             expect(screen.getByLabelText("Quote Text")).toHaveValue("A wise quote");
-            expect(screen.getByLabelText("Author")).toHaveValue("Author");
-            expect(screen.getByLabelText("Source")).toHaveValue("Book");
+            expect(screen.getByLabelText("Attribution")).toHaveValue("Author — Book");
         });
     });
 
@@ -234,12 +273,13 @@ describe("BlockInspector", () => {
     });
 
     describe("Research Focus editor", () => {
-        it("renders title and research areas", () => {
+        it("renders every schema-backed field", () => {
             const block = makeBlock({
                 block_type: "research_focus",
                 settings: {
                     title: "My Research",
-                    areas: [{ name: "AI", description: "Artificial Intelligence" }],
+                    description: "Artificial Intelligence",
+                    icon: "brain",
                 },
             });
             render(
@@ -251,56 +291,92 @@ describe("BlockInspector", () => {
                 />,
             );
             expect(screen.getByLabelText("Title")).toHaveValue("My Research");
-            expect(screen.getByLabelText("Area 1 name")).toHaveValue("AI");
-            expect(screen.getByLabelText("Area 1 description")).toHaveValue("Artificial Intelligence");
+            expect(screen.getByLabelText("Description")).toHaveValue("Artificial Intelligence");
+            expect(screen.getByLabelText("Icon")).toHaveValue("brain");
         });
+    });
 
-        it("can add a new research area", async () => {
+    describe("Animation editors", () => {
+        it("exposes every parallax field through its label and preserves a zero speed", () => {
             const onChange = vi.fn();
-            const block = makeBlock({
-                block_type: "research_focus",
-                settings: { title: "Research", areas: [] },
-            });
+            const settings = {
+                title: "Depth",
+                subtitle: "Layered",
+                media_url: "/media/depth.jpg",
+                speed: 0.5,
+                duration: 600,
+                delay: 0,
+                easing: "ease-out",
+                trigger: "scroll",
+            };
             render(
                 <BlockInspector
-                    block={block}
+                    block={makeBlock({ block_type: "parallax", settings })}
                     onChange={onChange}
                     onDelete={vi.fn()}
                     onClose={vi.fn()}
                 />,
             );
-            await userEvent.click(screen.getByText("Add Research Area"));
-            expect(onChange).toHaveBeenCalledWith("block-1", {
-                title: "Research",
-                areas: [{ name: "", description: "" }],
-            });
+
+            expect(screen.getByLabelText("Title")).toHaveValue("Depth");
+            expect(screen.getByLabelText("Subtitle")).toHaveValue("Layered");
+            expect(screen.getByLabelText("Media URL")).toHaveValue("/media/depth.jpg");
+            fireEvent.change(screen.getByLabelText("Speed"), { target: { value: "0" } });
+            expect(onChange).toHaveBeenLastCalledWith("block-1", { ...settings, speed: 0 });
         });
 
-        it("can remove a research area", async () => {
+        it("preserves zero as a valid counter target", () => {
             const onChange = vi.fn();
-            const block = makeBlock({
-                block_type: "research_focus",
-                settings: {
-                    title: "Research",
-                    areas: [
-                        { name: "AI", description: "desc1" },
-                        { name: "ML", description: "desc2" },
-                    ],
-                },
-            });
+            const settings = {
+                label: "Projects",
+                target_number: 12,
+                suffix: "+",
+                duration: 600,
+                delay: 0,
+                easing: "ease-out",
+                trigger: "scroll",
+            };
             render(
                 <BlockInspector
-                    block={block}
+                    block={makeBlock({ block_type: "counter_animation", settings })}
                     onChange={onChange}
                     onDelete={vi.fn()}
                     onClose={vi.fn()}
                 />,
             );
-            await userEvent.click(screen.getByLabelText("Remove area 1"));
-            expect(onChange).toHaveBeenCalledWith("block-1", {
-                title: "Research",
-                areas: [{ name: "ML", description: "desc2" }],
+
+            fireEvent.change(screen.getByLabelText("Target Number"), { target: { value: "0" } });
+            expect(onChange).toHaveBeenLastCalledWith("block-1", {
+                ...settings,
+                target_number: 0,
             });
+        });
+
+        it("keeps all base animation fields editable", () => {
+            const settings = {
+                title: "Reveal",
+                description: "Description",
+                direction: "up",
+                duration: 600,
+                delay: 0,
+                easing: "ease-out",
+                trigger: "scroll",
+            };
+            render(
+                <BlockInspector
+                    block={makeBlock({ block_type: "scroll_reveal", settings })}
+                    onChange={vi.fn()}
+                    onDelete={vi.fn()}
+                    onClose={vi.fn()}
+                />,
+            );
+
+            expect(screen.getByLabelText("Description")).toHaveValue("Description");
+            expect(screen.getByLabelText("Direction")).toHaveValue("up");
+            expect(screen.getByLabelText("Duration (ms)")).toHaveValue(600);
+            expect(screen.getByLabelText("Delay (ms)")).toHaveValue(0);
+            expect(screen.getByLabelText("Easing")).toHaveValue("ease-out");
+            expect(screen.getByLabelText("Trigger")).toHaveValue("scroll");
         });
     });
 

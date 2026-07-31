@@ -14,6 +14,7 @@ export interface HeroSettings {
     subtitle?: string;
     media_id?: string;
     media_url?: string;
+    media_alt?: string;
     cta_url?: string;
     cta_label?: string;
 }
@@ -77,11 +78,13 @@ export interface CollectionSettings {
     source: CollectionSource;
     filter?: Record<string, unknown>;
     limit?: number;
+    order?: "default" | "newest" | "oldest";
     items?: CollectionItem[];
 }
 
 export interface QuoteSettings {
     text: string;
+    attribution?: string;
     author?: string;
     role?: string;
 }
@@ -93,6 +96,7 @@ export interface DividerSettings {
 export interface ResearchFocusSettings {
     title?: string;
     description?: string;
+    icon?: string;
     areas?: Array<{
         name: string;
         description?: string;

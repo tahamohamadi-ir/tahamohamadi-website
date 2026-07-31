@@ -3,6 +3,7 @@ import type { BlockComponentProps, QuoteSettings } from "../types";
 
 export function QuoteBlock({ data, locale }: BlockComponentProps<QuoteSettings>) {
     const isRtl = locale === "fa";
+    const attribution = data.attribution ?? data.author;
 
     return (
         <blockquote
@@ -16,11 +17,11 @@ export function QuoteBlock({ data, locale }: BlockComponentProps<QuoteSettings>)
                 {data.text}
             </p>
 
-            {(data.author || data.role) && (
+            {(attribution || data.role) && (
                 <footer className="mt-8 text-lg md:text-xl text-muted-foreground flex items-center gap-2">
                     <div className="h-[2px] w-12 bg-primary/50" />
-                    {data.author && <span className="font-bold text-foreground">{data.author}</span>}
-                    {data.author && data.role && <span>—</span>}
+                    {attribution && <span className="font-bold text-foreground">{attribution}</span>}
+                    {attribution && data.role && <span>—</span>}
                     {data.role && <span>{data.role}</span>}
                 </footer>
             )}

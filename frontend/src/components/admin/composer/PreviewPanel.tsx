@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import type { ComposerSection } from "./types";
 import type { Locale } from "@/components/blocks/types";
+import { projectSettingsForLocale } from "./project-settings";
 
 // ─── Device Presets ────────────────────────────────────────────────────────────
 
@@ -144,7 +145,7 @@ export function PreviewPanel({ sections }: PreviewPanelProps) {
                                                     block={{
                                                         id: block.id,
                                                         block_type: block.block_type,
-                                                        settings: block.settings,
+                                                        settings: projectSettingsForLocale(block.block_type, block.settings, locale),
                                                         ordering: block.ordering,
                                                     }}
                                                     locale={locale}

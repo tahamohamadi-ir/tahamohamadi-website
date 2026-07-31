@@ -57,6 +57,21 @@ describe("BlockRenderer", () => {
             expect(screen.getByRole("link", { name: "درباره من" })).toHaveAttribute("href", "/fa/about");
         });
 
+        it("exposes the localized alt text for configured Hero media", () => {
+            const block: BlockDTO = {
+                id: "hero-media",
+                block_type: "hero",
+                settings: {
+                    title: "Research",
+                    media_url: "/media/hero.png",
+                    media_alt: "Research workspace",
+                },
+                ordering: 0,
+            };
+            render(<BlockRenderer block={block} locale="en" />);
+            expect(screen.getByRole("img", { name: "Research workspace" })).toHaveAttribute("src", "/media/hero.png");
+        });
+
         it("renders TextBlock for block_type='text'", () => {
             const block: BlockDTO = {
                 id: "2",
@@ -72,7 +87,7 @@ describe("BlockRenderer", () => {
             const block: BlockDTO = {
                 id: "3",
                 block_type: "quote",
-                settings: { text: "Some insightful quote", author: "Author" },
+                settings: { text: "Some insightful quote", attribution: "Author" },
                 ordering: 2,
             };
             render(<BlockRenderer block={block} locale="en" />);
@@ -88,7 +103,18 @@ describe("BlockRenderer", () => {
                 ordering: 3,
             };
             render(<BlockRenderer block={block} locale="en" />);
-            expect(screen.getByText("Click Me")).toBeInTheDocument();
+            expect(screen.getByRole("link", { name: "Click Me" })).toHaveAttribute("href", "/en/contact");
+        });
+
+        it("does not render a CTA with an unsafe URL", () => {
+            const block: BlockDTO = {
+                id: "unsafe-cta",
+                block_type: "cta",
+                settings: { label: "Unsafe", url: "javascript:alert(1)", variant: "primary" },
+                ordering: 3,
+            };
+            render(<BlockRenderer block={block} locale="en" />);
+            expect(screen.queryByRole("link", { name: "Unsafe" })).not.toBeInTheDocument();
         });
 
         it("renders DividerBlock for block_type='divider'", () => {
@@ -108,13 +134,15 @@ describe("BlockRenderer", () => {
                 block_type: "research_focus",
                 settings: {
                     title: "Research Areas",
-                    areas: [{ name: "AI", description: "Machine learning" }],
+                    description: "Machine learning",
+                    icon: "AI",
                 },
                 ordering: 5,
             };
             render(<BlockRenderer block={block} locale="en" />);
             expect(screen.getByText("Research Areas")).toBeInTheDocument();
             expect(screen.getByText("AI")).toBeInTheDocument();
+            expect(screen.getByText("Machine learning")).toBeInTheDocument();
         });
     });
 

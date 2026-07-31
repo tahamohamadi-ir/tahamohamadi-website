@@ -16,6 +16,7 @@ import {
     verticalListSortingStrategy,
     arrayMove,
 } from "@dnd-kit/sortable";
+import { AnimatePresence } from "framer-motion";
 import { SortableSection } from "./SortableSection";
 import { SectionLibraryPanel } from "./SectionLibraryPanel";
 import { BlockLibraryPanel } from "./BlockLibraryPanel";
@@ -25,6 +26,7 @@ import type {
     SectionLayout,
     BlockType,
 } from "./types";
+import { createBlockSettings } from "./block-defaults";
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 
@@ -158,7 +160,7 @@ export function ComposerCanvas({
         const newBlock: ComposerBlock = {
             id: generateId("block"),
             block_type: blockType,
-            settings: {},
+            settings: createBlockSettings(blockType),
             ordering: 0,
         };
         updateSections((prev) =>
@@ -298,35 +300,37 @@ export function ComposerCanvas({
                                 items={sectionIds}
                                 strategy={verticalListSortingStrategy}
                             >
-                                {sections.map((section, index) => (
-                                    <SortableSection
-                                        key={section.id}
-                                        section={section}
-                                        isSelected={selectedSectionId === section.id}
-                                        selectedBlockId={
-                                            selectedSectionId === section.id ? selectedBlockId : null
-                                        }
-                                        onSelectSection={() => {
-                                            setSelectedSectionId(section.id);
-                                            setSelectedBlockId(null);
-                                        }}
-                                        onSelectBlock={(blockId) => {
-                                            setSelectedSectionId(section.id);
-                                            setSelectedBlockId(blockId);
-                                        }}
-                                        onDeleteSection={() => deleteSection(section.id)}
-                                        onDuplicateSection={() => duplicateSection(section.id)}
-                                        onMoveUp={() => moveSectionUp(section.id)}
-                                        onMoveDown={() => moveSectionDown(section.id)}
-                                        onDeleteBlock={(blockId) => deleteBlock(section.id, blockId)}
-                                        onDuplicateBlock={(blockId) => duplicateBlock(section.id, blockId)}
-                                        onMoveBlockUp={(blockId) => moveBlockUp(section.id, blockId)}
-                                        onMoveBlockDown={(blockId) => moveBlockDown(section.id, blockId)}
-                                        onReorderBlocks={reorderBlocks}
-                                        isFirst={index === 0}
-                                        isLast={index === sections.length - 1}
-                                    />
-                                ))}
+                                <AnimatePresence>
+                                    {sections.map((section, index) => (
+                                        <SortableSection
+                                            key={section.id}
+                                            section={section}
+                                            isSelected={selectedSectionId === section.id}
+                                            selectedBlockId={
+                                                selectedSectionId === section.id ? selectedBlockId : null
+                                            }
+                                            onSelectSection={() => {
+                                                setSelectedSectionId(section.id);
+                                                setSelectedBlockId(null);
+                                            }}
+                                            onSelectBlock={(blockId) => {
+                                                setSelectedSectionId(section.id);
+                                                setSelectedBlockId(blockId);
+                                            }}
+                                            onDeleteSection={() => deleteSection(section.id)}
+                                            onDuplicateSection={() => duplicateSection(section.id)}
+                                            onMoveUp={() => moveSectionUp(section.id)}
+                                            onMoveDown={() => moveSectionDown(section.id)}
+                                            onDeleteBlock={(blockId) => deleteBlock(section.id, blockId)}
+                                            onDuplicateBlock={(blockId) => duplicateBlock(section.id, blockId)}
+                                            onMoveBlockUp={(blockId) => moveBlockUp(section.id, blockId)}
+                                            onMoveBlockDown={(blockId) => moveBlockDown(section.id, blockId)}
+                                            onReorderBlocks={reorderBlocks}
+                                            isFirst={index === 0}
+                                            isLast={index === sections.length - 1}
+                                        />
+                                    ))}
+                                </AnimatePresence>
                             </SortableContext>
                         </DndContext>
                     )}

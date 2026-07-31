@@ -13,7 +13,15 @@ export type BlockType =
     | "collection"
     | "quote"
     | "divider"
-    | "research_focus";
+    | "research_focus"
+    | "scroll_reveal"
+    | "parallax"
+    | "text_stagger"
+    | "fade_in_sequence"
+    | "hover_card"
+    | "counter_animation"
+    | "image_reveal"
+    | "section_transition";
 
 export interface ComposerBlock {
     id: string;
@@ -42,4 +50,5 @@ export interface BlockLibraryItem {
     label: string;
     description: string;
     icon: string;
+    category: "basic" | "media" | "animation";
 }

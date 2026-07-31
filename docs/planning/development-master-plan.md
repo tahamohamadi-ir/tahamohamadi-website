@@ -394,10 +394,10 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 
 | ID | P | Size | Task | وابستگی / پذیرش |
 |---|---:|---:|---|---|
-| R6-01 | P1 | L | ساخت block contract مشترک | Backend JSON Schema + TypeScript discriminated union + default/label/preview metadata نسخه‌دار. |
-| R6-02 | P1 | L | بازسازی BlockInspector | shadcn Field، validation inline، MediaPicker و collection selector؛ حذف Media ID/CSV/JSON خام. |
+| R6-01 | P1 | L | 🟡 ساخت block contract مشترک | JSON Schema و defaults همهٔ ۱۶ block هم‌راستا و با create واقعی API تست شدند؛ discriminated union و metadata نسخه‌دار هنوز کامل نیست. |
+| R6-02 | P1 | L | 🟡 بازسازی BlockInspector | همهٔ propertyهای schema، ویرایش مستقل متن fa/en، MediaPicker، collection sourceها و خطای inline قابل فهم فعال شدند؛ حذف کامل Media ID/CSV/JSON خام باقی است. |
 | R6-03 | P1 | L | keyboard-safe Composer | add/duplicate/delete، drag و keyboard reorder، unsaved guard، focus restoration و screen-reader announcements. |
-| R6-04 | P1 | M | کتابخانهٔ block محدود و هدفمند | hero، text، gallery، CTA، collection، quote، divider و research-focus؛ unknown fail-closed. |
+| R6-04 | P1 | M | 🟡 کتابخانهٔ block محدود و هدفمند | هشت block اصلی و blockهای animation موجود defaults معتبر، inspector و preview مشترک دارند؛ QA مرورگر و تصمیم نهایی migration animation باقی است. |
 | R6-05 | P1 | L | مهاجرت animation blockها | جلوگیری از ایجاد جدید؛ تبدیل تدریجی به `motion: none|reveal` در blockهای پشتیبانی‌شده؛ legacy read-only تا migration کامل. |
 | R6-06 | P1 | L | Article editor مبتنی بر Tiptap | heading/list/link/code/quote، slug/SEO/topic/featured image، dirty guard و safe serialization. |
 | R6-07 | P1 | M | الگوی Page/Section template | Landing، Case Study و Research template قابل انتخاب؛ ایجاد رکورد واقعی، نه component سفارشی دلخواه. |

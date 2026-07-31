@@ -1,22 +1,31 @@
-import { cn } from "@/lib/utils";
 import type { BlockComponentProps, CtaSettings } from "../types";
 
-export function CtaBlock({ data, locale }: BlockComponentProps<CtaSettings>) {
-    const isPrimary = (data.variant ?? "primary") === "primary";
+function safeLocalizedUrl(value: string | undefined, locale: "fa" | "en"): string | undefined {
+  const url = value?.trim();
+  if (!url) return undefined;
+  if (url.startsWith("#") || /^https?:\/\//i.test(url)) return url;
+  if (!url.startsWith("/") || url.startsWith("//")) return undefined;
+  if (/^\/(fa|en)(\/|$)/.test(url)) return url;
+  return `/${locale}${url === "/" ? "" : url}`;
+}
 
-    return (
-        <div className="flex w-full justify-center py-8" dir={locale === "fa" ? "rtl" : "ltr"}>
-            <a
-                href={data.url}
-                className={cn(
-                    "inline-flex items-center rounded-lg px-6 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    isPrimary
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                        : "border border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-            >
-                {data.label}
-            </a>
-        </div>
-    );
+export function CtaBlock({ data, locale }: BlockComponentProps<CtaSettings>) {
+  const href = safeLocalizedUrl(data.url, locale);
+  if (!href || !data.label?.trim()) return null;
+
+  const isPrimary = (data.variant ?? "primary") === "primary";
+  return (
+    <div className="flex w-full justify-center py-12" dir={locale === "fa" ? "rtl" : "ltr"}>
+      <a
+        href={href}
+        className={
+          isPrimary
+            ? "inline-flex min-h-12 items-center border border-[#1746e0] bg-[#1746e0] px-7 py-3 font-semibold text-white transition-colors hover:border-black hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1746e0] focus-visible:ring-offset-4"
+            : "inline-flex min-h-12 items-center border border-black px-7 py-3 font-semibold text-black transition-colors hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1746e0] focus-visible:ring-offset-4"
+        }
+      >
+        {data.label}
+      </a>
+    </div>
+  );
 }

@@ -24,6 +24,7 @@ from apps.cms.block_registry import (
 )
 from apps.cms.collections import resolve_identity_collection
 from apps.cms.models import Block, Page, Section
+from apps.media.models import MediaAsset
 
 
 # ---------------------------------------------------------------------------
@@ -226,17 +227,70 @@ class PublicBlockSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
     def get_settings(self, block: Block) -> dict:
+        locale = self.context.get("locale", "en")
         settings = public_block_settings(
             block.block_type,
             block.settings,
-            self.context.get("locale", "en"),
+            locale,
         )
+        settings = self._resolve_media(settings, locale)
         if block.block_type == "collection":
             settings["items"] = resolve_identity_collection(
                 settings,
                 self.context.get("locale", "en"),
                 self.context.get("request"),
             )
+        return settings
+
+    def _resolve_media(self, settings: dict, locale: str) -> dict:
+        media_ids: list[str] = []
+        media_id = settings.get("media_id")
+        if isinstance(media_id, str) and media_id:
+            media_ids.append(media_id)
+        configured_ids = settings.get("media_ids")
+        if isinstance(configured_ids, list):
+            media_ids.extend(value for value in configured_ids if isinstance(value, str))
+        if not media_ids:
+            return settings
+
+        cache = self.context.setdefault("_cms_media_cache", {})
+        missing = [value for value in media_ids if value not in cache]
+        if missing:
+            found = MediaAsset.objects.filter(id__in=missing, status="active")
+            found_by_id = {str(asset.id): asset for asset in found}
+            for value in missing:
+                cache[value] = found_by_id.get(value)
+
+        request = self.context.get("request")
+
+        def asset_url(asset: MediaAsset) -> str | None:
+            if not asset.file:
+                return None
+            url = asset.file.url
+            return request.build_absolute_uri(url) if request else url
+
+        if isinstance(media_id, str):
+            asset = cache.get(media_id)
+            url = asset_url(asset) if asset else None
+            if url:
+                settings["media_url"] = url
+                settings["media_alt"] = getattr(asset, f"alt_text_{locale}", "")
+
+        if isinstance(configured_ids, list):
+            items = []
+            for configured_id in configured_ids:
+                asset = cache.get(configured_id)
+                url = asset_url(asset) if asset else None
+                if not asset or not url:
+                    continue
+                items.append({
+                    "media_id": configured_id,
+                    "url": url,
+                    "alt": getattr(asset, f"alt_text_{locale}", ""),
+                    "caption": getattr(asset, f"caption_{locale}", ""),
+                })
+            settings["items"] = items
+
         return settings
 
 

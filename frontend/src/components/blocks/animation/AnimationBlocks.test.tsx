@@ -144,6 +144,38 @@ describe("Animation Block Components", () => {
         expect(screen.getByAltText("Test Image")).toBeInTheDocument();
     });
 
+    it("suppresses unsafe animation media URLs", () => {
+        const { container, rerender } = render(
+            <ImageRevealBlock
+                data={{
+                    media_url: "javascript:alert(1)",
+                    duration: 600,
+                    delay: 0,
+                    easing: "ease-out",
+                    trigger: "scroll",
+                }}
+                locale="en"
+            />,
+        );
+        expect(container).toBeEmptyDOMElement();
+
+        rerender(
+            <ParallaxBlock
+                data={{
+                    title: "Safe text",
+                    media_url: "javascript:alert(1)",
+                    duration: 600,
+                    delay: 0,
+                    easing: "ease-out",
+                    trigger: "scroll",
+                }}
+                locale="en"
+            />,
+        );
+        expect(screen.getByText("Safe text")).toBeInTheDocument();
+        expect(container.querySelector('[style*="background-image"]')).not.toBeInTheDocument();
+    });
+
     it("renders SectionTransitionBlock", () => {
         render(
             <SectionTransitionBlock

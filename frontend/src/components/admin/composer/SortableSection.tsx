@@ -2,6 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { motion } from "framer-motion";
 import {
     DndContext,
     closestCenter,
@@ -68,6 +69,7 @@ export function SortableSection({
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
+        // Let framer-motion handle opacity if we want, or keep it here
         opacity: isDragging ? 0.5 : 1,
     };
 
@@ -86,11 +88,15 @@ export function SortableSection({
     }
 
     return (
-        <div
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: isDragging ? 0.5 : 1, scale: isSelected ? 1.01 : 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
             ref={setNodeRef}
             style={style}
             className={`rounded-lg border-2 transition-colors ${isSelected
-                    ? "border-blue-500 bg-blue-50/30"
+                    ? "border-blue-500 bg-blue-50/30 shadow-md"
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
         >
@@ -201,6 +207,6 @@ export function SortableSection({
                     </DndContext>
                 )}
             </div>
-        </div>
+        </motion.div>
     );
 }

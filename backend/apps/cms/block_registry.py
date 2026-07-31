@@ -14,6 +14,8 @@ Requirements:
 
 from __future__ import annotations
 
+import re
+
 from jsonschema import Draft7Validator, ValidationError as JsonSchemaValidationError
 
 # ---------------------------------------------------------------------------
@@ -43,6 +45,7 @@ BLOCK_SCHEMAS: dict[str, dict] = {
                 "pattern": _UUID_PATTERN,
             },
             "cta_url": {"type": ["string", "null"]},
+            "cta_label": {"type": ["string", "null"]},
         },
         "required": ["title"],
         "additionalProperties": False,
@@ -266,16 +269,26 @@ def is_legacy_localized_settings(block_type: str, settings: dict) -> bool:
     if block_type == "hero":
         allowed = {
             "heading_fa", "heading_en", "subheading_fa", "subheading_en",
-            "cta_text_fa", "cta_text_en", "cta_link",
+            "cta_text_fa", "cta_text_en", "cta_link", "media_id",
         }
         required = {"heading_fa", "heading_en"}
-        return set(settings).issubset(allowed) and required.issubset(settings) and all(
-            isinstance(settings[name], str) for name in required
+        if not set(settings).issubset(allowed) or not required.issubset(settings):
+            return False
+        text_fields = set(settings) - {"media_id"}
+        if not all(isinstance(settings[name], str) for name in text_fields):
+            return False
+        media_id = settings.get("media_id")
+        return media_id is None or (
+            isinstance(media_id, str) and re.fullmatch(_UUID_PATTERN, media_id) is not None
         )
 
     if block_type == "text":
-        return set(settings) == {"body_fa", "body_en"} and all(
-            isinstance(settings[name], str) for name in ("body_fa", "body_en")
+        allowed = {"body_fa", "body_en", "alignment"}
+        return (
+            set(settings).issubset(allowed)
+            and {"body_fa", "body_en"}.issubset(settings)
+            and all(isinstance(settings[name], str) for name in ("body_fa", "body_en"))
+            and settings.get("alignment", "start") in {"start", "center", "end"}
         )
 
     return False
@@ -291,6 +304,8 @@ def public_block_settings(block_type: str, settings: dict, locale: str) -> dict:
             "title": settings[f"heading_{locale}"],
             "cta_url": settings.get("cta_link"),
         }
+        if "media_id" in settings:
+            result["media_id"] = settings["media_id"]
         for legacy_name, canonical_name in (
             (f"subheading_{locale}", "subtitle"),
             (f"cta_text_{locale}", "cta_label"),
@@ -300,7 +315,10 @@ def public_block_settings(block_type: str, settings: dict, locale: str) -> dict:
                 result[canonical_name] = value
         return result
 
-    return {"content": settings[f"body_{locale}"], "alignment": "start"}
+    return {
+        "content": settings[f"body_{locale}"],
+        "alignment": settings.get("alignment", "start"),
+    }
 
 
 def validate_block_settings(block_type: str, settings: dict) -> list[str]:

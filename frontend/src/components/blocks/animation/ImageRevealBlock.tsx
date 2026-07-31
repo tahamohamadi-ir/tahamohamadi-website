@@ -2,9 +2,13 @@
 
 import React from "react";
 import type { BlockComponentProps, ImageRevealSettings } from "../types";
+import { safeMediaUrl } from "../safe-media-url";
 
 export function ImageRevealBlock({ data }: BlockComponentProps<ImageRevealSettings>) {
     const { media_url, alt = "", reveal_direction = "left", duration = 600 } = data;
+    const mediaUrl = safeMediaUrl(media_url);
+
+    if (!mediaUrl) return null;
 
     const transformClass = {
         left: "translate-x-0",
@@ -25,7 +29,7 @@ export function ImageRevealBlock({ data }: BlockComponentProps<ImageRevealSettin
             >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                    src={media_url}
+                    src={mediaUrl}
                     alt={alt || "Revealed image"}
                     className="w-full h-auto object-cover rounded-lg"
                     loading="lazy"

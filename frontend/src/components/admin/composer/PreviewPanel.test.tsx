@@ -3,6 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { describe, it, expect } from "vitest";
 import { PreviewPanel } from "./PreviewPanel";
 import type { ComposerSection } from "./types";
+import { BLOCK_LIBRARY } from "./library-data";
+import { createBlockSettings } from "./block-defaults";
 
 function makeSections(overrides: Partial<ComposerSection>[] = []): ComposerSection[] {
     if (overrides.length === 0) {
@@ -91,6 +93,35 @@ describe("PreviewPanel", () => {
         expect(screen.getByText(/LTR/)).toBeInTheDocument();
     });
 
+    it("projects bilingual Hero settings into the selected preview locale", async () => {
+        const sections = makeSections([{
+            blocks: [{
+                id: "hero",
+                block_type: "hero",
+                settings: {
+                    heading_fa: "عنوان فارسی",
+                    heading_en: "English title",
+                    subheading_fa: "زیرعنوان",
+                    subheading_en: "Subtitle",
+                    cta_text_fa: "بیشتر",
+                    cta_text_en: "More",
+                    cta_link: "/about",
+                    media_id: null,
+                },
+                ordering: 0,
+            }],
+        }]);
+        render(<PreviewPanel sections={sections} />);
+
+        expect(screen.getByRole("heading", { name: "عنوان فارسی" })).toBeInTheDocument();
+        expect(screen.getByRole("link", { name: "بیشتر" })).toHaveAttribute("href", "/fa/about");
+
+        await userEvent.click(screen.getByRole("radio", { name: /english/i }));
+
+        expect(screen.getByRole("heading", { name: "English title" })).toBeInTheDocument();
+        expect(screen.getByRole("link", { name: "More" })).toHaveAttribute("href", "/en/about");
+    });
+
     it("shows empty state when no sections", () => {
         render(<PreviewPanel sections={[]} />);
 
@@ -130,6 +161,22 @@ describe("PreviewPanel", () => {
 
         expect(screen.getByText("Visible")).toBeInTheDocument();
         expect(screen.queryByText("Hidden")).not.toBeInTheDocument();
+    });
+
+    it("previews the schema-valid defaults for every block in the library without crashing", () => {
+        const sections = makeSections([{
+            blocks: BLOCK_LIBRARY.map((item, ordering) => ({
+                id: `block-${item.block_type}`,
+                block_type: item.block_type,
+                settings: createBlockSettings(item.block_type),
+                ordering,
+            })),
+        }]);
+
+        expect(() => render(<PreviewPanel sections={sections} />)).not.toThrow();
+        expect(screen.getByTestId("scroll-reveal-block")).toBeInTheDocument();
+        expect(screen.getByTestId("counter-animation-block")).toBeInTheDocument();
+        expect(screen.getByTestId("section-transition-block")).toBeInTheDocument();
     });
 
     it("has proper accessibility structure with radiogroups", () => {

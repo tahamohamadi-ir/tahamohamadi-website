@@ -28,6 +28,19 @@
 - [ ] aggregate فعلی هیچ identity/portfolio/publication/blog collection منتشرشده‌ای ندارد؛ بنابراین evidence pillars، selected work، research، publications، experience و latest writing طبق قرارداد بدون placeholder suppress مانده‌اند و پس از ورود دادهٔ تأییدشده باید فعال و QA شوند.
 - [ ] `docker compose up -d --build` به‌علت timeout در TLS handshake دریافت token ناشناس Docker Hub برای imageهای پایه کامل نشد. QA با image موجود و mount کد backend جاری در پورت موقت و Next dev محلی انجام شد؛ rebuild نهایی Docker باید پس از پایداری دسترسی registry تکرار شود.
 
+## R6-01/R6-02/R6-04 — Page Builder
+
+- [x] ساخت block جدید دیگر `settings: {}` تولید نمی‌کند؛ defaults همهٔ ۱۶ نوع block هم در JSON Schema backend و هم با create واقعی صفحه در API بررسی شده‌اند.
+- [x] Hero و Text دوزبانهٔ قدیمی بدون تغییر مخرب schema قابل ویرایش و preview هستند؛ propertyهای Quote، Research Focus، Collection و هشت block انیمیشن با قرارداد backend هم‌نام شده‌اند.
+- [x] Hero/Gallery رسانهٔ فعال را به URL و alt/caption همان locale تبدیل می‌کنند؛ CTA و مسیرهای صفحهٔ سفارشی locale-safe هستند و URL رسانهٔ انیمیشن fail-closed است.
+- [x] خطای ۴۲۲ ذخیره دیگر کل Composer را حذف یا JSON خام نمایش نمی‌دهد؛ پیام کوتاه با شمارهٔ بخش و block در همان صفحه باقی می‌ماند.
+- [x] مسیر ایجاد صفحهٔ جدید اکنون title/slug مستقل fa/en، نوع و وضعیت دارد و پس از POST به editor رکورد واقعی می‌رود؛ route عمومی `/{locale}/{slug}` نیز canonical/hreflang دوزبانه دارد.
+- [ ] QA زندهٔ Admin با session/CSRF واقعی باقی است: ایجاد یک صفحه، افزودن/ویرایش/duplicate/reorder/delete blockها، انتخاب رسانه، preview fa/en، ذخیره، reload و انتشار در 375/768/1024/1440 باید بعد از rebuild Docker انجام شود.
+- [ ] ورودی پیشرفتهٔ Media ID/CSV و Filter JSON هنوز برای سازگاری و سرعت باقی مانده است. پیش از گیت نهایی R6 باید با selected-asset list و filter builder بدون UUID/JSON خام جایگزین شود.
+- [ ] dirty guard، autosave draft، focus restoration، announcement کامل screen reader و keyboard-only drag/reorder هنوز در R6-03/R5-07 باز هستند.
+- [ ] full browser security regression برای URL، XSS، media archive، permission و conflict هم‌زمان اجرا نشده است؛ فعلاً unit/contract/integration هدفمند و production build اجرا شده‌اند.
+- [ ] rebuild کامل Docker در این برش دوباره اجرا نشد؛ آخرین تلاش به timeout TLS در Docker Hub خورده بود و باید پس از پایداری registry تکرار شود.
+
 ## R0-05 — Blog discovery عمومی
 
 - [x] اجرای مجموعهٔ متمرکز pytest برای endpointهای `q` و `topics/`: 17 تست در
@@ -60,9 +73,8 @@
 - [ ] build موفق هنگام prerender سه خط `fetch failed / ECONNREFUSED` برای API خاموش چاپ
   می‌کند. سیاست روشن fail/empty برای routeهای SSG و خروجی log بدون ابهام باید جداگانه
   تعیین و آزمایش شود؛ خروج صفر build فعلی به‌تنهایی سلامت دادهٔ prerender را اثبات نمی‌کند.
-- [ ] composer فعلی برای block جدید `settings: {}` می‌سازد و بنابراین همچنان می‌تواند
-  422 معتبر بگیرد. defaults، فرم دوزبانه و پیام inline باید پس از تعیین قرارداد canonical
-  blockها در همان تغییرات مستقل frontend یکپارچه و با QA مرورگر بررسی شود.
+- [x] composer برای block جدید defaults معتبر می‌سازد؛ فرم دوزبانه و پیام inline نیز تکمیل و
+  با unit/contract/API integration بررسی شدند. QA مرورگر authenticated در بخش R6 بالا باز مانده است.
 - [ ] سیاست اجرای migration در compose معمولی تعریف نشده است. migrationهای عقب‌افتادهٔ
   دیتابیس محلی در 2026-07-30 به‌صورت دستی اعمال شد؛ پیش از محیط مشترک باید backup، job یا
   startup policy امن و smoke پس از migration تعیین شود.

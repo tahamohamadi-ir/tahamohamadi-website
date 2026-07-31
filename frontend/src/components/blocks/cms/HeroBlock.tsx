@@ -51,7 +51,6 @@ export function HeroBlock({ data, locale }: BlockComponentProps<HeroSettings>) {
         </div>
 
         <div
-          aria-hidden="true"
           className={cn(
             "pointer-events-none absolute inset-y-0 w-[46%] overflow-hidden border-black/10 md:relative md:inset-auto md:h-[min(68vh,690px)] md:w-full",
             isRtl ? "left-0 border-r md:border" : "right-0 border-l md:border"
@@ -73,7 +72,7 @@ export function HeroBlock({ data, locale }: BlockComponentProps<HeroSettings>) {
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={data.media_url}
-              alt=""
+              alt={data.media_alt ?? ""}
               className="absolute inset-0 h-full w-full object-cover opacity-20 grayscale mix-blend-multiply"
             />
           )}

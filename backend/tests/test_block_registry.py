@@ -9,6 +9,7 @@ import pytest
 from apps.cms.block_registry import (
     BLOCK_SCHEMAS,
     is_known_block_type,
+    public_block_settings,
     validate_block_settings,
 )
 from apps.cms.services import get_allowed_block_types
@@ -97,10 +98,40 @@ class TestValidSettings:
         }
         assert validate_block_settings("hero", settings) == []
 
+    def test_localized_hero_supports_media_and_projects_one_locale(self):
+        settings = {
+            "heading_fa": "عنوان فارسی",
+            "heading_en": "English title",
+            "subheading_fa": "زیرعنوان فارسی",
+            "subheading_en": "English subtitle",
+            "cta_text_fa": "بیشتر",
+            "cta_text_en": "More",
+            "cta_link": "/about",
+            "media_id": None,
+        }
+
+        assert validate_block_settings("hero", settings) == []
+        assert public_block_settings("hero", settings, "fa") == {
+            "title": "عنوان فارسی",
+            "subtitle": "زیرعنوان فارسی",
+            "cta_label": "بیشتر",
+            "cta_url": "/about",
+            "media_id": None,
+        }
+
     def test_text_valid(self):
         assert validate_block_settings("text", {"content": "Hi", "alignment": "start"}) == []
         assert validate_block_settings("text", {"content": "Hi", "alignment": "center"}) == []
         assert validate_block_settings("text", {"content": "Hi", "alignment": "end"}) == []
+
+    def test_localized_text_supports_alignment_and_projects_one_locale(self):
+        settings = {"body_fa": "متن فارسی", "body_en": "English text", "alignment": "center"}
+
+        assert validate_block_settings("text", settings) == []
+        assert public_block_settings("text", settings, "en") == {
+            "content": "English text",
+            "alignment": "center",
+        }
 
     def test_gallery_valid(self):
         settings = {
@@ -140,6 +171,34 @@ class TestValidSettings:
     def test_research_focus_full(self):
         settings = {"title": "AI", "description": "Studying ML", "icon": "brain"}
         assert validate_block_settings("research_focus", settings) == []
+
+    def test_composer_default_shapes_pass_every_registered_schema(self):
+        animation = {"duration": 600, "delay": 0, "easing": "ease-out", "trigger": "scroll"}
+        defaults = {
+            "hero": {
+                "heading_fa": "", "heading_en": "", "subheading_fa": "", "subheading_en": "",
+                "cta_text_fa": "", "cta_text_en": "", "cta_link": "", "media_id": None,
+            },
+            "text": {"body_fa": "", "body_en": "", "alignment": "start"},
+            "gallery": {"media_ids": [], "layout": "grid"},
+            "cta": {"label": "", "url": "/", "variant": "primary"},
+            "collection": {"source": "portfolio", "filter": {}, "limit": 6, "order": "default"},
+            "quote": {"text": "", "attribution": None},
+            "divider": {"style": "line"},
+            "research_focus": {"title": "", "description": "", "icon": None},
+            "scroll_reveal": {"title": "", "description": None, "direction": "up", **animation},
+            "parallax": {"title": "", "subtitle": None, "media_url": None, "speed": 0.5, **animation},
+            "text_stagger": {"content": "", "stagger_delay": 50, **animation},
+            "fade_in_sequence": {"items": [], **animation},
+            "hover_card": {"title": "", "description": "", "icon": None, "hover_effect": "lift", **animation},
+            "counter_animation": {"label": "", "target_number": 0, "suffix": None, **animation},
+            "image_reveal": {"media_url": "", "alt": None, "reveal_direction": "left", **animation},
+            "section_transition": {"transition_type": "fade", **animation},
+        }
+
+        assert set(defaults) == set(BLOCK_SCHEMAS)
+        for block_type, settings in defaults.items():
+            assert validate_block_settings(block_type, settings) == [], block_type
 
 
 # ---------------------------------------------------------------------------

@@ -86,6 +86,10 @@ describe("ComposerCanvas", () => {
         );
         expect(firstSection.blocks).toHaveLength(3);
         expect(firstSection.blocks[2].block_type).toBe("quote");
+        expect(firstSection.blocks[2].settings).toEqual({
+            text: "",
+            attribution: null,
+        });
     });
 
     it("deletes a section", async () => {

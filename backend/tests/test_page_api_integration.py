@@ -9,9 +9,11 @@ Conflict tests use transaction=True for real DB transaction behaviour.
 """
 
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 
 from apps.cms.models import Block, Page, Section
+from apps.media.models import MediaAsset
 
 
 # ---------------------------------------------------------------------------
@@ -48,6 +50,33 @@ def _valid_page_payload(**overrides):
     }
     payload.update(overrides)
     return payload
+
+
+def _composer_default_blocks():
+    """Mirror the frontend block library defaults for an HTTP contract check."""
+    animation = {"duration": 600, "delay": 0, "easing": "ease-out", "trigger": "scroll"}
+    settings = [
+        ("hero", {"heading_fa": "", "heading_en": "", "subheading_fa": "", "subheading_en": "", "cta_text_fa": "", "cta_text_en": "", "cta_link": "", "media_id": None}),
+        ("text", {"body_fa": "", "body_en": "", "alignment": "start"}),
+        ("gallery", {"media_ids": [], "layout": "grid"}),
+        ("cta", {"label": "", "url": "/", "variant": "primary"}),
+        ("collection", {"source": "portfolio", "filter": {}, "limit": 6, "order": "default"}),
+        ("quote", {"text": "", "attribution": None}),
+        ("divider", {"style": "line"}),
+        ("research_focus", {"title": "", "description": "", "icon": None}),
+        ("scroll_reveal", {"title": "", "description": None, "direction": "up", **animation}),
+        ("parallax", {"title": "", "subtitle": None, "media_url": None, "speed": 0.5, **animation}),
+        ("text_stagger", {"content": "", "stagger_delay": 50, **animation}),
+        ("fade_in_sequence", {"items": [], **animation}),
+        ("hover_card", {"title": "", "description": "", "icon": None, "hover_effect": "lift", **animation}),
+        ("counter_animation", {"label": "", "target_number": 0, "suffix": None, **animation}),
+        ("image_reveal", {"media_url": "", "alt": None, "reveal_direction": "left", **animation}),
+        ("section_transition", {"transition_type": "fade", **animation}),
+    ]
+    return [
+        {"block_type": block_type, "settings": block_settings, "ordering": ordering}
+        for ordering, (block_type, block_settings) in enumerate(settings)
+    ]
 
 
 @pytest.fixture()
@@ -181,6 +210,23 @@ class TestAdminCRUDSuccess:
         assert data["title_en"] == "Updated Title"
         # Version should have been incremented
         assert data["version"] == version + 1
+
+    def test_create_page_accepts_every_composer_block_default(self, admin_client: APIClient):
+        payload = _valid_page_payload(
+            slug_fa="همه-بلاکها",
+            slug_en="all-composer-blocks",
+            sections=[{
+                "ordering": 0,
+                "enabled": True,
+                "layout": "full-width",
+                "blocks": _composer_default_blocks(),
+            }],
+        )
+
+        response = admin_client.post(ADMIN_PAGES_URL, data=payload, format="json")
+
+        assert response.status_code == 201, response.content.decode()
+        assert len(response.json()["sections"][0]["blocks"]) == 16
 
 
 # ===========================================================================
@@ -381,6 +427,46 @@ class TestPublicPageEndpoint:
         assert response.status_code == 200
         data = response.json()
         assert data["slug_en"] == "published-page"
+
+    def test_public_blocks_resolve_active_media_for_hero_and_gallery(
+        self, api_client: APIClient, published_page, settings, tmp_path
+    ):
+        settings.MEDIA_ROOT = tmp_path
+        asset = MediaAsset.objects.create(
+            file=SimpleUploadedFile("hero.png", b"png-content", content_type="image/png"),
+            original_filename="hero.png",
+            mime_type="image/png",
+            file_size=11,
+            checksum="a" * 64,
+            alt_text_fa="تصویر معرفی",
+            alt_text_en="Introduction image",
+            caption_fa="شرح فارسی",
+            caption_en="English caption",
+            status="active",
+        )
+        section = published_page.sections.filter(enabled=True).first()
+        hero = section.blocks.get(block_type="hero")
+        hero.settings = {"title": "Hello", "media_id": str(asset.id)}
+        hero.save(update_fields=["settings"])
+        Block.objects.create(
+            section=section,
+            block_type="gallery",
+            settings={"media_ids": [str(asset.id)], "layout": "grid"},
+            ordering=1,
+        )
+
+        response = api_client.get(
+            f"{PUBLIC_PAGES_URL}{published_page.slug_en}/", {"locale": "en"}
+        )
+
+        blocks = response.json()["sections"][0]["blocks"]
+        assert blocks[0]["settings"]["media_url"].endswith(asset.file.url)
+        assert blocks[0]["settings"]["media_alt"] == "Introduction image"
+        item = blocks[1]["settings"]["items"][0]
+        assert item["media_id"] == str(asset.id)
+        assert item["url"].endswith(asset.file.url)
+        assert item["alt"] == "Introduction image"
+        assert item["caption"] == "English caption"
 
     def test_public_home_uses_page_type_instead_of_a_locale_slug(
         self, api_client: APIClient, db
