@@ -1,0 +1,45 @@
+# Repository and editor metadata
+.git
+.github
+.agents
+.augment
+.claude
+.codebuddy
+.codewhale
+.continue
+.cursor
+.factory
+.gemini
+.kilocode
+.kiro
+.opencode
+.qoder
+.roo
+.trae
+.vscode
+.warp
+.windsurf
+
+# Local dependencies and build output
+node_modules
+frontend/node_modules
+e2e/node_modules
+frontend/.next
+e2e/test-results
+e2e/playwright-report
+
+# Python virtual environments and generated files
+.venv
+backend/.venv
+**/__pycache__
+*.py[cod]
+
+# Local secrets and non-runtime project material
+.env
+.env.*
+!.env.example
+docs
+e2e
+scripts
+backups
+*.log

@@ -20,7 +20,7 @@ _HTML_TAG_RE = re.compile(r"<[^>]+>")
 
 # Matches dangerous content that MUST be rejected outright
 _DANGEROUS_RE = re.compile(
-    r"<\s*script|<\s*iframe|javascript\s*:|data\s*:",
+    r"<\s*script|<\s*iframe|javascript\s*:|data\s*:|on\w+\s*=",
     re.IGNORECASE,
 )
 
