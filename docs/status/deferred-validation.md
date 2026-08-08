@@ -51,6 +51,7 @@
 - [x] خطای ۴۲۲ ذخیره دیگر کل Composer را حذف یا JSON خام نمایش نمی‌دهد؛ پیام کوتاه با شمارهٔ بخش و block در همان صفحه باقی می‌ماند.
 - [x] مسیر ایجاد صفحهٔ جدید اکنون title/slug مستقل fa/en، نوع و وضعیت دارد و پس از POST به editor رکورد واقعی می‌رود؛ route عمومی `/{locale}/{slug}` نیز canonical/hreflang دوزبانه دارد.
 - [ ] QA زندهٔ Admin با session/CSRF واقعی باقی است: ایجاد یک صفحه، افزودن/ویرایش/duplicate/reorder/delete blockها، انتخاب رسانه، preview fa/en، ذخیره، reload و انتشار در 375/768/1024/1440 باید بعد از rebuild Docker انجام شود.
+- [ ] Preview-token release validation remains: capture 375/768/1024/1440 viewport screenshots, scrutinize live referrer and access logs to ensure tokens are not leaked, and exercise the authenticated browser token-generation and unauthenticated token-preview flow with real session/CSRF.
 - [ ] ورودی پیشرفتهٔ Media ID/CSV و Filter JSON هنوز برای سازگاری و سرعت باقی مانده است. پیش از گیت نهایی R6 باید با selected-asset list و filter builder بدون UUID/JSON خام جایگزین شود.
 - [ ] dirty guard، autosave draft، focus restoration، announcement کامل screen reader و keyboard-only drag/reorder هنوز در R6-03/R5-07 باز هستند.
 - [ ] full browser security regression برای URL، XSS، media archive، permission و conflict هم‌زمان اجرا نشده است؛ فعلاً unit/contract/integration هدفمند و production build اجرا شده‌اند.

@@ -14,8 +14,11 @@ from unittest.mock import patch
 
 import pytest
 from django.core import signing
+from rest_framework.test import APIClient
 
 from apps.blog.models import Article
+from apps.cms.models import Block, Page, Section
+from apps.cms.serializers import PublicPageSerializer
 from apps.workflow.services import (
     _PREVIEW_TOKEN_MAX_AGE,
     _PREVIEW_TOKEN_SALT,
@@ -204,3 +207,70 @@ class TestLocaleBinding:
         token = generate_preview_token(draft_article, "en")
         assert validate_preview_token(token, draft_article, "en") is True
         assert validate_preview_token(token, draft_article, "fa") is False
+
+
+class TestPreviewContentProjection:
+    def test_cms_preview_matches_public_projection_for_token_locale(self, db):
+        """A CMS token preview must expose only the public CMS projection."""
+        page = Page.objects.create(
+            slug_fa="پیش‌نمایش-cms",
+            slug_en="cms-preview",
+            title_fa="پیش‌نمایش فارسی",
+            title_en="English preview",
+            page_type="custom",
+            status="draft",
+        )
+        enabled = Section.objects.create(page=page, ordering=0, enabled=True)
+        disabled = Section.objects.create(page=page, ordering=1, enabled=False)
+        Block.objects.create(
+            section=enabled,
+            block_type="text",
+            settings={"content": "English-only preview text", "alignment": "start"},
+            ordering=0,
+        )
+        Block.objects.create(
+            section=enabled,
+            block_type="unknown_preview_type",
+            settings={},
+            ordering=1,
+        )
+        Block.objects.create(
+            section=enabled,
+            block_type="text",
+            settings={"content": 42, "alignment": "start"},
+            ordering=2,
+        )
+        Block.objects.create(
+            section=disabled,
+            block_type="text",
+            settings={"content": "Disabled section", "alignment": "start"},
+            ordering=0,
+        )
+
+        token = generate_preview_token(page, "en")
+        response = APIClient().get(f"/api/public/workflow/preview/?token={token}")
+
+        assert response.status_code == 200
+        assert response.data["locale"] == "en"
+        assert response.data["data"] == PublicPageSerializer(
+            page,
+            context={"locale": "en", "request": response.wsgi_request},
+        ).data
+        assert response.data["data"]["sections"] == [
+            {
+                "id": str(enabled.id),
+                "ordering": 0,
+                "layout": "default",
+                "blocks": [
+                    {
+                        "id": str(enabled.blocks.get(block_type="text", ordering=0).id),
+                        "block_type": "text",
+                        "settings": {
+                            "content": "English-only preview text",
+                            "alignment": "start",
+                        },
+                        "ordering": 0,
+                    }
+                ],
+            }
+        ]

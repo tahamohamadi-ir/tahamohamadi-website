@@ -900,6 +900,11 @@ def _serialize_preview_content(entity, model_label: str, locale: str) -> dict:
 
     Falls back to a basic dict representation if no serializer is registered.
     """
+    if model_label == "cms.page":
+        from apps.cms.serializers import PublicPageSerializer
+
+        return PublicPageSerializer(entity, context={"locale": locale}).data
+
     from apps.workflow.services import _get_serializer_map
 
     serializer_map = _get_serializer_map()
