@@ -4,6 +4,18 @@
 نشده‌اند. هر مورد باید پیش از اعلام آماده‌بودن release متناظر بسته یا با تصمیم
 صریح پذیرفته شود.
 
+سیاست ثبت، مالکیت و trigger بازگشت در [fast-track delivery](../governance/fast-track-delivery.md) تعریف شده است. defer هرگز authorization، session/CSRF، integrity داده، migration سازگار یا مرز انتشار public را دور نمی‌زند.
+
+## PHASE1-R1 — جمع‌بندی گیت عملیاتی
+
+- [x] R1-01 تا R1-10 از منظر inventory کد/قرارداد بررسی شده‌اند: identity، site configuration، aggregate، Admin CRUD، seed review و collectionهای CMS در Django/DRF و Next.js/React وجود دارند.
+- [ ] `PHASE1-R1-QA-001` — QA public با داده و asset تأییدشده در هر دو locale، برای identity، پژوهش، publication و resume. **Owner:** product/content. **Trigger:** پیش از اولین publish عمومی این منابع. **Mitigation:** public sectionهای خالی/locale ناقص suppress می‌شوند.
+- [ ] `PHASE1-R1-QA-002` — QA واقعی Admin برای session/CSRF، pagination، conflict و keyboard flow. **Owner:** frontend/backend. **Trigger:** پیش از فعال‌سازی عملیاتی فرم‌های R1. **Mitigation:** API server-side permission/validation/optimistic locking را enforce می‌کند؛ این جای QA مرورگر نیست.
+- [ ] `PHASE1-R1-OPS-003` — اجرای seed توسعه، production build با API در دسترس و اندازه‌گیری query/cache/CDN. **Owner:** platform. **Trigger:** پیش از deploy production. **Mitigation:** seed profile-guarded است، publish خودکار ندارد و cache فقط TTL اولیهٔ مستند دارد.
+- [ ] `PHASE1-R1-REVIEW-004` — بازبینی انسانیِ privacy، ترجمه و صحت محتوای CMS. **Owner:** product owner. **Trigger:** پیش از هر انتشار. **Mitigation:** phone/reference/asset خصوصی در projection عمومی قرار نمی‌گیرند و automatic publish وجود ندارد.
+- [ ] `PHASE1-R1-TEST-005` — pytest متمرکز identity/siteconfig/seed در 2026-08-08 اجرا نشد، زیرا Docker Desktop daemon در این محیط در دسترس نبود (`dockerDesktopLinuxEngine`). **Owner:** platform. **Trigger:** پیش از بستن فاز ۱ یا deploy. **Mitigation:** contractهای backend قبلاً فقط با PostgreSQL Compose معتبرند؛ اجرای local بدون dependency جایگزین این شواهد نیست.
+- [ ] `PHASE1-R1-OWNERSHIP-006` — worktree مشترک تغییرهای گستردهٔ نامرتبط و فایل‌های untracked دارد؛ stage/commit فقط پس از تعیین task-owned files مجاز است. **Owner:** development lead. **Trigger:** پیش از commit یا push برش بعدی. **Mitigation:** این برش فقط rules و مستندات مشخص‌شده را تغییر داده و هیچ cleanup/revert روی فایل‌های دیگر انجام نداده است.
+
 ## R0-03 — قرارداد `getPublicPage`
 
 - [x] Home با `page_type=home` بازیابی می‌شود، نه اسلاگ وابسته به locale. مسیرهای

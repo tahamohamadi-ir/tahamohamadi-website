@@ -1,6 +1,8 @@
 
-# سند نهایی جامع Product + Technical + Architecture + Roadmap + AI Development Setup  
+# سند تاریخی Product + Technical + Architecture + Roadmap + AI Development Setup
 ## پروژه: TahaMohamadi.ir  
+
+> **وضعیت سند — 2026-08-08:** این فایل snapshot تصمیم‌های اولیهٔ Java/Spring Boot و Vue/Quasar است و برای اجرای فعلی معتبر نیست. پشتهٔ عملیاتی این repository عبارت است از Python/Django/DRF، PostgreSQL/Django migrations و Next.js/React/TypeScript. برای توسعهٔ جدید از [برنامهٔ جامع جاری](planning/development-master-plan.md)، [تسک‌لیست CMS](012-cms-v2-wordpress-capability-task-list.md)، [قواعد پروژه](../.codex/project-context.md) و [ledger اعتبارسنجی‌های معوق](status/deferred-validation.md) استفاده کنید. محتوای قدیمی این فایل فقط برای تاریخچه حفظ شده است.
 **نسخه:** 2.0 Final  
 **تاریخ:** 2026-07-09  
 **زبان سند:** فارسی با حفظ اصطلاحات فنی انگلیسی  

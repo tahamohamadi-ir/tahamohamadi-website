@@ -244,7 +244,7 @@ flowchart LR
 
 هر task باید یک owner، dependency، فایل‌های در scope، تست RED، پیاده‌سازی GREEN، acceptance evidence و rollback note داشته باشد.
 
-### 4.2 وضعیت اجرای جاری (2026-07-29)
+### 4.2 وضعیت اجرای جاری (2026-08-08)
 
 علامت‌ها: **✅** تکمیل و شواهد پذیرش موجود؛ **🟡** پیاده‌سازی شده اما یک یا چند
 gate در [فهرست اعتبارسنجی معوق](../status/deferred-validation.md) باقی است؛
@@ -277,6 +277,8 @@ gate در [فهرست اعتبارسنجی معوق](../status/deferred-validati
 | R1-08 | 🟡 | seed idempotent برای identity/siteconfig فقط رکوردهای draft حداقلی و بدون دادهٔ تماس/سند/asset می‌سازد؛ بازبینی و انتشار واقعی باقی است. |
 | R1-09 | 🟡 | API محافظت‌شده و UI checklist `seed-review` وضعیت draft و کامل‌بودن دو locale را گزارش می‌کنند و auto-publish را صریحاً ممنوع می‌سازند؛ QA واقعی session/CSRF و مرور انسانی باقی است. |
 | R1-10 | 🟡 | collection block اکنون source/filter/limit/order محدود دارد، identity/Blog/Portfolio منتشرشده را بدون ID یا JSON خام resolve می‌کند و renderer SSR آن را نمایش می‌دهد؛ QA مرورگر با محتوای تأییدشده باقی است. |
+
+**جمع‌بندی فاز ۱:** R1-01 تا R1-10 از نظر کد و قراردادهای موجود یک‌بار inventory شده‌اند و قابلیت تکراریِ قابل ساخت دیگری در این release پیدا نشد. وضعیت 🟡 به‌معنی «قابل publish بودن» نیست: گیت‌های QA مرورگر، داده/asset تأییدشده، session/CSRF واقعی، measurement production و بازبینی انسانی در `docs/status/deferred-validation.md` باقی می‌مانند.
 
 #### وضعیت شروع R3
 
