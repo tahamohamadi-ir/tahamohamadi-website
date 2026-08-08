@@ -1,7 +1,7 @@
 # Phase 2 Composer Foundation — Design
 
-**Date:** 2026-08-08  
-**Status:** Approved direction; awaiting review of this design before implementation planning  
+**Date:** 2026-08-08
+**Status:** Approved direction; awaiting review of this design before implementation planning
 **Scope:** Release 2 T2.1 first, then the smallest safe path through T2.2–T2.5
 
 ## Purpose
