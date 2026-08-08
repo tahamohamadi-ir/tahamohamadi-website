@@ -2,6 +2,7 @@
 
 import { AuthGuard } from "@/components/admin/auth-guard";
 import { AdminNavbar } from "@/components/admin/admin-navbar";
+import { CommandPalette } from "@/components/admin/CommandPalette";
 
 /**
  * Dashboard route group layout.
@@ -18,6 +19,7 @@ export default function AdminDashboardLayout({
             <div className="min-h-screen">
                 <AdminNavbar />
                 <main className="p-6">{children}</main>
+                <CommandPalette />
             </div>
         </AuthGuard>
     );

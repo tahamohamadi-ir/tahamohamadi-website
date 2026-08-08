@@ -3,10 +3,44 @@
 @theme {
   --font-inter: "Inter", system-ui, sans-serif;
   --font-vazirmatn: "Vazirmatn", system-ui, sans-serif;
+
+  --animate-spotlight: spotlight 2s ease .75s 1 forwards;
+  @keyframes spotlight {
+    0% {
+      opacity: 0;
+      transform: translate(-72%, -62%) scale(0.5);
+    }
+    100% {
+      opacity: 1;
+      transform: translate(-50%,-40%) scale(1);
+    }
+  }
+
+  --animate-aurora: aurora 60s linear infinite;
+  @keyframes aurora {
+    from {
+      background-position: 50% 50%, 50% 50%;
+    }
+    to {
+      background-position: 350% 50%, 350% 50%;
+    }
+  }
+
+  --animate-sweep: sweep 2s linear infinite;
+  @keyframes sweep {
+    0% {
+      background-position: -100% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
 }
 
 @layer base {
   :root {
+    --canvas: 0 0% 100%;
+    --surface: 0 0% 98%;
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
@@ -23,13 +57,29 @@
     --accent-foreground: 0 0% 9%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 9%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
     --ring: 0 0% 3.9%;
     --radius: 0.5rem;
+
+    /* Motion Tokens */
+    --duration-fast: 150ms;
+    --duration-normal: 200ms;
+    --duration-drawer: 300ms;
+    --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   }
 
   .dark {
+    --canvas: 220 30% 5%;
+    --surface: 220 25% 8%;
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
     --card: 0 0% 3.9%;
@@ -46,6 +96,12 @@
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
+    --success: 142 60% 40%;
+    --success-foreground: 0 0% 98%;
+    --warning: 38 80% 50%;
+    --warning-foreground: 0 0% 9%;
+    --info: 217 80% 55%;
+    --info-foreground: 0 0% 98%;
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
@@ -62,9 +118,14 @@
     color: hsl(var(--foreground));
   }
 
+  /* High contrast focus ring for WCAG 2.2 AA */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
   /* Reduced motion: disable non-essential animations globally */
   @media (prefers-reduced-motion: reduce) {
-
     *,
     *::before,
     *::after {
@@ -74,4 +135,4 @@
       scroll-behavior: auto !important;
     }
   }
-}
+}

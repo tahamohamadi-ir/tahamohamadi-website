@@ -13,6 +13,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DashboardCharts } from "@/components/admin/analytics/DashboardCharts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -107,6 +108,9 @@ export default function AdminDashboard() {
                     ) : null}
                 </div>
             </section>
+
+            {/* Analytics */}
+            <DashboardCharts />
 
             {/* Bottom Grid */}
             <div className="grid gap-6 lg:grid-cols-3">
