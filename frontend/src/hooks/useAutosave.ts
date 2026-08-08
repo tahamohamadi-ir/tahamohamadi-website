@@ -23,7 +23,7 @@ export interface UseAutosaveReturn {
     autosaveStatus: AutosaveStatus;
     lastSavedAt: Date | null;
     /** Manually trigger a save (cancels any pending autosave). */
-    save: () => Promise<void>;
+    save: () => Promise<boolean>;
 }
 
 /** Autosaves Draft content after a debounce without automatic retries. */
@@ -32,7 +32,7 @@ export function useAutosave<T>(options: UseAutosaveOptions<T>): UseAutosaveRetur
     const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>("idle");
     const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const isSavingRef = useRef(false);
+    const activeSavePromiseRef = useRef<Promise<boolean> | null>(null);
     const queueLatestRef = useRef(false);
     const mountedRef = useRef(true);
     const dataRef = useRef(data);
@@ -54,41 +54,51 @@ export function useAutosave<T>(options: UseAutosaveOptions<T>): UseAutosaveRetur
         }
     }, []);
 
-    const performSave = useCallback(async (dataToSave: T): Promise<void> => {
-        if (isSavingRef.current) {
+    const performSave = useCallback((initialData: T): Promise<boolean> => {
+        if (activeSavePromiseRef.current) {
             queueLatestRef.current = true;
-            return;
+            return activeSavePromiseRef.current;
         }
 
-        isSavingRef.current = true;
-        if (mountedRef.current) setAutosaveStatus("saving");
-        let saved = false;
-        try {
-            await onSaveRef.current(dataToSave);
-            saved = true;
-            if (mountedRef.current) {
-                setAutosaveStatus("saved");
-                setLastSavedAt(new Date());
+        const drainSaves = async () => {
+            let dataToSave = initialData;
+            while (true) {
+                if (mountedRef.current) setAutosaveStatus("saving");
+                try {
+                    await onSaveRef.current(dataToSave);
+                    if (mountedRef.current) {
+                        setAutosaveStatus("saved");
+                        setLastSavedAt(new Date());
+                    }
+                } catch (error) {
+                    queueLatestRef.current = false;
+                    if (mountedRef.current) setAutosaveStatus("error");
+                    onErrorRef.current?.(error);
+                    return false;
+                }
+
+                const shouldSaveLatest = queueLatestRef.current;
+                queueLatestRef.current = false;
+                const hasNewerData = dataRef.current !== dataToSave;
+                if (shouldSaveLatest && mountedRef.current && statusRef.current === "draft") {
+                    dataToSave = dataRef.current;
+                    continue;
+                }
+                if (!hasNewerData) onSuccessRef.current?.();
+                return true;
             }
-        } catch (error) {
-            if (mountedRef.current) setAutosaveStatus("error");
-            onErrorRef.current?.(error);
-        } finally {
-            isSavingRef.current = false;
-            const shouldSaveLatest = queueLatestRef.current;
-            queueLatestRef.current = false;
-            const hasNewerData = dataRef.current !== dataToSave;
-            if (saved && shouldSaveLatest && mountedRef.current && statusRef.current === "draft") {
-                void performSave(dataRef.current);
-            } else if (saved && !hasNewerData) {
-                onSuccessRef.current?.();
-            }
-        }
+        };
+
+        const activeSave = drainSaves().finally(() => {
+            activeSavePromiseRef.current = null;
+        });
+        activeSavePromiseRef.current = activeSave;
+        return activeSave;
     }, []);
 
-    const save = useCallback(async (): Promise<void> => {
+    const save = useCallback(async (): Promise<boolean> => {
         cancelPendingDebounce();
-        await performSave(dataRef.current);
+        return performSave(dataRef.current);
     }, [cancelPendingDebounce, performSave]);
 
     const isFirstRender = useRef(true);

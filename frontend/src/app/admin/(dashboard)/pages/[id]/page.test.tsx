@@ -1,9 +1,10 @@
-import { act, render as testingLibraryRender, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render as testingLibraryRender, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AdminNavigationGuardProvider } from "@/components/admin/admin-navigation-guard";
+import { AdminNavbar } from "@/components/admin/admin-navbar";
 import { DRAFT_RECOVERY_STORAGE_PREFIX } from "@/components/admin/composer/draft-recovery";
 import { AdminApiError } from "@/lib/admin-fetch";
 import PageEditorPage from "./page";
@@ -17,12 +18,17 @@ const { adminFetchMock, pushMock, paramsMock } = vi.hoisted(() => ({
 vi.mock("next/navigation", () => ({
   useParams: () => paramsMock,
   useRouter: () => ({ push: pushMock }),
+  usePathname: () => "/admin/pages/page-1",
 }));
 
 vi.mock("@/lib/admin-fetch", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/admin-fetch")>();
   return { ...actual, adminFetch: adminFetchMock };
 });
+
+vi.mock("@/components/admin/auth-context", () => ({
+  useAuth: () => ({ user: { username: "editor" }, logout: vi.fn() }),
+}));
 
 vi.mock("@/components/admin/composer", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/components/admin/composer")>();
@@ -71,12 +77,13 @@ describe("PageEditorPage", () => {
     adminFetchMock.mockResolvedValueOnce(page);
   });
 
-  it("keeps the composer visible and shows a concise validation alert after save fails", async () => {
+  it("keeps the composer visible and sanitizes the API composition error after save fails", async () => {
+    const missingMediaId = "11111111-2222-4333-8444-555555555555";
     adminFetchMock.mockRejectedValueOnce(
-      new AdminApiError(422, {
-        detail: "One or more fields are invalid.",
+      new AdminApiError(400, {
+        detail: "Page composition validation failed.",
         errors: {
-          sections: [{ blocks: [{ settings: ["(root): 'title' is required"] }] }],
+          composition: [`sections[0].blocks[0]: media asset '${missingMediaId}' not found`],
         },
       }),
     );
@@ -88,8 +95,8 @@ describe("PageEditorPage", () => {
 
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("Review 1 highlighted Composer field");
-    expect(alert).not.toHaveTextContent("'title' is required");
-    expect(alert).not.toHaveTextContent("API error 422");
+    expect(alert).not.toHaveTextContent(missingMediaId);
+    expect(alert).not.toHaveTextContent("media asset");
     expect(screen.getByTestId("composer-canvas")).toBeInTheDocument();
   });
 
@@ -188,7 +195,36 @@ describe("PageEditorPage", () => {
     expect(adminFetchMock).toHaveBeenCalledTimes(3);
   });
 
+  it("does not start a same-version manual PUT while Draft autosave is in flight", async () => {
+    vi.useFakeTimers();
+    let resolveAutosave: ((value: typeof draftPage) => void) | undefined;
+    adminFetchMock.mockReset();
+    adminFetchMock
+      .mockResolvedValueOnce(draftPage)
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveAutosave = resolve; }));
+    render(<PageEditorPage />);
+    await act(async () => { await Promise.resolve(); });
+
+    await act(async () => { screen.getByRole("button", { name: "Edit composition" }).click(); });
+    await act(async () => { vi.advanceTimersByTime(750); });
+
+    const saveButton = screen.getByRole("button", { name: /ذخیره/ });
+    expect(saveButton).toBeDisabled();
+    fireEvent.click(saveButton);
+    expect(adminFetchMock).toHaveBeenCalledTimes(2);
+    expect(adminFetchMock.mock.calls[1]?.[1]?.body).toContain('"version":1');
+
+    await act(async () => {
+      resolveAutosave?.({ ...draftPage, version: 2 });
+      await Promise.resolve();
+    });
+    expect(adminFetchMock).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
+  });
+
   it("confirms dirty return navigation", async () => {
+    adminFetchMock.mockReset();
+    adminFetchMock.mockResolvedValueOnce(draftPage);
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
     const user = userEvent.setup();
     render(<PageEditorPage />);
@@ -199,10 +235,29 @@ describe("PageEditorPage", () => {
 
     expect(confirmSpy).toHaveBeenCalled();
     expect(pushMock).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem(`${DRAFT_RECOVERY_STORAGE_PREFIX}page-1`)).not.toBeNull();
+    confirmSpy.mockRestore();
+  });
+
+  it("clears the recovery marker after confirmed Back discard", async () => {
+    adminFetchMock.mockReset();
+    adminFetchMock.mockResolvedValueOnce(draftPage);
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    render(<PageEditorPage />);
+
+    await screen.findByTestId("composer-canvas");
+    await userEvent.click(screen.getByRole("button", { name: "Edit composition" }));
+    expect(sessionStorage.getItem(`${DRAFT_RECOVERY_STORAGE_PREFIX}page-1`)).not.toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: /بازگشت/ }));
+
+    expect(pushMock).toHaveBeenCalledWith("/admin/pages");
+    expect(sessionStorage.getItem(`${DRAFT_RECOVERY_STORAGE_PREFIX}page-1`)).toBeNull();
     confirmSpy.mockRestore();
   });
 
   it("uses the same dirty confirmation before leaving for an imported template", async () => {
+    adminFetchMock.mockReset();
+    adminFetchMock.mockResolvedValueOnce(draftPage);
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
     const user = userEvent.setup();
     render(<PageEditorPage />);
@@ -213,6 +268,45 @@ describe("PageEditorPage", () => {
 
     expect(confirmSpy).toHaveBeenCalled();
     expect(pushMock).not.toHaveBeenCalledWith("/admin/pages/imported-page");
+    expect(sessionStorage.getItem(`${DRAFT_RECOVERY_STORAGE_PREFIX}page-1`)).not.toBeNull();
+    confirmSpy.mockRestore();
+  });
+
+  it("clears the recovery marker after confirmed template discard", async () => {
+    adminFetchMock.mockReset();
+    adminFetchMock.mockResolvedValueOnce(draftPage);
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    render(<PageEditorPage />);
+
+    await screen.findByTestId("composer-canvas");
+    await userEvent.click(screen.getByRole("button", { name: "Edit composition" }));
+    await userEvent.click(screen.getByRole("button", { name: "Open imported template" }));
+
+    expect(pushMock).toHaveBeenCalledWith("/admin/pages/imported-page");
+    expect(sessionStorage.getItem(`${DRAFT_RECOVERY_STORAGE_PREFIX}page-1`)).toBeNull();
+    confirmSpy.mockRestore();
+  });
+
+  it("clears the recovery marker after a confirmed navbar discard", async () => {
+    adminFetchMock.mockReset();
+    adminFetchMock.mockResolvedValueOnce(draftPage);
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    testingLibraryRender(
+      <AdminNavigationGuardProvider>
+        <AdminNavbar />
+        <PageEditorPage />
+      </AdminNavigationGuardProvider>,
+    );
+
+    await screen.findByTestId("composer-canvas");
+    await userEvent.click(screen.getByRole("button", { name: "Edit composition" }));
+    const blogLink = document.querySelector<HTMLAnchorElement>('a[href="/admin/blog"]');
+    expect(blogLink).not.toBeNull();
+    blogLink!.addEventListener("click", (event) => event.preventDefault());
+    fireEvent.click(blogLink!);
+
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(sessionStorage.getItem(`${DRAFT_RECOVERY_STORAGE_PREFIX}page-1`)).toBeNull();
     confirmSpy.mockRestore();
   });
 

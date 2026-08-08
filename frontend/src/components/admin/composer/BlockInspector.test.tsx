@@ -73,7 +73,8 @@ describe("BlockInspector", () => {
             );
             expect(screen.getByLabelText("Title")).toHaveValue("Welcome");
             expect(screen.getByLabelText("Subtitle")).toHaveValue("Hello");
-            expect(screen.getByLabelText("Media ID")).toBeInTheDocument();
+            expect(screen.getByRole("button", { name: "Choose media..." })).toBeInTheDocument();
+            expect(screen.queryByLabelText("Media ID")).not.toBeInTheDocument();
             expect(screen.getByLabelText("CTA URL")).toBeInTheDocument();
         });
 
@@ -88,7 +89,7 @@ describe("BlockInspector", () => {
                     cta_text_fa: "بیشتر",
                     cta_text_en: "More",
                     cta_link: "/about",
-                    media_id: null,
+                    media_id: "11111111-2222-4333-8444-555555555555",
                 },
             });
             render(
@@ -100,7 +101,10 @@ describe("BlockInspector", () => {
             expect(screen.getByLabelText("CTA text — فارسی")).toHaveValue("بیشتر");
             expect(screen.getByLabelText("CTA text — English")).toHaveValue("More");
             expect(screen.getByLabelText("CTA URL")).toHaveValue("/about");
-            expect(screen.getByLabelText("Media ID")).toHaveValue("");
+            expect(screen.getByText("Media selected")).toBeInTheDocument();
+            expect(screen.getByRole("button", { name: "Clear media selection" })).toBeInTheDocument();
+            expect(screen.queryByText("11111111-2222-4333-8444-555555555555")).not.toBeInTheDocument();
+            expect(screen.queryByLabelText("Media ID")).not.toBeInTheDocument();
         });
 
         it("calls onChange with updated settings on input change", () => {
@@ -157,7 +161,8 @@ describe("BlockInspector", () => {
     });
 
     describe("Gallery editor", () => {
-        it("renders media ids and layout select", () => {
+        it("renders a non-raw selected-media list with individual clear controls", async () => {
+            const onChange = vi.fn();
             const block = makeBlock({
                 block_type: "gallery",
                 settings: { media_ids: ["id1", "id2"], layout: "carousel" },
@@ -165,12 +170,19 @@ describe("BlockInspector", () => {
             render(
                 <BlockInspector
                     block={block}
-                    onChange={vi.fn()}
+                    onChange={onChange}
                     onDelete={vi.fn()}
                     onClose={vi.fn()}
                 />,
             );
-            expect(screen.getByLabelText("Media IDs (comma-separated)")).toHaveValue("id1, id2");
+            expect(screen.getByText("2 media items selected")).toBeInTheDocument();
+            expect(screen.queryByText(/id1|id2/)).not.toBeInTheDocument();
+            expect(screen.queryByLabelText("Media IDs (comma-separated)")).not.toBeInTheDocument();
+            await userEvent.click(screen.getByRole("button", { name: "Remove selected media 1" }));
+            expect(onChange).toHaveBeenLastCalledWith("block-1", {
+                media_ids: ["id2"],
+                layout: "carousel",
+            });
             expect(screen.getByLabelText("Layout")).toHaveValue("carousel");
         });
     });

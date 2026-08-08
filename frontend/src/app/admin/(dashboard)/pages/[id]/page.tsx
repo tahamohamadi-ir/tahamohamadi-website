@@ -87,7 +87,14 @@ export default function PageEditorPage() {
     });
     const { canUndo, canRedo, push, undo, redo, reset } = commandStack;
 
-    useEffect(() => registerGuard(confirmNavigation), [registerGuard, confirmNavigation]);
+    const confirmDiscard = useCallback(() => {
+        const confirmed = confirmNavigation();
+        const currentPage = pageRef.current;
+        if (confirmed && currentPage?.id) clearDraftRecoveryMarker(currentPage.id);
+        return confirmed;
+    }, [confirmNavigation]);
+
+    useEffect(() => registerGuard(confirmDiscard), [registerGuard, confirmDiscard]);
 
     const saveExistingPage = useCallback(async (payload: PageSavePayload): Promise<PageData | undefined> => {
         const currentPage = pageRef.current;
@@ -129,7 +136,7 @@ export default function PageEditorPage() {
         sections,
     ]);
 
-    const { autosaveStatus } = useAutosave({
+    const { autosaveStatus, save: saveNow } = useAutosave({
         data: autosaveData,
         status: page?.status === "draft" && pageId !== "new" && isDirty ? "draft" : "idle",
         debounceMs: 750,
@@ -215,7 +222,8 @@ export default function PageEditorPage() {
                 router.push(`/admin/pages/${created.id}`);
                 return;
             }
-            await saveExistingPage(payload);
+            const saved = await saveNow();
+            if (!saved) return;
             reset();
             markClean();
             clearDraftRecoveryMarker(page.id);
@@ -225,7 +233,7 @@ export default function PageEditorPage() {
         } finally {
             setSaving(false);
         }
-    }, [page, pageId, router, sections, saveExistingPage, reset, markClean, applySaveFailure]);
+    }, [page, pageId, router, sections, saveNow, reset, markClean, applySaveFailure]);
 
     const updatePageField = useCallback(
         (field: keyof Pick<PageData, "title_fa" | "title_en" | "slug_fa" | "slug_en" | "page_type" | "status">, value: string) => {
@@ -392,7 +400,7 @@ export default function PageEditorPage() {
                         بازگشت
                     </Button>
                     {page && (
-                        <Button onClick={handleSave} disabled={saving || !canSave}>
+                        <Button onClick={handleSave} disabled={saving || autosaveStatus === "saving" || !canSave}>
                             {saving ? "در حال ذخیره..." : pageId === "new" ? "ایجاد صفحه" : "ذخیره"}
                         </Button>
                     )}

@@ -20,7 +20,7 @@ function safeMessage(field: string, serverMessage: string): string {
         return "Enter a safe internal path or HTTPS URL.";
     }
     if (/required/.test(normalized)) return "This field is required.";
-    if (/(media|uuid)/.test(field) || /uuid|active media/.test(normalized)) {
+    if (/(media|uuid)/.test(field) || /uuid|active media|media asset/.test(normalized)) {
         return "Choose an active media item.";
     }
     if (/additional propert|unsupported|unknown/.test(normalized)) return "Remove unsupported settings.";
@@ -49,15 +49,49 @@ function collectMessages(
     }
 }
 
+function addFieldMessage(
+    fields: Record<string, string[]>,
+    field: string,
+    serverMessage: string,
+) {
+    const message = safeMessage(field, serverMessage);
+    fields[field] = [...new Set([...(fields[field] ?? []), message])];
+}
+
+function collectCompositionIssues(
+    composition: unknown,
+    issuesByBlock: Map<string, ComposerValidationIssue>,
+) {
+    if (!Array.isArray(composition)) return;
+
+    composition.forEach((item) => {
+        if (typeof item !== "string") return;
+        const match = item.match(
+            /^sections\[(\d+)]\.blocks\[(\d+)](?:\.settings(?:\.([a-z][a-z0-9_]*))?)?:\s*(.*)$/i,
+        );
+        if (!match) return;
+
+        const sectionIndex = Number(match[1]);
+        const blockIndex = Number(match[2]);
+        const detail = match[4].replace(/^\(root\):\s*/, "");
+        const urlField = detail.match(/unsafe\s+url\s+in\s+([a-z][a-z0-9_]*)/i)?.[1];
+        const field = match[3]
+            ?? urlField
+            ?? (/media\s+(?:asset|uuid)/i.test(detail) ? "_block" : inferField([], detail));
+        const key = `${sectionIndex}:${blockIndex}`;
+        const issue = issuesByBlock.get(key) ?? { sectionIndex, blockIndex, fields: {} };
+        addFieldMessage(issue.fields, field, detail);
+        issuesByBlock.set(key, issue);
+    });
+}
+
 export function extractComposerValidationIssues(error: unknown): ComposerValidationIssue[] {
     if (!(error instanceof AdminApiError)) return [];
     const errors = error.body.errors;
     if (!errors || typeof errors !== "object") return [];
+    const issuesByBlock = new Map<string, ComposerValidationIssue>();
     const sections = (errors as { sections?: unknown }).sections;
-    if (!Array.isArray(sections)) return [];
-
-    const issues: ComposerValidationIssue[] = [];
-    sections.forEach((section, sectionIndex) => {
+    if (Array.isArray(sections)) sections.forEach((section, sectionIndex) => {
         if (!section || typeof section !== "object") return;
         const blocks = (section as { blocks?: unknown }).blocks;
         if (!Array.isArray(blocks)) return;
@@ -67,8 +101,11 @@ export function extractComposerValidationIssues(error: unknown): ComposerValidat
             if (settings === undefined) return;
             const fields: Record<string, string[]> = {};
             collectMessages(settings, fields);
-            if (Object.keys(fields).length > 0) issues.push({ sectionIndex, blockIndex, fields });
+            if (Object.keys(fields).length > 0) {
+                issuesByBlock.set(`${sectionIndex}:${blockIndex}`, { sectionIndex, blockIndex, fields });
+            }
         });
     });
-    return issues;
+    collectCompositionIssues((errors as { composition?: unknown }).composition, issuesByBlock);
+    return [...issuesByBlock.values()];
 }

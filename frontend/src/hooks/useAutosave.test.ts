@@ -157,6 +157,21 @@ describe('useAutosave', () => {
             expect(result.current.autosaveStatus).toBe('saved');
             expect(result.current.lastSavedAt).toBeInstanceOf(Date);
         });
+
+        it('reports a failed manual save so the editor keeps local state dirty', async () => {
+            const onSave = vi.fn().mockRejectedValue(new Error('Validation failed'));
+            const { result } = renderHook(() =>
+                useAutosave({ data: { title: 'test' }, status: 'draft', onSave })
+            );
+
+            let saved: boolean | undefined;
+            await act(async () => {
+                saved = await result.current.save();
+            });
+
+            expect(saved).toBe(false);
+            expect(result.current.autosaveStatus).toBe('error');
+        });
     });
 
     describe('error handling and in-flight changes', () => {

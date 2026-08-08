@@ -303,7 +303,7 @@
 - [x] برای هر block، default settings، validation schema، media policy و fields محلی مستند شود.
 - [x] settings ناشناخته، block type ناشناخته، ترتیب نامعتبر و media inactive با Problem Details رد شوند.
 - [x] public renderer block ناشناخته را fail closed کند و Admin diagnostic نشان دهد.
-- [x] renderer هیچ block را با raw HTML render نکند.
+- [x] composition عادی و template import هر دو raw HTML را پیش از ذخیره رد می‌کنند و renderer نیز sink برای HTML خام ندارد.
 
 **پذیرش:** یک block تنها در صورتی قابل ذخیره است که frontend، server، preview و public renderer آن را بفهمند.
 

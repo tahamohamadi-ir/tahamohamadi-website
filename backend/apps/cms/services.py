@@ -344,6 +344,9 @@ def validate_page_composition(
                 errors.append(f"{path}: settings must be a dict")
                 continue
 
+            if _contains_raw_html(settings):
+                errors.append(f"{path}: settings must not contain raw HTML")
+
             settings_errors = validate_block_settings(block_type, settings)
             for err in settings_errors:
                 errors.append(f"{path}: {err}")
