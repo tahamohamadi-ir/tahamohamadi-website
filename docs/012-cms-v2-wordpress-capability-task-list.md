@@ -279,10 +279,10 @@
 
 **نوع:** BUILD، فقط توسعه
 
-- [x] seed صریح و profile-guarded برای CMS کاملاً خالی، یک Home دوزبانهٔ منتشرشده، دو block تصویر‌دار، هویت سایت و یک نمونه‌کار galleryدار افزوده شد.
-- [x] دو تصویر تولیدیِ توسعه‌ای همراه با alt فارسی/انگلیسی از `Media Library` ثبت می‌شوند؛ public page به متن یا URL نمونهٔ ثابت وابسته نیست.
-- [x] مسیر اجرا و منع production در `scripts/seed/README.md` ثبت شد.
-- [ ] اجرای واقعی seed روی PostgreSQL توسعه و QA SSR صفحات `/fa`، `/en` و نمونه‌کار هنوز انجام نشده است؛ مرجع: `CMS-DEMO-SEED-010` در ledger.
+- [ ] وضعیت واقعی `main` در 2026-08-08: `seed_data` فقط بخشی از identity/siteconfig را به‌صورت draft می‌سازد، اما profile-guard نیست، نمونهٔ رسانه‌دار ندارد و pageهای منتشرشدهٔ قدیمی ایجاد می‌کند؛ این رفتار نباید به‌عنوان محتوای قابل‌انتشار تلقی شود.
+- [ ] یک فرمان seed صریح و idempotent، فقط برای profile توسعه و فقط برای CMS خالی/با تأیید صریح، باید Home دوزبانهٔ **Draft**، دو block تصویر‌دار، هویت سایت و یک نمونه‌کار galleryدار ایجاد کند.
+- [ ] دو asset توسعه‌ایِ دارای alt فارسی/انگلیسی باید از `Media Library` ثبت شوند؛ public page نباید به متن، URL یا asset نمونهٔ ثابت وابسته باشد.
+- [ ] راهنمای اجرای توسعه و منع production در `scripts/seed/README.md` افزوده شود؛ سپس seed روی PostgreSQL توسعه و QA SSR صفحه‌های `/fa`، `/en` و نمونه‌کار انجام شود. مرجع: `CMS-DEMO-SEED-010` در ledger.
 
 ---
 
