@@ -260,20 +260,21 @@ tahamohamadi-website/
 - **CSR admin panel** — Client-side rendering with session auth
 - **Bilingual** — `/fa/` and `/en/` routing with RTL/LTR switching
 
-See [docs/architecture.md](docs/architecture.md) for the full system architecture.
+See [docs/architecture/architecture.md](docs/architecture/architecture.md) for the full system architecture.
 
 ## Documentation
 
 | Document | Description |
 | ---------- | ------------- |
-| [Architecture](docs/architecture.md) | System architecture, data flows, design decisions |
-| [Goals & Vision](docs/goals-and-vision.md) | Project goals, constraints, success criteria |
-| [Tech Stack](docs/tech-stack.md) | Technology choices and rationale |
-| [Design System](docs/design-system-summary.md) | Design system quick reference |
-| [Roadmap](docs/roadmap.md) | Development roadmap with timeline |
-| [Scalability](docs/scalability.md) | Scalability strategy and migration path |
-| [CI/CD](docs/ci-cd.md) | CI/CD pipeline documentation |
-| [Conventions](docs/conventions.md) | Code and project conventions |
+| [Documentation index](docs/INDEX.md) | Canonical documentation map and precedence |
+| [Architecture](docs/architecture/architecture.md) | System architecture, data flows, design decisions |
+| [Goals & Vision](docs/planning/goals-and-vision.md) | Project goals, constraints, success criteria |
+| [Tech Stack](docs/architecture/tech-stack.md) | Technology choices and rationale |
+| [Design System](docs/architecture/design-system-summary.md) | Design system quick reference |
+| [Roadmap](docs/planning/roadmap.md) | Development roadmap with timeline |
+| [Scalability](docs/architecture/scalability.md) | Scalability strategy and migration path |
+| [CI/CD](docs/architecture/ci-cd.md) | CI/CD pipeline documentation |
+| [Conventions](docs/architecture/conventions.md) | Code and project conventions |
 
 ## License
 

@@ -3,7 +3,7 @@
 **Version:** 2.0  
 **Last Updated:** 2026-07-28  
 **Full Reference:** `docs/ui-ux/design-system/`  
-**Runtime Source of Truth:** `frontend/src/css/tokens.scss` (when created)  
+**Runtime Source of Truth:** `frontend/src/app/globals.css`  
 
 ---
 

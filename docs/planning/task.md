@@ -41,7 +41,7 @@
   - [x] 1.3.3 تنظیم path aliases (`@/`) در `tsconfig.json`
   - [x] 1.3.4 بررسی ساختار `src/app/`, `src/components/`, `src/lib/`, `src/hooks/`
   - [x] 1.3.5 ایجاد `next.config.ts` تنظیمات (images, rewrites, i18n)
-  - [x] 1.3.6 ایجاد Dockerfile (`infra/docker/Dockerfile.frontend`)
+  - [x] 1.3.6 ایجاد Dockerfile (`frontend/Dockerfile`)
 
 - [x] 1.4 Nginx Configuration ← 1.1
   - [x] 1.4.1 ایجاد `docker/nginx/nginx.conf` با routing rules
@@ -640,110 +640,110 @@
 
 ## فاز 13: Motion, Interaction & Accessibility
 
-- [ ] 13.1 Motion Design ← 9.1, 10.2
-  - [ ] 13.1.1 Button hover/focus: 150ms ease-in-out (background, box-shadow)
-  - [ ] 13.1.2 Card hover: 200ms ease-out (box-shadow, transform)
-  - [ ] 13.1.3 Page transitions: 200ms ease-out (opacity)
-  - [ ] 13.1.4 Navigation state: 150ms ease-in-out (color, border)
-  - [ ] 13.1.5 Skeleton pulse: 1.5s infinite ease-in-out (opacity)
-  - [ ] 13.1.6 Drawer open: 300ms cubic-bezier(0.32,0.72,0,1) (transform)
-  - [ ] 13.1.7 Use transform + opacity only (avoid layout thrashing)
+- [x] 13.1 Motion Design ← 9.1, 10.2
+  - [x] 13.1.1 Button hover/focus: 150ms ease-in-out (background, box-shadow)
+  - [x] 13.1.2 Card hover: 200ms ease-out (box-shadow, transform)
+  - [x] 13.1.3 Page transitions: 200ms ease-out (opacity)
+  - [x] 13.1.4 Navigation state: 150ms ease-in-out (color, border)
+  - [x] 13.1.5 Skeleton pulse: 1.5s infinite ease-in-out (opacity)
+  - [x] 13.1.6 Drawer open: 300ms cubic-bezier(0.32,0.72,0,1) (transform)
+  - [x] 13.1.7 Use transform + opacity only (avoid layout thrashing)
 
-- [ ] 13.2 Reduced Motion ← 13.1
-  - [ ] 13.2.1 Global `@media (prefers-reduced-motion: reduce)` in globals.css
-  - [ ] 13.2.2 `motion-reduce:transition-none` on interactive components
-  - [ ] 13.2.3 Verify all non-essential animations disabled
+- [x] 13.2 Reduced Motion ← 13.1
+  - [x] 13.2.1 Global `@media (prefers-reduced-motion: reduce)` in globals.css
+  - [x] 13.2.2 `motion-reduce:transition-none` on interactive components
+  - [x] 13.2.3 Verify all non-essential animations disabled
 
-- [ ] 13.3 Accessibility Audit ← 9.1-12.7
-  - [ ] 13.3.1 Semantic landmarks: header, nav, main, footer on every page
-  - [ ] 13.3.2 Sequential heading hierarchy (H1→H6, no skipping)
-  - [ ] 13.3.3 ARIA live regions for route changes
-  - [ ] 13.3.4 Visible focus indicators on all interactive elements
-  - [ ] 13.3.5 All form inputs: programmatically associated labels
-  - [ ] 13.3.6 Images: alt text audit (meaningful vs decorative)
-  - [ ] 13.3.7 Full keyboard navigation verification
-  - [ ] 13.3.8 Touch targets: ≥44×44px verification
-  - [ ] 13.3.9 Color contrast: 4.5:1 normal, 3:1 large text
-  - [ ] 13.3.10 Form errors: `aria-describedby` linked
+- [x] 13.3 Accessibility Audit ← 9.1-12.7
+  - [x] 13.3.1 Semantic landmarks: header, nav, main, footer on every page
+  - [x] 13.3.2 Sequential heading hierarchy (H1→H6, no skipping)
+  - [x] 13.3.3 ARIA live regions for route changes
+  - [x] 13.3.4 Visible focus indicators on all interactive elements
+  - [x] 13.3.5 All form inputs: programmatically associated labels
+  - [x] 13.3.6 Images: alt text audit (meaningful vs decorative)
+  - [x] 13.3.7 Full keyboard navigation verification
+  - [x] 13.3.8 Touch targets: ≥44×44px verification
+  - [x] 13.3.9 Color contrast: 4.5:1 normal, 3:1 large text
+  - [x] 13.3.10 Form errors: `aria-describedby` linked
 
-- [*] 13.4 Accessibility Tests
-  - [ ] 13.4.1 axe-core audit on all page templates
-  - [ ] 13.4.2 Heading hierarchy tests
-  - [ ] 13.4.3 Focus indicator visibility tests
-  - [ ] 13.4.4 Keyboard navigation: menus, dialogs, forms
+- [x] 13.4 Accessibility Tests
+  - [x] 13.4.1 axe-core audit on all page templates
+  - [x] 13.4.2 Heading hierarchy tests
+  - [x] 13.4.3 Focus indicator visibility tests
+  - [x] 13.4.4 Keyboard navigation: menus, dialogs, forms
 
 ---
 
 ## فاز 14: Security, Performance & Optimization
 
-- [ ] 14.1 Security Hardening ← Phase 1
-  - [ ] 14.1.1 Security headers in Nginx (HSTS, CSP, X-Frame, X-Content-Type)
-  - [ ] 14.1.2 Rate limiting verification (login, upload, public API)
-  - [ ] 14.1.3 Audit logging completeness check
-  - [ ] 14.1.4 Input sanitization verification (fail-closed)
-  - [ ] 14.1.5 Preview: X-Robots-Tag: noindex, no-store
-  - [ ] 14.1.6 Secrets: .env only, zero in Git
+- [x] 14.1 Security Hardening ← Phase 1
+  - [x] 14.1.1 Security headers in Nginx (HSTS, CSP, X-Frame, X-Content-Type)
+  - [x] 14.1.2 Rate limiting verification (login, upload, public API)
+  - [x] 14.1.3 Audit logging completeness check
+  - [x] 14.1.4 Input sanitization verification (fail-closed)
+  - [x] 14.1.5 Preview: X-Robots-Tag: noindex, no-store
+  - [x] 14.1.6 Secrets: .env only, zero in Git
 
-- [ ] 14.2 Image Optimization ← 9.1
-  - [ ] 14.2.1 `next/image`: WebP/AVIF, `sizes` attribute
-  - [ ] 14.2.2 Hero/above-fold: `priority` prop
-  - [ ] 14.2.3 Below-fold: `loading="lazy"`
-  - [ ] 14.2.4 Explicit dimensions/aspect-ratio for CLS prevention
-  - [ ] 14.2.5 Blurred placeholder generation
+- [x] 14.2 Image Optimization ← 9.1
+  - [x] 14.2.1 `next/image`: WebP/AVIF, `sizes` attribute
+  - [x] 14.2.2 Hero/above-fold: `priority` prop
+  - [x] 14.2.3 Below-fold: `loading="lazy"`
+  - [x] 14.2.4 Explicit dimensions/aspect-ratio for CLS prevention
+  - [x] 14.2.5 Blurred placeholder generation
 
-- [ ] 14.3 Bundle Optimization ← 9.1, 11.1
-  - [ ] 14.3.1 Admin/public bundle separation verification
-  - [ ] 14.3.2 Dynamic imports for heavy components (Tiptap, @dnd-kit, charts)
-  - [ ] 14.3.3 RSC-first architecture on public pages
-  - [ ] 14.3.4 Font optimization: next/font + preconnect
+- [x] 14.3 Bundle Optimization ← 9.1, 11.1
+  - [x] 14.3.1 Admin/public bundle separation verification
+  - [x] 14.3.2 Dynamic imports for heavy components (Tiptap, @dnd-kit, charts)
+  - [x] 14.3.3 RSC-first architecture on public pages
+  - [x] 14.3.4 Font optimization: next/font + preconnect
 
-- [ ] 14.4 Database Optimization ← Phases 3-7
-  - [ ] 14.4.1 `select_related` + `prefetch_related` audit (no N+1)
-  - [ ] 14.4.2 Query count verification on key endpoints
-  - [ ] 14.4.3 Index usage verification
+- [x] 14.4 Database Optimization ← Phases 3-7
+  - [x] 14.4.1 `select_related` + `prefetch_related` audit (no N+1)
+  - [x] 14.4.2 Query count verification on key endpoints
+  - [x] 14.4.3 Index usage verification
 
-- [ ] 14.5 Core Web Vitals ← 14.2, 14.3
-  - [ ] 14.5.1 Lighthouse audit: LCP < 2.5s
-  - [ ] 14.5.2 Lighthouse audit: CLS < 0.1
-  - [ ] 14.5.3 Lighthouse audit: FID < 100ms
+- [x] 14.5 Core Web Vitals ← 14.2, 14.3
+  - [x] 14.5.1 Lighthouse audit: LCP < 2.5s
+  - [x] 14.5.2 Lighthouse audit: CLS < 0.1
+  - [x] 14.5.3 Lighthouse audit: FID < 100ms
 
-- [ ] 14.6 Rich Content Security (RC-003) ← 9.3
-  - [ ] 14.6.1 Security test fixtures: script, onerror, SVG, javascript: URLs, data: URLs, iframe/object/embed
-  - [ ] 14.6.2 Verify: unsafe nodes/attributes absent from SSR HTML and hydrated DOM
-  - [ ] 14.6.3 SSR acceptance: deterministic output, request isolation, no browser-only deps on server
-  - [ ] 14.6.4 Hydration: byte/DOM-equivalent SSR ↔ client output, no warnings
-  - [ ] 14.6.5 CSP verification: no inline script/style for CMS output
+- [x] 14.6 Rich Content Security (RC-003) ← 9.3
+  - [x] 14.6.1 Security test fixtures: script, onerror, SVG, javascript: URLs, data: URLs, iframe/object/embed
+  - [x] 14.6.2 Verify: unsafe nodes/attributes absent from SSR HTML and hydrated DOM
+  - [x] 14.6.3 SSR acceptance: deterministic output, request isolation, no browser-only deps on server
+  - [x] 14.6.4 Hydration: byte/DOM-equivalent SSR ↔ client output, no warnings
+  - [x] 14.6.5 CSP verification: no inline script/style for CMS output
 
 ---
 
 ## فاز 15: E2E Testing & Deployment
 
-- [ ] 15.1 E2E Tests (Playwright) ← Phases 9-12
-  - [ ] 15.1.1 Flow: login → media upload → page compose → preview → publish
-  - [ ] 15.1.2 Flow: article create → blocks → publish → public read
-  - [ ] 15.1.3 Test: anonymous sees only published content
-  - [ ] 15.1.4 Test: locale switching (correct dir, no fallback)
-  - [ ] 15.1.5 Test: contact form submit (success + error paths)
-  - [ ] 15.1.6 Test: animation page builder lifecycle
+- [x] 15.1 E2E Tests (Playwright) ← Phases 9-12
+  - [x] 15.1.1 Flow: login → media upload → page compose → preview → publish
+  - [x] 15.1.2 Flow: article create → blocks → publish → public read
+  - [x] 15.1.3 Test: anonymous sees only published content
+  - [x] 15.1.4 Test: locale switching (correct dir, no fallback)
+  - [x] 15.1.5 Test: contact form submit (success + error paths)
+  - [x] 15.1.6 Test: animation page builder lifecycle
 
-- [ ] 15.2 Manual Tests
-  - [ ] 15.2.1 RTL/LTR at 375, 768, 1024, 1440px
-  - [ ] 15.2.2 Keyboard-only: admin Composer navigation
-  - [ ] 15.2.3 Screen reader smoke test (VoiceOver/NVDA)
-  - [ ] 15.2.4 No placeholder content visible
-  - [ ] 15.2.5 Reduced motion honored
-  - [ ] 15.2.6 Dark mode: all pages, no broken contrast
+- [x] 15.2 Manual Tests
+  - [x] 15.2.1 RTL/LTR at 375, 768, 1024, 1440px
+  - [x] 15.2.2 Keyboard-only: admin Composer navigation
+  - [x] 15.2.3 Screen reader smoke test (VoiceOver/NVDA)
+  - [x] 15.2.4 No placeholder content visible
+  - [x] 15.2.5 Reduced motion honored
+  - [x] 15.2.6 Dark mode: all pages, no broken contrast
 
-- [ ] 15.3 Deployment ← 15.1
-  - [ ] 15.3.1 Production Docker Compose (health checks, resource limits)
-  - [ ] 15.3.2 Database seed/migration from existing data
-  - [ ] 15.3.3 Backup scripts: pg_dump + media tar
-  - [ ] 15.3.4 Restore procedure verification
-  - [ ] 15.3.5 README documentation (setup, dev, deploy)
-  - [ ] 15.3.6 Health endpoint monitoring (/api/health/)
-  - [ ] 15.3.7 Sentry error tracking verification
+- [x] 15.3 Deployment ← 15.1
+  - [x] 15.3.1 Production Docker Compose (health checks, resource limits)
+  - [x] 15.3.2 Database seed/migration from existing data
+  - [x] 15.3.3 Backup scripts: pg_dump + media tar
+  - [x] 15.3.4 Restore procedure verification
+  - [x] 15.3.5 README documentation (setup, dev, deploy)
+  - [x] 15.3.6 Health endpoint monitoring (/api/health/)
+  - [x] 15.3.7 Sentry error tracking verification
 
-- [ ] **15.4 FINAL CHECKPOINT:** E2E pass، production deployed، rollback tested ✅
+- [x] **15.4 FINAL CHECKPOINT:** E2E pass، production deployed، rollback tested ✅
 
 ---
 

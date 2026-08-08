@@ -650,7 +650,7 @@ ALLOWED_TRANSITIONS = {
 - Minimum 1 block validation before save
 - Draft/published states (integrate with Workflow module)
 - Revision history + restore
-- LocalStorage fallback on network error
+- LocalStorage fallback on network error + retry
 
 #### 12.6 Public Renderer
 - GPU-accelerated: CSS transforms + opacity
