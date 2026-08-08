@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" role="img" aria-label="Neutral composer demo gallery artwork">
+  <rect width="1200" height="640" fill="#edf0ea"/>
+  <rect x="130" y="112" width="300" height="416" rx="20" fill="#b9c7b4"/>
+  <rect x="450" y="112" width="300" height="416" rx="20" fill="#d6c7ad"/>
+  <rect x="770" y="112" width="300" height="416" rx="20" fill="#a8bec3"/>
+  <path d="M185 442l90-120 82 88 45-62" stroke="#61766b" stroke-width="22" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="870" cy="240" r="64" fill="#607f86"/>
+</svg>

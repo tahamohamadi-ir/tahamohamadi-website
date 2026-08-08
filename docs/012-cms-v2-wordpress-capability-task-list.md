@@ -280,9 +280,9 @@
 **نوع:** BUILD، فقط توسعه
 
 - [ ] وضعیت واقعی `main` در 2026-08-08: `seed_data` فقط بخشی از identity/siteconfig را به‌صورت draft می‌سازد، اما profile-guard نیست، نمونهٔ رسانه‌دار ندارد و pageهای منتشرشدهٔ قدیمی ایجاد می‌کند؛ این رفتار نباید به‌عنوان محتوای قابل‌انتشار تلقی شود.
-- [ ] یک فرمان seed صریح و idempotent، فقط برای profile توسعه و فقط برای CMS خالی/با تأیید صریح، باید Home دوزبانهٔ **Draft**، دو block تصویر‌دار، هویت سایت و یک نمونه‌کار galleryدار ایجاد کند.
-- [ ] دو asset توسعه‌ایِ دارای alt فارسی/انگلیسی باید از `Media Library` ثبت شوند؛ public page نباید به متن، URL یا asset نمونهٔ ثابت وابسته باشد.
-- [ ] راهنمای اجرای توسعه و منع production در `scripts/seed/README.md` افزوده شود؛ سپس seed روی PostgreSQL توسعه و QA SSR صفحه‌های `/fa`، `/en` و نمونه‌کار انجام شود. مرجع: `CMS-DEMO-SEED-010` در ledger.
+- [x] `seed_composer_demo` صریح، idempotent و محدود به `DEBUG=true` برای dataset خالی، یک صفحهٔ دوزبانهٔ Draft با Hero/Text/Gallery، هویت و تنظیمات سایت Draft، navigation header Draft و یک CaseStudy گالری‌دار Draft ایجاد می‌کند. آزمون Compose در 2026-08-08 guard، refusal، روابط، private بودن public endpoint و idempotence را تأیید کرد.
+- [x] دو SVG خنثیِ توسعه‌ای با alt فارسی/انگلیسی به‌صورت MediaAsset فعال ثبت می‌شوند و blockها فقط UUID آن‌ها را نگه می‌دارند، نه URL یا کد frontend.
+- [x] راهنمای فرمان، شرط database خالی و منع مطلق production در `scripts/seed/README.md` ثبت شد. QA SSR مرورگر و بازبینی انسانی محتوا/asset هنوز deferred هستند. مرجع: `CMS-DEMO-SEED-010` در ledger.
 
 ---
 

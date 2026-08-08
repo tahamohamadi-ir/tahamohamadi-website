@@ -8,6 +8,8 @@
 
 ## PHASE1-R1 — جمع‌بندی گیت عملیاتی
 
+- [ ] `CMS-DEMO-SEED-010` — QA مرورگر SSR برای Composer demo در هر دو locale و بازبینی انسانیِ متن، ترجمه و neutral بودن assetهای توسعه‌ای. **Owner:** frontend/product-content. **Trigger:** پیش از هر استفادهٔ نمایشی یا انتشار از محتوای CMS. **Mitigation:** fixture فقط با `DEBUG=true` و database خالی ساخته می‌شود، همهٔ رکوردها Draft هستند و public page پاسخ 404 می‌دهد.
+
 - [x] R1-01 تا R1-10 از منظر inventory کد/قرارداد بررسی شده‌اند: identity، site configuration، aggregate، Admin CRUD، seed review و collectionهای CMS در Django/DRF و Next.js/React وجود دارند.
 - [ ] `PHASE1-R1-QA-001` — QA public با داده و asset تأییدشده در هر دو locale، برای identity، پژوهش، publication و resume. **Owner:** product/content. **Trigger:** پیش از اولین publish عمومی این منابع. **Mitigation:** public sectionهای خالی/locale ناقص suppress می‌شوند.
 - [ ] `PHASE1-R1-CONTENT-007` — inventory محیط Compose در 2026-08-08 نشان می‌دهد Site Settings، navigation، SiteProfile، ResearchProject، Publication و ResumeVariant هنوز هیچ رکوردی ندارند؛ چهار MediaAsset فعال و چند Page منتشرشده وجود دارد، اما تأیید محتوایی/مالکیت و parity فارسی/انگلیسیِ آن‌ها ثبت نشده است. **Owner:** product/content. **Trigger:** پیش از عملیاتی‌سازی public site. **Mitigation:** هیچ متن، تصویر یا URL نمونه در component ساخته نمی‌شود؛ بخش‌های فاقد دادهٔ منتشرشده suppress می‌مانند.
