@@ -157,11 +157,10 @@ class Command(BaseCommand):
         return any(
             model.objects.exists()
             for model in (
-                Page, Section, Block, SiteProfile, SiteSettings, NavigationItem,
-                CaseStudy, MediaAsset, Affiliation, Certification, Education,
+                Page, SiteProfile, SiteSettings, NavigationItem, CaseStudy,
+                MediaAsset, Affiliation, Certification, Education,
                 Experience, LanguageProficiency, Publication, ResearchInterest,
-                ResearchProject, ResumeVariant, Skill, SocialLink, RedirectRule,
-                CaseStudyBlock, MediaUsageReference,
+                ResearchProject, Skill, SocialLink, RedirectRule,
             )
         )
 

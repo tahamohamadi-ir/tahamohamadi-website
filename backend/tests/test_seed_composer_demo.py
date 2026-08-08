@@ -1,7 +1,6 @@
 """Contract tests for the opt-in, draft-only Composer demo fixture."""
 
 import pytest
-from uuid import uuid4
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -41,19 +40,12 @@ def _create_in_scope_record(kind):
 
     creators = {
         "page": page,
-        "section": lambda: Section.objects.create(page=page(), ordering=0),
-        "block": lambda: Block.objects.create(section=Section.objects.create(page=page(), ordering=0), block_type="text", settings={"content": "x", "alignment": "start"}, ordering=0),
         "profile": lambda: SiteProfile.objects.create(name_fa="نمونه", name_en="Sample"),
         "settings": lambda: SiteSettings.objects.create(site_title_fa="نمونه", site_title_en="Sample"),
         "navigation": lambda: NavigationItem.objects.create(label_fa="نمونه", label_en="Sample", href="/en", location="header"),
         "redirect": lambda: RedirectRule.objects.create(source_path="/old", target_url="/en"),
         "case_study": case_study,
-        "case_study_block": lambda: CaseStudyBlock.objects.create(case_study=case_study(), locale="en", block_type="text", content={}, ordering=0),
         "media": _media_asset,
-        "media_usage_reference": lambda: MediaUsageReference.objects.create(
-            media=_media_asset(), source_type="cms_block", source_id=uuid4(),
-            owner_type="page", owner_id=uuid4(), reference_field="settings.media_id",
-        ),
         "affiliation": lambda: Affiliation.objects.create(organization_fa="نمونه", organization_en="Sample"),
         "certification": lambda: Certification.objects.create(title_fa="نمونه", title_en="Sample", issuer_fa="نمونه", issuer_en="Sample"),
         "education": lambda: Education.objects.create(institution_fa="نمونه", institution_en="Sample", degree_fa="نمونه", degree_en="Sample"),
@@ -62,7 +54,6 @@ def _create_in_scope_record(kind):
         "publication": lambda: Publication.objects.create(slug_fa="انتشار-موجود", slug_en="existing-publication", title_fa="نمونه", title_en="Sample", publication_type="article"),
         "interest": lambda: ResearchInterest.objects.create(name_fa="نمونه", name_en="Sample"),
         "project": lambda: ResearchProject.objects.create(slug_fa="پروژه-موجود", slug_en="existing-project", title_fa="نمونه", title_en="Sample"),
-        "resume": lambda: ResumeVariant.objects.create(slug="existing-resume", label_fa="نمونه", label_en="Sample", variant_type="general", file=_media_asset()),
         "skill": lambda: Skill.objects.create(name_fa="نمونه", name_en="Sample"),
         "social": lambda: SocialLink.objects.create(label_fa="نمونه", label_en="Sample", url="https://example.test"),
     }
@@ -76,10 +67,10 @@ class TestSeedComposerDemo:
             call_command("seed_composer_demo")
 
     @pytest.mark.parametrize("kind", [
-        "page", "section", "block", "profile", "settings", "navigation", "redirect",
-        "case_study", "case_study_block", "media", "affiliation", "certification",
+        "page", "profile", "settings", "navigation", "redirect", "case_study",
+        "media", "affiliation", "certification",
         "education", "experience", "language", "publication", "interest", "project",
-        "resume", "skill", "social", "media_usage_reference",
+        "skill", "social",
     ])
     def test_refuses_every_non_empty_in_scope_model(self, kind):
         existing = _create_in_scope_record(kind)
