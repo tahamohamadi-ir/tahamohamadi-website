@@ -16,7 +16,8 @@ from apps.identity.models import (
     Publication, ResearchInterest, ResearchProject, ResumeVariant, SiteProfile,
     Skill, SocialLink,
 )
-from apps.media.models import MediaAsset
+from apps.media.models import MediaAsset, MediaUsageReference
+from apps.media.services import reconcile_media_usage_references
 from apps.portfolio.models import CaseStudy, CaseStudyBlock
 from apps.siteconfig.models import NavigationItem, RedirectRule, SiteSettings
 
@@ -50,24 +51,107 @@ class Command(BaseCommand):
             self._create_page(media)
             self._create_site_records()
             self._create_case_study(media)
+            reconcile_media_usage_references()
 
         self.stdout.write(self.style.SUCCESS("Draft-only Composer demo created."))
 
     def _is_complete_demo(self) -> bool:
-        if not Page.objects.filter(slug_en="composer-demo", created_by=SEED_MARKER).exists():
-            return False
         expected_counts = {
             Page: 1, Section: 1, Block: 3, SiteProfile: 1, SiteSettings: 1,
-            NavigationItem: 1, CaseStudy: 1, MediaAsset: 2,
+            NavigationItem: 1, CaseStudy: 1, MediaAsset: 2, MediaUsageReference: 5,
         }
-        return all(model.objects.count() == count for model, count in expected_counts.items()) and not any(
+        if not all(model.objects.count() == count for model, count in expected_counts.items()):
+            return False
+        if any(
             model.objects.exists()
             for model in (
                 Affiliation, Certification, Education, Experience, LanguageProficiency,
                 Publication, ResearchInterest, ResearchProject, ResumeVariant, Skill,
                 SocialLink, RedirectRule, CaseStudyBlock,
             )
-        )
+        ):
+            return False
+
+        page = Page.objects.filter(slug_en="composer-demo").first()
+        profile = SiteProfile.objects.first()
+        site_settings = SiteSettings.objects.first()
+        navigation = NavigationItem.objects.first()
+        case_study = CaseStudy.objects.filter(slug_en="composer-demo-case-study").first()
+        media_by_filename = {asset.original_filename: asset for asset in MediaAsset.objects.all()}
+        if not all((page, profile, site_settings, navigation, case_study)) or set(media_by_filename) != {
+            filename for filename, *_ in ASSETS
+        }:
+            return False
+        if not self._matches(page, {
+            "slug_fa": "نمونه-کامپوزر", "slug_en": "composer-demo",
+            "title_fa": "نمونهٔ پیش‌نویس کامپوزر", "title_en": "Draft Composer Demo",
+            "page_type": "custom", "status": "draft", "published_at": None,
+            "created_by": SEED_MARKER, "updated_by": SEED_MARKER,
+        }) or not self._matches(profile, {
+            "name_fa": "پروفایل نمونهٔ پیش‌نویس", "name_en": "Draft Demo Profile",
+            "headline_fa": "صرفاً برای بازبینی توسعه", "headline_en": "For development review only",
+            "bio_fa": "", "bio_en": "", "public_email": "", "portrait_id": None,
+            "status": "draft", "created_by": SEED_MARKER, "updated_by": SEED_MARKER,
+        }) or not self._matches(site_settings, {
+            "site_title_fa": "تنظیمات نمونهٔ پیش‌نویس", "site_title_en": "Draft Demo Settings",
+            "primary_cta_label_fa": "بازبینی", "primary_cta_label_en": "Review",
+            "primary_cta_url": "/en/composer-demo", "public_email": "", "default_og_image_id": None,
+            "status": "draft", "created_by": SEED_MARKER, "updated_by": SEED_MARKER,
+        }) or not self._matches(navigation, {
+            "label_fa": "نمونهٔ کامپوزر", "label_en": "Composer Demo", "href": "/en/composer-demo",
+            "location": "header", "ordering": 0, "status": "draft",
+            "created_by": SEED_MARKER, "updated_by": SEED_MARKER,
+        }) or not self._matches(case_study, {
+            "slug_fa": "نمونه-پروژه-کامپوزر", "slug_en": "composer-demo-case-study",
+            "title_fa": "نمونهٔ پروژهٔ پیش‌نویس", "title_en": "Draft Composer Case Study",
+            "technologies": [], "featured": False, "status": "draft", "published_at": None,
+            "created_by": SEED_MARKER, "updated_by": SEED_MARKER,
+        }):
+            return False
+        if any(not self._matches(media_by_filename[filename], {
+            "mime_type": "image/svg+xml", "status": "active", "alt_text_fa": alt_fa,
+            "alt_text_en": alt_en, "caption_fa": "", "caption_en": "",
+            "created_by": SEED_MARKER, "updated_by": SEED_MARKER,
+        }) or not media_by_filename[filename].file.name
+               for filename, alt_fa, alt_en in ASSETS):
+            return False
+
+        section = page.sections.filter(ordering=0, enabled=True, layout="default").first()
+        if section is None or page.sections.count() != 1:
+            return False
+        blocks = list(section.blocks.order_by("ordering"))
+        if len(blocks) != 3:
+            return False
+        hero, text, gallery = blocks
+        media_ids = [str(media_by_filename[filename].id) for filename, *_ in ASSETS]
+        if not (
+            self._matches(hero, {"block_type": "hero", "ordering": 0, "settings": {
+                "title": "Draft Composer Demo", "subtitle": "Development-only sample",
+                "media_id": str(media_by_filename["composer-demo-hero.svg"].id),
+                "cta_url": None, "cta_label": None,
+            }}) and self._matches(text, {"block_type": "text", "ordering": 1, "settings": {
+                "content": "This neutral draft demonstrates Composer blocks before editorial review.",
+                "alignment": "start",
+            }}) and self._matches(gallery, {"block_type": "gallery", "ordering": 2, "settings": {
+                "media_ids": media_ids, "layout": "grid",
+            }}) and set(case_study.gallery.values_list("id", flat=True)) == set(media_by_filename[filename].id for filename, *_ in ASSETS)
+        ):
+            return False
+
+        expected_references = {
+            ("cms_block", hero.id, "settings.media_id", media_by_filename["composer-demo-hero.svg"].id),
+            ("cms_block", gallery.id, "settings.media_ids", media_by_filename["composer-demo-gallery.svg"].id),
+            ("cms_block", gallery.id, "settings.media_ids", media_by_filename["composer-demo-hero.svg"].id),
+            ("case_study", case_study.id, "gallery", media_by_filename["composer-demo-gallery.svg"].id),
+            ("case_study", case_study.id, "gallery", media_by_filename["composer-demo-hero.svg"].id),
+        }
+        return set(MediaUsageReference.objects.values_list(
+            "source_type", "source_id", "reference_field", "media_id"
+        )) == expected_references
+
+    @staticmethod
+    def _matches(instance, expected: dict) -> bool:
+        return all(getattr(instance, field) == value for field, value in expected.items())
 
     def _has_existing_content(self) -> bool:
         return any(
@@ -77,7 +161,7 @@ class Command(BaseCommand):
                 CaseStudy, MediaAsset, Affiliation, Certification, Education,
                 Experience, LanguageProficiency, Publication, ResearchInterest,
                 ResearchProject, ResumeVariant, Skill, SocialLink, RedirectRule,
-                CaseStudyBlock,
+                CaseStudyBlock, MediaUsageReference,
             )
         )
 
