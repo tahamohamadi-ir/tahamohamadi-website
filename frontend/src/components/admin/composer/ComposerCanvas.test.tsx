@@ -62,7 +62,7 @@ describe("ComposerCanvas", () => {
             ])
         );
         expect(screen.getByRole("button", { name: "Select full-width section" })).toHaveFocus();
-        expect(screen.getByText("Section added")).toHaveAttribute("aria-live", "polite");
+        expect(screen.getByText("Section added").parentElement).toHaveAttribute("aria-live", "polite");
     });
 
     it("disables block library when no section selected", () => {
@@ -110,7 +110,45 @@ describe("ComposerCanvas", () => {
         const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
         expect(lastCall).toHaveLength(1);
         expect(lastCall[0].id).toBe("section-2");
-        expect(screen.getByText("Section deleted")).toHaveAttribute("aria-live", "polite");
+        expect(screen.getByText("Section deleted").parentElement).toHaveAttribute("aria-live", "polite");
+    });
+
+    it("replaces repeated live announcements", async () => {
+        const user = userEvent.setup();
+        render(<ComposerCanvas initialSections={makeSections()} />);
+
+        await user.click(screen.getAllByRole("button", { name: /duplicate section/i })[0]);
+        const firstAnnouncement = screen.getByText("Section duplicated");
+        await user.click(screen.getAllByRole("button", { name: /duplicate section/i })[0]);
+
+        expect(screen.getByText("Section duplicated")).not.toBe(firstAnnouncement);
+    });
+
+    it("traps confirmation focus and returns it on cancel", async () => {
+        const user = userEvent.setup();
+        render(<ComposerCanvas initialSections={makeSections()} />);
+
+        const deleteButton = screen.getAllByRole("button", { name: /delete section/i })[0];
+        await user.click(deleteButton);
+        const cancel = screen.getByRole("button", { name: "Cancel" });
+        expect(cancel).toHaveFocus();
+        await user.keyboard("{Shift>}{Tab}{/Shift}");
+        expect(screen.getByRole("button", { name: "Confirm delete" })).toHaveFocus();
+        await user.keyboard("{Tab}");
+        expect(cancel).toHaveFocus();
+
+        await user.click(cancel);
+        expect(deleteButton).toHaveFocus();
+    });
+
+    it("focuses the stable add-section control after deleting the only section", async () => {
+        const user = userEvent.setup();
+        render(<ComposerCanvas initialSections={[makeSections()[0]]} />);
+
+        await user.click(screen.getByRole("button", { name: /delete section/i }));
+        await user.click(screen.getByRole("button", { name: "Confirm delete" }));
+
+        expect(screen.getByRole("button", { name: "Add Full Width section" })).toHaveFocus();
     });
 
     it("duplicates a section", async () => {
@@ -127,7 +165,7 @@ describe("ComposerCanvas", () => {
         expect(lastCall[1].layout).toBe("full-width");
         expect(lastCall[1].id).not.toBe(lastCall[0].id);
         expect(screen.getAllByRole("button", { name: "Select full-width section" })[1]).toHaveFocus();
-        expect(screen.getByText("Section duplicated")).toHaveAttribute("aria-live", "polite");
+        expect(screen.getByText("Section duplicated").parentElement).toHaveAttribute("aria-live", "polite");
     });
 
     it("moves a section up via keyboard button", async () => {
@@ -157,7 +195,7 @@ describe("ComposerCanvas", () => {
         expect(lastCall[0].id).toBe("section-2");
         expect(lastCall[1].id).toBe("section-1");
         expect(screen.getByRole("button", { name: "Select full-width section" })).toHaveFocus();
-        expect(screen.getByText("Section moved down")).toHaveAttribute("aria-live", "polite");
+        expect(screen.getByText("Section moved down").parentElement).toHaveAttribute("aria-live", "polite");
     });
 
     it("requires confirmation before deleting a block", async () => {
@@ -177,7 +215,7 @@ describe("ComposerCanvas", () => {
         expect(firstSection.blocks).toHaveLength(1);
         expect(firstSection.blocks[0].id).toBe("block-2");
         expect(screen.getByRole("button", { name: "Select text block" })).toHaveFocus();
-        expect(screen.getByText("Block deleted")).toHaveAttribute("aria-live", "polite");
+        expect(screen.getByText("Block deleted").parentElement).toHaveAttribute("aria-live", "polite");
     });
 
     it("duplicates a block", async () => {

@@ -209,6 +209,30 @@ describe('useAutosave', () => {
             expect(onSave).toHaveBeenCalledWith({ title: 'v3' });
             expect(onSave).toHaveBeenCalledTimes(2);
         });
+
+        it('keeps a later debounced edit pending when an earlier save resolves first', async () => {
+            let resolveFirstSave: (() => void) | undefined;
+            const onSuccess = vi.fn();
+            const onSave = vi
+                .fn()
+                .mockImplementationOnce(() => new Promise<void>((resolve) => { resolveFirstSave = resolve; }))
+                .mockResolvedValueOnce(undefined);
+            const { rerender } = renderHook(
+                ({ data }) => useAutosave({ data, status: 'draft', onSave, onSuccess, debounceMs: 100 }),
+                { initialProps: { data: { title: 'v1' } } },
+            );
+
+            rerender({ data: { title: 'v2' } });
+            await act(async () => { vi.advanceTimersByTime(100); });
+            rerender({ data: { title: 'v3' } });
+
+            await act(async () => { resolveFirstSave?.(); await Promise.resolve(); });
+            expect(onSuccess).not.toHaveBeenCalled();
+
+            await act(async () => { vi.advanceTimersByTime(100); });
+            expect(onSave).toHaveBeenLastCalledWith({ title: 'v3' });
+            expect(onSave).toHaveBeenCalledTimes(2);
+        });
     });
 
     describe('status transitions', () => {

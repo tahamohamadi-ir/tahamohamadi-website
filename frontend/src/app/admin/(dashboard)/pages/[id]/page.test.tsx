@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -151,5 +151,53 @@ describe("PageEditorPage", () => {
     await new Promise((resolve) => setTimeout(resolve, 800));
 
     expect(adminFetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not discard a later Draft edit when an earlier autosave resolves first", async () => {
+    vi.useFakeTimers();
+    let resolveFirstSave: ((value: typeof draftPage) => void) | undefined;
+    adminFetchMock.mockReset();
+    adminFetchMock
+      .mockResolvedValueOnce(draftPage)
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveFirstSave = resolve; }))
+      .mockResolvedValueOnce({ ...draftPage, version: 3 });
+    render(<PageEditorPage />);
+    await act(async () => { await Promise.resolve(); });
+
+    await act(async () => { screen.getByRole("button", { name: "Edit composition" }).click(); });
+    await act(async () => { vi.advanceTimersByTime(750); });
+    await act(async () => { screen.getByRole("button", { name: "Edit composition" }).click(); });
+    await act(async () => { resolveFirstSave?.({ ...draftPage, version: 2 }); await Promise.resolve(); });
+    await act(async () => { vi.advanceTimersByTime(750); });
+
+    expect(adminFetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("confirms dirty return navigation", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const user = userEvent.setup();
+    render(<PageEditorPage />);
+
+    await screen.findByTestId("composer-canvas");
+    await user.click(screen.getByRole("button", { name: "Edit composition" }));
+    await user.click(screen.getByRole("button", { name: /بازگشت/ }));
+
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(pushMock).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
+  });
+
+  it("resets undo history after a successful manual save", async () => {
+    adminFetchMock.mockReset();
+    adminFetchMock.mockResolvedValueOnce(draftPage).mockResolvedValueOnce({ ...draftPage, version: 2 });
+    const user = userEvent.setup();
+    render(<PageEditorPage />);
+
+    await screen.findByTestId("composer-canvas");
+    await user.click(screen.getByRole("button", { name: "Edit composition" }));
+    expect(screen.getByRole("button", { name: "Undo composition change" })).toBeEnabled();
+    await user.click(screen.getByRole("button", { name: /ذخیره/ }));
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Undo composition change" })).toBeDisabled());
   });
 });

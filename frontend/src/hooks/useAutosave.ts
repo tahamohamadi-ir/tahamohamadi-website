@@ -77,9 +77,10 @@ export function useAutosave<T>(options: UseAutosaveOptions<T>): UseAutosaveRetur
             isSavingRef.current = false;
             const shouldSaveLatest = queueLatestRef.current;
             queueLatestRef.current = false;
+            const hasNewerData = dataRef.current !== dataToSave;
             if (saved && shouldSaveLatest && mountedRef.current && statusRef.current === "draft") {
                 void performSave(dataRef.current);
-            } else if (saved) {
+            } else if (saved && !hasNewerData) {
                 onSuccessRef.current?.();
             }
         }

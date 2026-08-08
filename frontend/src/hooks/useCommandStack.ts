@@ -127,6 +127,13 @@ export function useCommandStack<T>(
         if (!enableKeyboardShortcuts) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
+            const target = e.target;
+            if (
+                target instanceof HTMLElement
+                && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
+            ) {
+                return;
+            }
             const isCtrlOrCmd = e.ctrlKey || e.metaKey;
             if (!isCtrlOrCmd) return;
 
