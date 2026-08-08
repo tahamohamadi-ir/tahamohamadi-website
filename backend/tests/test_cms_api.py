@@ -264,6 +264,69 @@ class TestAdminUpdatePage:
         assert data["title_en"] == "Updated Title"
         assert data["version"] == current_version + 1
 
+    def test_update_with_active_media_id_200(self, authed_client, valid_page_payload):
+        """An update can persist a CMS reference to active media."""
+        page_data = self._create_page(authed_client, valid_page_payload)
+        media = MediaAsset.objects.create(
+            file=SimpleUploadedFile("update-active.png", b"image bytes", content_type="image/png"),
+            original_filename="update-active.png",
+            mime_type="image/png",
+            file_size=11,
+            checksum="c" * 64,
+            status="active",
+        )
+        valid_page_payload["sections"][0]["blocks"][0]["settings"]["media_id"] = str(media.id)
+        valid_page_payload["version"] = page_data["version"]
+
+        resp = authed_client.put(
+            f"/api/admin/pages/{page_data['id']}/", valid_page_payload, format="json"
+        )
+
+        assert resp.status_code == 200
+        assert resp.json()["sections"][0]["blocks"][0]["settings"]["media_id"] == str(media.id)
+
+    def test_update_with_archived_media_id_returns_problem_details(
+        self, authed_client, valid_page_payload
+    ):
+        """An update cannot persist a CMS reference to archived media."""
+        page_data = self._create_page(authed_client, valid_page_payload)
+        media = MediaAsset.objects.create(
+            file=SimpleUploadedFile("update-archived.png", b"image bytes", content_type="image/png"),
+            original_filename="update-archived.png",
+            mime_type="image/png",
+            file_size=11,
+            checksum="d" * 64,
+            status="archived",
+        )
+        valid_page_payload["sections"][0]["blocks"][0]["settings"]["media_id"] = str(media.id)
+        valid_page_payload["version"] = page_data["version"]
+
+        resp = authed_client.put(
+            f"/api/admin/pages/{page_data['id']}/", valid_page_payload, format="json"
+        )
+
+        assert resp.status_code == 400
+        assert resp["Content-Type"].startswith("application/problem+json")
+        assert "not found" in str(resp.json()["errors"]["composition"]).lower()
+
+    def test_update_with_nonexistent_media_id_returns_problem_details(
+        self, authed_client, valid_page_payload
+    ):
+        """An update cannot persist a CMS reference to nonexistent media."""
+        page_data = self._create_page(authed_client, valid_page_payload)
+        valid_page_payload["sections"][0]["blocks"][0]["settings"]["media_id"] = (
+            "22222222-2222-4222-8222-222222222222"
+        )
+        valid_page_payload["version"] = page_data["version"]
+
+        resp = authed_client.put(
+            f"/api/admin/pages/{page_data['id']}/", valid_page_payload, format="json"
+        )
+
+        assert resp.status_code == 400
+        assert resp["Content-Type"].startswith("application/problem+json")
+        assert "not found" in str(resp.json()["errors"]["composition"]).lower()
+
     def test_update_with_wrong_version_409(
         self, authed_client, valid_page_payload
     ):

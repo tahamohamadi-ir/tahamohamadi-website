@@ -9,7 +9,7 @@
  * - filterKnownBlocks always returns a subset of the input
  */
 import { render } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { beforeAll, describe, it, expect, vi } from "vitest";
 import * as fc from "fast-check";
 import {
     BlockRenderer,
@@ -33,6 +33,18 @@ const CMS_BLOCK_TYPES = [
     "research_focus",
 ] as const;
 
+const CMS_RENDERER_BLOCK_TYPES = [
+    ...CMS_BLOCK_TYPES,
+    "scroll_reveal",
+    "parallax",
+    "text_stagger",
+    "fade_in_sequence",
+    "hover_card",
+    "counter_animation",
+    "image_reveal",
+    "section_transition",
+] as const;
+
 const ARTICLE_BLOCK_TYPES = [
     "paragraph",
     "heading",
@@ -47,10 +59,10 @@ const ARTICLE_BLOCK_TYPES = [
     "reference",
 ] as const;
 
-const ALL_KNOWN_BLOCK_TYPES = [...new Set([...CMS_BLOCK_TYPES, ...ARTICLE_BLOCK_TYPES])];
+const ALL_KNOWN_BLOCK_TYPES = [...new Set([...CMS_RENDERER_BLOCK_TYPES, ...ARTICLE_BLOCK_TYPES])];
 
-/** Generates a random known CMS block type */
-const cmsBlockTypeArb = fc.constantFrom(...CMS_BLOCK_TYPES);
+/** Generates a random CMS-renderable block type. */
+const cmsBlockTypeArb = fc.constantFrom(...CMS_RENDERER_BLOCK_TYPES);
 
 /** Generates a random known article block type */
 const articleBlockTypeArb = fc.constantFrom(...ARTICLE_BLOCK_TYPES);
@@ -73,6 +85,17 @@ const unknownBlockTypeArb = fc
     );
 
 const localeArb = fc.constantFrom("fa" as const, "en" as const);
+
+beforeAll(() => {
+    vi.stubGlobal(
+        "IntersectionObserver",
+        class {
+            observe() {}
+            unobserve() {}
+            disconnect() {}
+        }
+    );
+});
 
 /**
  * Generates minimal valid settings for a given CMS block_type.
@@ -102,6 +125,22 @@ function cmsSettingsForType(blockType: string): Record<string, unknown> {
             return { style: "line" };
         case "research_focus":
             return { title: "Research", areas: [{ name: "AI", description: "ML research" }] };
+        case "scroll_reveal":
+            return { title: "Reveal", description: "Revealed content" };
+        case "parallax":
+            return { title: "Parallax", subtitle: "Scrolling content" };
+        case "text_stagger":
+            return { content: "Staggered text" };
+        case "fade_in_sequence":
+            return { items: ["First item"] };
+        case "hover_card":
+            return { title: "Hover card", description: "Hover content" };
+        case "counter_animation":
+            return { label: "Count", target_number: 1, duration: 300 };
+        case "image_reveal":
+            return { media_url: "/img.jpg", alt: "Revealed image" };
+        case "section_transition":
+            return { transition_type: "fade" };
         default:
             return {};
     }
@@ -232,10 +271,10 @@ describe("BlockRenderer property-based tests", () => {
         });
     });
 
-    describe("isCmsBlockType and isArticleBlockType are consistent", () => {
+    describe("block-type helper contracts are consistent", () => {
         it("a CMS block type is always known", () => {
             fc.assert(
-                fc.property(cmsBlockTypeArb, (blockType) => {
+                fc.property(fc.constantFrom(...CMS_BLOCK_TYPES), (blockType) => {
                     expect(isCmsBlockType(blockType)).toBe(true);
                     expect(isKnownBlockType(blockType)).toBe(true);
                 })
