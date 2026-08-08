@@ -60,7 +60,11 @@ describe("PublicLayout", () => {
 
   it("uses only the published CMS header navigation for the requested locale", async () => {
     fetchPublicSiteConfigMock.mockResolvedValue({
-      settings: { site_title: "Published Identity" } as NonNullable<
+      settings: {
+        site_title: "Published Identity",
+        primary_cta_label: "Published contact",
+        primary_cta_url: "/en/contact",
+      } as NonNullable<
         Awaited<ReturnType<typeof fetchPublicSiteConfig>>["settings"]
       >,
       navigation: {
@@ -75,6 +79,7 @@ describe("PublicLayout", () => {
 
     expect(screen.getAllByRole("link", { name: "Published Research" })).toHaveLength(2);
     expect(screen.getAllByRole("link", { name: "Published Research" })[0]).toHaveAttribute("href", "/en/research");
+    expect(screen.getByRole("link", { name: "Published contact" })).toHaveAttribute("href", "/en/contact");
     expect(screen.queryByRole("link", { name: "Portfolio" })).not.toBeInTheDocument();
   });
 });

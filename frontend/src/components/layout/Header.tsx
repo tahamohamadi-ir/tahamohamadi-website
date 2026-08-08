@@ -10,18 +10,30 @@ interface HeaderProps {
   locale: Locale;
   brandName: string | null;
   navigationItems: PublicNavigationItemDTO[];
+  primaryCta?: {
+    label: string;
+    href: string;
+  } | null;
 }
 
 function isExternalHref(href: string): boolean {
   return href.startsWith("https://");
 }
 
-export function Header({ locale, brandName, navigationItems }: HeaderProps) {
+function isSafePublicHref(href: string): boolean {
+  return (href.startsWith("/") && !href.startsWith("//")) || isExternalHref(href);
+}
+
+export function Header({ locale, brandName, navigationItems, primaryCta }: HeaderProps) {
   const pathname = usePathname();
   const navigationLabel = locale === "fa" ? "ناوبری اصلی" : "Main navigation";
   const menuLabel = locale === "fa" ? "فهرست" : "Menu";
   const isActive = (href: string) =>
     href === `/${locale}` ? pathname === href : pathname.startsWith(`${href}/`) || pathname === href;
+  const cta =
+    primaryCta?.label.trim() && primaryCta.href.trim() && isSafePublicHref(primaryCta.href.trim())
+      ? { label: primaryCta.label.trim(), href: primaryCta.href.trim() }
+      : null;
 
   const navigation = (mobile = false) => (
     <nav aria-label={mobile ? `${navigationLabel} — ${menuLabel}` : navigationLabel}>
@@ -104,6 +116,24 @@ export function Header({ locale, brandName, navigationItems }: HeaderProps) {
               </div>
             </details>
           )}
+          {cta &&
+            (isExternalHref(cta.href) ? (
+              <a
+                href={cta.href}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-11 items-center bg-[#1746e0] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1038b8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1746e0] focus-visible:ring-offset-2"
+              >
+                {cta.label}
+              </a>
+            ) : (
+              <Link
+                href={cta.href}
+                className="inline-flex min-h-11 items-center bg-[#1746e0] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1038b8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1746e0] focus-visible:ring-offset-2"
+              >
+                {cta.label}
+              </Link>
+            ))}
           <LanguageSwitcher locale={locale} />
         </div>
       </div>

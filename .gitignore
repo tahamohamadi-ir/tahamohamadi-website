@@ -65,3 +65,6 @@ Thumbs.db
 .windsurf/
 .github/prompts/
 docs/now/
+
+# Local Graphify knowledge graph (regenerated from source)
+graphify-out/

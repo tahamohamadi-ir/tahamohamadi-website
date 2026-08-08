@@ -33,6 +33,12 @@ export async function PublicLayout({ locale, children }: PublicLayoutProps) {
   const homePage = homeResult.status === "fulfilled" ? homeResult.value : null;
   const configuredTitle = siteConfig?.settings?.site_title?.trim();
   const brandName = configuredTitle || homeHeroTitle(homePage);
+  const configuredCtaLabel = siteConfig?.settings?.primary_cta_label?.trim();
+  const configuredCtaUrl = siteConfig?.settings?.primary_cta_url?.trim();
+  const primaryCta =
+    configuredCtaLabel && configuredCtaUrl
+      ? { label: configuredCtaLabel, href: configuredCtaUrl }
+      : null;
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-black">
@@ -42,7 +48,12 @@ export async function PublicLayout({ locale, children }: PublicLayoutProps) {
       >
         {locale === "fa" ? "رفتن به محتوای اصلی" : "Skip to content"}
       </a>
-      <Header locale={locale} brandName={brandName} navigationItems={siteConfig?.navigation.header ?? []} />
+      <Header
+        locale={locale}
+        brandName={brandName}
+        navigationItems={siteConfig?.navigation.header ?? []}
+        primaryCta={primaryCta}
+      />
       <main id="main-content" className="flex-1">
         {children}
       </main>

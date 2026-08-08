@@ -13,7 +13,7 @@
 - [ ] `PHASE1-R1-QA-002` — QA واقعی Admin برای session/CSRF، pagination، conflict و keyboard flow. **Owner:** frontend/backend. **Trigger:** پیش از فعال‌سازی عملیاتی فرم‌های R1. **Mitigation:** API server-side permission/validation/optimistic locking را enforce می‌کند؛ این جای QA مرورگر نیست.
 - [ ] `PHASE1-R1-OPS-003` — اجرای seed توسعه، production build با API در دسترس و اندازه‌گیری query/cache/CDN. **Owner:** platform. **Trigger:** پیش از deploy production. **Mitigation:** seed profile-guarded است، publish خودکار ندارد و cache فقط TTL اولیهٔ مستند دارد.
 - [ ] `PHASE1-R1-REVIEW-004` — بازبینی انسانیِ privacy، ترجمه و صحت محتوای CMS. **Owner:** product owner. **Trigger:** پیش از هر انتشار. **Mitigation:** phone/reference/asset خصوصی در projection عمومی قرار نمی‌گیرند و automatic publish وجود ندارد.
-- [ ] `PHASE1-R1-TEST-005` — pytest متمرکز identity/siteconfig/seed در 2026-08-08 اجرا نشد، زیرا Docker Desktop daemon در این محیط در دسترس نبود (`dockerDesktopLinuxEngine`). **Owner:** platform. **Trigger:** پیش از بستن فاز ۱ یا deploy. **Mitigation:** contractهای backend قبلاً فقط با PostgreSQL Compose معتبرند؛ اجرای local بدون dependency جایگزین این شواهد نیست.
+- [x] `PHASE1-R1-TEST-005` — pytest متمرکز identity/siteconfig/seed در 2026-08-08 با `docker compose -f docker-compose.dev.yml --profile test run --rm backend-test tests/test_public_identity_api.py tests/test_siteconfig_api.py tests/test_seed_data.py` روی PostgreSQL Compose اجرا شد: ۱۹ تست در ۱٫۳۶ ثانیه پاس شد. این شواهد جای QA مرورگر یا production deploy نیست.
 - [ ] `PHASE1-R1-OWNERSHIP-006` — worktree مشترک تغییرهای گستردهٔ نامرتبط و فایل‌های untracked دارد؛ stage/commit فقط پس از تعیین task-owned files مجاز است. **Owner:** development lead. **Trigger:** پیش از commit یا push برش بعدی. **Mitigation:** این برش فقط rules و مستندات مشخص‌شده را تغییر داده و هیچ cleanup/revert روی فایل‌های دیگر انجام نداده است.
 
 ## R0-03 — قرارداد `getPublicPage`
@@ -218,8 +218,9 @@
 - [x] تست قراردادی API عمومی و اعتبارسنجی لینک/redirect در `backend/tests/test_siteconfig_api.py`
   روی PostgreSQL Compose اجرا شد؛ migration check و `manage.py check` نیز بدون issue گذشتند.
 - [x] Footer SSR به `/api/public/site/` متصل شد؛ فقط متن و navigation منتشرشدهٔ CMS را نمایش می‌دهد و در نبود config، محتوای hardcode نشان نمی‌دهد.
-- [x] Header اکنون `navigation.header` همان locale را از `/api/public/site/` می‌گیرد؛ fallback hardcode حذف شده و اگر navigation منتشرشده خالی باشد، منوی ساختگی render نمی‌شود. ۳ تست متمرکز Header/PublicLayout در 2026-08-08 پاس شد.
-- [ ] اتصال metadata SEO و CTA فرانت‌اند به `/api/public/site/` و QA مرورگر در هر دو locale. **Owner:** frontend/product. **Trigger:** پیش از publish عمومیِ Site Settings. **Mitigation:** Header/Footer تنها دادهٔ منتشرشدهٔ همان locale را می‌خوانند و در نبود داده fallback محتوایی ندارند.
+- [x] Header اکنون `navigation.header` و CTA منتشرشدهٔ همان locale را از `/api/public/site/` می‌گیرد؛ fallback hardcode حذف شده و اگر navigation یا CTA ناقص باشد، محتوای ساختگی render نمی‌شود. CTA فقط path داخلی یا URL مطلق HTTPS را render می‌کند.
+- [x] metadata ریشهٔ locale (title/description/OG/Twitter) از Site Settings منتشرشده خوانده می‌شود و در failure یا نبود داده، metadata محتوایی hardcode نمی‌شود. ۶ تست متمرکز Header/PublicLayout/layout در 2026-08-08 پاس شد.
+- [ ] QA مرورگر Header، CTA و metadata در هر دو locale با Site Settings واقعی. **Owner:** frontend/product. **Trigger:** پیش از publish عمومیِ Site Settings. **Mitigation:** Header/Footer/metadata تنها دادهٔ منتشرشدهٔ همان locale را می‌خوانند و در نبود داده fallback محتوایی ندارند.
 - [x] middleware برای `RedirectRule`‌های active با آزمون 301/302، جلوگیری از loop، مقصد ناسالم و روش غیر GET/HEAD
   در PostgreSQL Compose پیاده و بررسی شد.
 - [x] `SiteSettings` اکنون unique singleton constraint در دیتابیس دارد و API در برخورد race، Problem Details 409 بازمی‌گرداند.

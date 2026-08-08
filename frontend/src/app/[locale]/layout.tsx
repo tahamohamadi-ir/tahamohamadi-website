@@ -8,6 +8,7 @@ import {
   SITE_URL,
   type Locale,
 } from "@/lib/i18n";
+import { fetchPublicSiteConfig } from "@/lib/api";
 import { inter, vazirmatn } from "@/lib/fonts";
 import { PublicLayout } from "@/components/layout";
 import "../globals.css";
@@ -29,24 +30,22 @@ export async function generateMetadata({
   const { locale } = await params;
   if (!isValidLocale(locale)) return {};
 
+  const siteConfig = await fetchPublicSiteConfig(locale).catch(() => null);
+  const settings = siteConfig?.settings;
+  const siteTitle = settings?.site_title.trim() || undefined;
+  const title = settings?.default_title.trim() || siteTitle;
+  const description = settings?.default_description.trim() || undefined;
   const altLocale = getAlternateLocale(locale);
 
-  const title =
-    locale === "fa"
-      ? "طاها محمدی — وبسایت شخصی"
-      : "Taha Mohamadi — Personal Website";
-
-  const description =
-    locale === "fa"
-      ? "وبسایت شخصی، بلاگ، نمونه‌کارها و رزومه طاها محمدی"
-      : "Personal website, blog, portfolio and resume of Taha Mohamadi";
-
   return {
-    title: {
-      default: title,
-      template:
-        locale === "fa" ? "%s | طاها محمدی" : "%s | Taha Mohamadi",
-    },
+    ...(title
+      ? {
+          title: {
+            default: title,
+            template: siteTitle ? `%s | ${siteTitle}` : "%s",
+          },
+        }
+      : {}),
     description,
     metadataBase: new URL(SITE_URL),
     alternates: {
@@ -58,18 +57,17 @@ export async function generateMetadata({
       },
     },
     openGraph: {
-      title,
+      ...(title ? { title } : {}),
       description,
       url: `${SITE_URL}/${locale}`,
-      siteName:
-        locale === "fa" ? "طاها محمدی" : "Taha Mohamadi",
+      siteName: siteTitle,
       locale: locale === "fa" ? "fa_IR" : "en_US",
       alternateLocale: altLocale === "fa" ? "fa_IR" : "en_US",
       type: "website",
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      ...(title ? { title } : {}),
       description,
     },
     robots: {

@@ -28,4 +28,31 @@ describe("Header", () => {
     expect(screen.queryByText("Menu")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Home" })).not.toBeInTheDocument();
   });
+
+  it("renders a published CTA only for a safe CMS destination", () => {
+    const { rerender } = render(
+      <Header
+        locale="en"
+        brandName="Published Identity"
+        navigationItems={[]}
+        primaryCta={{ label: "Request a consultation", href: "/en/contact" }}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Request a consultation" })).toHaveAttribute(
+      "href",
+      "/en/contact",
+    );
+
+    rerender(
+      <Header
+        locale="en"
+        brandName="Published Identity"
+        navigationItems={[]}
+        primaryCta={{ label: "Unsafe CTA", href: "javascript:alert(1)" }}
+      />,
+    );
+
+    expect(screen.queryByRole("link", { name: "Unsafe CTA" })).not.toBeInTheDocument();
+  });
 });
