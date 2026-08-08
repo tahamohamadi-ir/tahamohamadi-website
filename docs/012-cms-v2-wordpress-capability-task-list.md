@@ -299,11 +299,11 @@
 - `backend/apps/cms/{block_registry,serializers,views}.py`
 - DTOهای block/section در همان package
 
-- [ ] catalog blockهای frontend با allowlist backend تطبیق داده شود.
-- [ ] برای هر block، default settings، validation schema، media policy و fields محلی مستند شود.
-- [ ] settings ناشناخته، block type ناشناخته، ترتیب نامعتبر و media inactive با Problem Details رد شوند.
-- [ ] public renderer block ناشناخته را fail closed کند و Admin diagnostic نشان دهد.
-- [ ] renderer هیچ block را با raw HTML render نکند.
+- [x] catalog blockهای frontend با allowlist backend تطبیق داده شود.
+- [x] برای هر block، default settings، validation schema، media policy و fields محلی مستند شود.
+- [x] settings ناشناخته، block type ناشناخته، ترتیب نامعتبر و media inactive با Problem Details رد شوند.
+- [x] public renderer block ناشناخته را fail closed کند و Admin diagnostic نشان دهد.
+- [x] renderer هیچ block را با raw HTML render نکند.
 
 **پذیرش:** یک block تنها در صورتی قابل ذخیره است که frontend، server، preview و public renderer آن را بفهمند.
 
@@ -323,12 +323,12 @@
 
 **نوع:** VERIFY + BUILD مشروط
 
-- [ ] add/remove/duplicate/reorder section و block با mouse و keyboard قابل انجام باشد.
-- [ ] بعد از move/duplicate/delete، focus به target منطقی منتقل و با `aria-live` اعلام شود.
-- [ ] drag handle فعلی فقط زمانی فعال شود که drag-and-drop واقعی، touch-safe و قابل دسترس باشد؛ در غیر این صورت دکمه‌های keyboard مرجع هستند.
-- [ ] delete confirmation برای block/section destructive داشته باشد.
-- [ ] Inspector drawer errorهای فیلد را کنار همان field و در Validation Summary نمایش دهد.
-- [ ] navigation خارج از صفحه با unsaved guard پوشش داده شود.
+- [x] add/remove/duplicate/reorder section و block با mouse و keyboard قابل انجام باشد.
+- [x] بعد از move/duplicate/delete، focus به target منطقی منتقل و با `aria-live` اعلام شود.
+- [x] drag handle فعلی فقط زمانی فعال شود که drag-and-drop واقعی، touch-safe و قابل دسترس باشد؛ در غیر این صورت دکمه‌های keyboard مرجع هستند.
+- [x] delete confirmation برای block/section destructive داشته باشد.
+- [x] Inspector drawer errorهای فیلد را کنار همان field و در Validation Summary نمایش دهد.
+- [x] navigation خارج از صفحه با unsaved guard پوشش داده شود.
 
 **تست‌ها:** keyboard-only reorder، focus restoration، duplicate locality، delete confirmation و route leave.
 
@@ -336,11 +336,11 @@
 
 **نوع:** VERIFY
 
-- [ ] command history فقط mutationهای محلی را ذخیره کند و پس از save موفق reset شود.
-- [ ] autosave فقط `DRAFT` باشد و debounce مشخص داشته باشد.
-- [ ] validation failure، offline و 409 conflict نباید دادهٔ remote را overwrite یا publish کنند.
-- [ ] statusهای pending/saving/saved/error/conflict برای screen reader اعلام شوند.
-- [ ] بعد از reload رفتار recovery marker و unsaved draft به‌صورت صریح تعیین شود.
+- [x] command history فقط mutationهای محلی را ذخیره کند و پس از save موفق reset شود.
+- [x] autosave فقط `DRAFT` باشد و debounce مشخص داشته باشد.
+- [x] validation failure، offline و 409 conflict نباید دادهٔ remote را overwrite یا publish کنند.
+- [x] statusهای pending/saving/saved/error/conflict برای screen reader اعلام شوند.
+- [x] بعد از reload رفتار recovery marker و unsaved draft به‌صورت صریح تعیین شود.
 
 **تست‌ها:** rapid edits، stale version، offline، invalid action path، autosave cleanup در unmount و Draft/PUBLISHED تفاوت رفتار.
 

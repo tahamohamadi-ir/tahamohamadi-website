@@ -12,8 +12,8 @@ function makeSections(): ComposerSection[] {
             enabled: true,
             ordering: 0,
             blocks: [
-                { id: "block-1", block_type: "hero", settings: {}, ordering: 0 },
-                { id: "block-2", block_type: "text", settings: {}, ordering: 1 },
+                { id: "block-1", block_type: "hero", settings: { title: "Welcome" }, ordering: 0 },
+                { id: "block-2", block_type: "text", settings: { content: "Body", alignment: "start" }, ordering: 1 },
             ],
         },
         {
@@ -92,6 +92,47 @@ describe("ComposerCanvas", () => {
             text: "",
             attribution: null,
         });
+    });
+
+    it("opens the selected block inspector and sends settings changes through onChange", async () => {
+        const user = userEvent.setup();
+        const onChange = vi.fn();
+        render(<ComposerCanvas initialSections={makeSections()} onChange={onChange} />);
+
+        await user.click(screen.getByRole("button", { name: "Select hero block" }));
+        const inspector = screen.getByRole("complementary", { name: "Block Inspector" });
+        expect(within(inspector).getByRole("heading", { name: "hero Settings" })).toBeInTheDocument();
+
+        await user.clear(within(inspector).getByLabelText("Title"));
+        await user.type(within(inspector).getByLabelText("Title"), "Updated");
+
+        const latest = onChange.mock.calls.at(-1)?.[0] as ComposerSection[];
+        expect(latest[0].blocks[0].settings.title).toBe("Updated");
+    });
+
+    it("shows sanitized field errors and a summary only for the selected block", async () => {
+        const user = userEvent.setup();
+        render(
+            <ComposerCanvas
+                initialSections={makeSections()}
+                validationIssues={[
+                    {
+                        sectionIndex: 0,
+                        blockIndex: 0,
+                        fields: { title: ["This field is required."] },
+                    },
+                ]}
+            />,
+        );
+
+        await user.click(screen.getByRole("button", { name: "Select hero block" }));
+
+        expect(screen.getByRole("alert", { name: "Validation Summary" })).toHaveTextContent(
+            "Review 1 field in this block",
+        );
+        expect(screen.getByLabelText("Title")).toHaveAttribute("aria-invalid", "true");
+        expect(screen.getByText("This field is required.")).toBeInTheDocument();
+        expect(screen.queryByText("block-1")).not.toBeInTheDocument();
     });
 
     it("requires confirmation before deleting a section", async () => {

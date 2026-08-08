@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { MouseEvent } from "react";
 import { useAuth } from "./auth-context";
+import { useAdminNavigationGuard } from "./admin-navigation-guard";
 
 const navItems = [
     { href: "/admin", label: "داشبورد", icon: "📊" },
@@ -16,10 +18,16 @@ const navItems = [
 export function AdminNavbar() {
     const { user, logout } = useAuth();
     const pathname = usePathname();
+    const { confirmNavigation } = useAdminNavigationGuard();
 
     async function handleLogout() {
+        if (!confirmNavigation()) return;
         await logout();
         window.location.href = "/admin/login";
+    }
+
+    function handleNavigation(event: MouseEvent<HTMLAnchorElement>) {
+        if (!confirmNavigation()) event.preventDefault();
     }
 
     function isActive(href: string) {
@@ -31,7 +39,7 @@ export function AdminNavbar() {
         <nav className="border-b bg-white">
             <div className="flex items-center justify-between px-6 py-3">
                 <div className="flex items-center gap-6">
-                    <Link href="/admin" className="text-lg font-semibold text-gray-900">
+                    <Link href="/admin" onClick={handleNavigation} className="text-lg font-semibold text-gray-900">
                         Admin CMS
                     </Link>
                     <div className="hidden md:flex items-center gap-1">
@@ -39,6 +47,7 @@ export function AdminNavbar() {
                             <Link
                                 key={item.href}
                                 href={item.href}
+                                onClick={handleNavigation}
                                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive(item.href)
                                         ? "bg-gray-900 text-white"
                                         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
@@ -69,6 +78,7 @@ export function AdminNavbar() {
                     <Link
                         key={item.href}
                         href={item.href}
+                        onClick={handleNavigation}
                         className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${isActive(item.href)
                                 ? "bg-gray-900 text-white"
                                 : "text-gray-600 hover:bg-gray-100"

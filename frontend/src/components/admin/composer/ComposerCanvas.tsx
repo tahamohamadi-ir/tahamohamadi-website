@@ -21,6 +21,8 @@ import { SortableSection } from "./SortableSection";
 import { SectionLibraryPanel } from "./SectionLibraryPanel";
 import { BlockLibraryPanel } from "./BlockLibraryPanel";
 import { TemplatePanel, type TemplatePageIdentity } from "./TemplatePanel";
+import { BlockInspector } from "./BlockInspector";
+import type { ComposerValidationIssue } from "./composer-validation";
 import type {
     ComposerSection,
     ComposerBlock,
@@ -49,6 +51,8 @@ export interface ComposerCanvasProps {
     templatePageIdentity?: TemplatePageIdentity;
     /** Called only after the server creates a separate Draft page. */
     onTemplateImported?: (pageId: string) => void;
+    /** Sanitized server validation issues indexed by persisted section/block order. */
+    validationIssues?: ComposerValidationIssue[];
 }
 
 type PendingDeletion =
@@ -62,6 +66,7 @@ export function ComposerCanvas({
     onChange,
     templatePageIdentity,
     onTemplateImported,
+    validationIssues = [],
 }: ComposerCanvasProps) {
     const [sections, setSections] = useState<ComposerSection[]>(initialSections);
     const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
@@ -81,6 +86,14 @@ export function ComposerCanvas({
 
     useEffect(() => {
         setSections(initialSections);
+        setSelectedSectionId((currentSectionId) => (
+            initialSections.some((section) => section.id === currentSectionId) ? currentSectionId : null
+        ));
+        setSelectedBlockId((currentBlockId) => (
+            initialSections.some((section) => section.blocks.some((block) => block.id === currentBlockId))
+                ? currentBlockId
+                : null
+        ));
     }, [initialSections]);
 
     useEffect(() => {
@@ -233,6 +246,15 @@ export function ComposerCanvas({
         announce("Block added");
     }
 
+    function updateBlockSettings(blockId: string, settings: Record<string, unknown>) {
+        updateSections((prev) => prev.map((section) => ({
+            ...section,
+            blocks: section.blocks.map((block) => (
+                block.id === blockId ? { ...block, settings } : block
+            )),
+        })));
+    }
+
     function deleteBlock(sectionId: string, blockId: string) {
         updateSections((prev) =>
             prev.map((section) => {
@@ -360,6 +382,15 @@ export function ComposerCanvas({
     }
 
     const sectionIds = sections.map((s) => s.id);
+    const selectedLocation = sections.flatMap((section, sectionIndex) => (
+        section.blocks.map((block, blockIndex) => ({ section, sectionIndex, block, blockIndex }))
+    )).find(({ block }) => block.id === selectedBlockId);
+    const selectedValidationIssue = selectedLocation
+        ? validationIssues.find((issue) => (
+            issue.sectionIndex === selectedLocation.sectionIndex
+            && issue.blockIndex === selectedLocation.blockIndex
+        ))
+        : undefined;
 
     // ─── Render ──────────────────────────────────────────────────────────────
 
@@ -460,6 +491,19 @@ export function ComposerCanvas({
                     )}
                 </div>
             </div>
+            {selectedLocation && (
+                <BlockInspector
+                    block={selectedLocation.block}
+                    fieldErrors={selectedValidationIssue?.fields}
+                    onChange={updateBlockSettings}
+                    onClose={() => setSelectedBlockId(null)}
+                    onDelete={(blockId) => setPendingDeletion({
+                        kind: "block",
+                        sectionId: selectedLocation.section.id,
+                        blockId,
+                    })}
+                />
+            )}
         </div>
     );
 }

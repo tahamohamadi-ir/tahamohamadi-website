@@ -308,6 +308,12 @@
 - [ ] اجرای migration و import روی staging با media واقعی active/archived و بررسی audit/rollback در PostgreSQL production-like. **Owner:** backend/operations. **Trigger:** پیش از rollout production. **Mitigation:** import در transaction است، media فقط از مجموعهٔ active پذیرفته می‌شود و هیچ Page موجودی update نمی‌شود.
 - [ ] full frontend/backend suite، build production و visual QA در viewportهای هدف در این برش متمرکز اجرا نشد. **Owner:** release. **Trigger:** Task 6 evidence gate. **Mitigation:** تست‌های متمرکز backend و TemplatePanel قرارداد امنیتی و Draft-only را پوشش می‌دهند.
 
+## T2.1/T2.3/T2.4 — Composer editor completion
+
+- [ ] QA مرورگر واقعی با session/CSRF برای خروج از Back و تمام لینک‌های desktop/mobile داشبورد، conflict هم‌زمان autosave/manual، انتخاب «نگه‌داشتن ویرایش محلی» و reload عمدی نسخهٔ server. **Owner:** CMS/frontend QA. **Trigger:** پیش از انتشار Admin Composer. **Mitigation:** تست‌های component/page مسیر مشترک navigation guard و هر دو انتخاب conflict را پوشش می‌دهند.
+- [ ] QA بصری و تعاملی Inspector/Validation Summary و recovery notice در RTL/LTR و viewportهای هدف، همراه با keyboard-only و screen-reader واقعی. **Owner:** accessibility/product QA. **Trigger:** پیش از release. **Mitigation:** field association، alert/status live region و متن بدون UUID/error خام در تست‌های متمرکز بررسی شده‌اند.
+- [ ] full frontend/backend suite و production build در Task 6 اجرا نشدند. **Owner:** release. **Trigger:** گیت یکپارچه‌سازی Phase 2. **Mitigation:** changed frontend focused tests و `git diff --check` برای این برش اجرا می‌شوند.
+
 ## ریسک محیط مشترک
 
 - [ ] اجرای دوبارهٔ کل collection backend پس از commitهای R1؛ برای سرعت فقط suiteهای متمرکز

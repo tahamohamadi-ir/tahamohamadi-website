@@ -2,6 +2,8 @@ export { ComposerCanvas } from "./ComposerCanvas";
 export { BlockInspector } from "./BlockInspector";
 export type { BlockInspectorProps } from "./BlockInspector";
 export { ConflictDialog } from "./ConflictDialog";
+export { extractComposerValidationIssues } from "./composer-validation";
+export type { ComposerValidationIssue } from "./composer-validation";
 export type { ConflictDialogProps } from "./ConflictDialog";
 export { PreviewPanel } from "./PreviewPanel";
 export type { PreviewPanelProps } from "./PreviewPanel";
