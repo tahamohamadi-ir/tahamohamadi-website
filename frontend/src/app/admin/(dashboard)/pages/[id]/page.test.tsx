@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AdminApiError } from "@/lib/admin-fetch";
 import PageEditorPage from "./page";
@@ -22,7 +22,12 @@ vi.mock("@/lib/admin-fetch", async (importOriginal) => {
 });
 
 vi.mock("@/components/admin/composer", () => ({
-  ComposerCanvas: () => <div data-testid="composer-canvas">Composer</div>,
+  ComposerCanvas: ({ initialSections, onChange }: { initialSections: unknown[]; onChange: (sections: unknown[]) => void }) => (
+    <div data-testid="composer-canvas">
+      Composer: {initialSections.length} sections
+      <button type="button" onClick={() => onChange([{ id: "section-1" }])}>Edit composition</button>
+    </div>
+  ),
   PreviewPanel: () => <div data-testid="preview-panel">Preview</div>,
 }));
 
@@ -38,7 +43,12 @@ const page = {
   sections: [],
 };
 
+const draftPage = { ...page, status: "draft" };
+
 describe("PageEditorPage", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
   beforeEach(() => {
     paramsMock.id = "page-1";
     adminFetchMock.mockReset();
@@ -90,5 +100,56 @@ describe("PageEditorPage", () => {
       }),
     );
     expect(pushMock).toHaveBeenCalledWith("/admin/pages/created-page");
+  });
+
+  it("restores composition through visible and keyboard undo/redo without saving immediately", async () => {
+    adminFetchMock.mockReset();
+    adminFetchMock.mockResolvedValueOnce(draftPage);
+    const user = userEvent.setup();
+    render(<PageEditorPage />);
+
+    expect(await screen.findByTestId("composer-canvas")).toHaveTextContent("0 sections");
+    await user.click(screen.getByRole("button", { name: "Edit composition" }));
+    expect(screen.getByTestId("composer-canvas")).toHaveTextContent("1 sections");
+    expect(screen.getByRole("button", { name: "Undo composition change" })).toBeEnabled();
+
+    await user.keyboard("{Control>}z{/Control}");
+    expect(screen.getByTestId("composer-canvas")).toHaveTextContent("0 sections");
+    expect(adminFetchMock).toHaveBeenCalledTimes(1);
+
+    await user.keyboard("{Control>}{Shift>}z{/Shift}{/Control}");
+    expect(screen.getByTestId("composer-canvas")).toHaveTextContent("1 sections");
+  });
+
+  it("autosaves only Draft composition changes after the 750 ms debounce", async () => {
+    vi.useFakeTimers();
+    adminFetchMock.mockReset();
+    adminFetchMock.mockResolvedValueOnce(draftPage).mockResolvedValueOnce({ ...draftPage, version: 2 });
+    render(<PageEditorPage />);
+
+    await act(async () => { await Promise.resolve(); });
+    expect(screen.getByTestId("composer-canvas")).toBeInTheDocument();
+    await act(async () => { screen.getByRole("button", { name: "Edit composition" }).click(); });
+
+    await act(async () => { vi.advanceTimersByTime(749); });
+    expect(adminFetchMock).toHaveBeenCalledTimes(1);
+    await act(async () => { vi.advanceTimersByTime(1); });
+
+    expect(adminFetchMock).toHaveBeenLastCalledWith(
+      "/api/admin/pages/page-1/",
+      expect.objectContaining({ method: "PUT", body: expect.stringContaining('"version":1') }),
+    );
+    vi.useRealTimers();
+  });
+
+  it("does not autosave published composition changes", async () => {
+    const user = userEvent.setup();
+    render(<PageEditorPage />);
+
+    await screen.findByTestId("composer-canvas");
+    await user.click(screen.getByRole("button", { name: "Edit composition" }));
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    expect(adminFetchMock).toHaveBeenCalledTimes(1);
   });
 });

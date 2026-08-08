@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
     DndContext,
     closestCenter,
@@ -31,6 +31,7 @@ import { createBlockSettings } from "./block-defaults";
 // ─── Utility ─────────────────────────────────────────────────────────────────
 
 let idCounter = 0;
+const EMPTY_SECTIONS: ComposerSection[] = [];
 function generateId(prefix: string): string {
     idCounter += 1;
     return `${prefix}-${Date.now()}-${idCounter}`;
@@ -45,18 +46,35 @@ export interface ComposerCanvasProps {
     onChange?: (sections: ComposerSection[]) => void;
 }
 
+type PendingDeletion =
+    | { kind: "section"; sectionId: string }
+    | { kind: "block"; sectionId: string; blockId: string };
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function ComposerCanvas({
-    initialSections = [],
+    initialSections = EMPTY_SECTIONS,
     onChange,
 }: ComposerCanvasProps) {
     const [sections, setSections] = useState<ComposerSection[]>(initialSections);
     const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
     const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+    const [announcement, setAnnouncement] = useState("");
+    const [pendingDeletion, setPendingDeletion] = useState<PendingDeletion | null>(null);
 
     // Ref for focus preservation after keyboard reorder
     const focusTargetRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        setSections(initialSections);
+    }, [initialSections]);
+
+    useEffect(() => {
+        const target = focusTargetRef.current;
+        if (!target) return;
+        document.querySelector<HTMLElement>(`[data-composer-focus-target="${target}"]`)?.focus();
+        focusTargetRef.current = null;
+    }, [sections]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -84,6 +102,8 @@ export function ComposerCanvas({
             const reordered = arrayMove(prev, oldIndex, newIndex);
             return reordered.map((s, i) => ({ ...s, ordering: i }));
         });
+        focusTargetRef.current = `section:${activeId}`;
+        setAnnouncement("Section reordered");
     }
 
     // ─── Section operations ──────────────────────────────────────────────────
@@ -99,18 +119,24 @@ export function ComposerCanvas({
         updateSections((prev) => [...prev, newSection]);
         setSelectedSectionId(newSection.id);
         setSelectedBlockId(null);
+        focusTargetRef.current = `section:${newSection.id}`;
+        setAnnouncement("Section added");
     }
 
     function deleteSection(sectionId: string) {
-        updateSections((prev) =>
-            prev
-                .filter((s) => s.id !== sectionId)
-                .map((s, i) => ({ ...s, ordering: i }))
-        );
+        updateSections((prev) => {
+            const index = prev.findIndex((section) => section.id === sectionId);
+            const focusSection = prev[index + 1] ?? prev[index - 1];
+            if (focusSection) focusTargetRef.current = `section:${focusSection.id}`;
+            return prev
+                .filter((section) => section.id !== sectionId)
+                .map((section, i) => ({ ...section, ordering: i }));
+        });
         if (selectedSectionId === sectionId) {
             setSelectedSectionId(null);
             setSelectedBlockId(null);
         }
+        setAnnouncement("Section deleted");
     }
 
     function duplicateSection(sectionId: string) {
@@ -129,8 +155,10 @@ export function ComposerCanvas({
             };
             const next = [...prev];
             next.splice(idx + 1, 0, newSection);
+            focusTargetRef.current = `section:${newSection.id}`;
             return next.map((s, i) => ({ ...s, ordering: i }));
         });
+        setAnnouncement("Section duplicated");
     }
 
     function moveSectionUp(sectionId: string) {
@@ -140,7 +168,8 @@ export function ComposerCanvas({
             const reordered = arrayMove(prev, idx, idx - 1);
             return reordered.map((s, i) => ({ ...s, ordering: i }));
         });
-        focusTargetRef.current = sectionId;
+        focusTargetRef.current = `section:${sectionId}`;
+        setAnnouncement("Section moved up");
     }
 
     function moveSectionDown(sectionId: string) {
@@ -150,7 +179,8 @@ export function ComposerCanvas({
             const reordered = arrayMove(prev, idx, idx + 1);
             return reordered.map((s, i) => ({ ...s, ordering: i }));
         });
-        focusTargetRef.current = sectionId;
+        focusTargetRef.current = `section:${sectionId}`;
+        setAnnouncement("Section moved down");
     }
 
     // ─── Block operations ────────────────────────────────────────────────────
@@ -174,12 +204,19 @@ export function ComposerCanvas({
             })
         );
         setSelectedBlockId(newBlock.id);
+        focusTargetRef.current = `block:${newBlock.id}`;
+        setAnnouncement("Block added");
     }
 
     function deleteBlock(sectionId: string, blockId: string) {
         updateSections((prev) =>
             prev.map((section) => {
                 if (section.id !== sectionId) return section;
+                const index = section.blocks.findIndex((block) => block.id === blockId);
+                const focusBlock = section.blocks[index + 1] ?? section.blocks[index - 1];
+                focusTargetRef.current = focusBlock
+                    ? `block:${focusBlock.id}`
+                    : `section:${section.id}`;
                 const blocks = section.blocks
                     .filter((b) => b.id !== blockId)
                     .map((b, i) => ({ ...b, ordering: i }));
@@ -189,6 +226,7 @@ export function ComposerCanvas({
         if (selectedBlockId === blockId) {
             setSelectedBlockId(null);
         }
+        setAnnouncement("Block deleted");
     }
 
     function duplicateBlock(sectionId: string, blockId: string) {
@@ -204,9 +242,11 @@ export function ComposerCanvas({
                 };
                 const blocks = [...section.blocks];
                 blocks.splice(idx + 1, 0, newBlock);
+                focusTargetRef.current = `block:${newBlock.id}`;
                 return { ...section, blocks: blocks.map((b, i) => ({ ...b, ordering: i })) };
             })
         );
+        setAnnouncement("Block duplicated");
     }
 
     function moveBlockUp(sectionId: string, blockId: string) {
@@ -222,7 +262,8 @@ export function ComposerCanvas({
                 return { ...section, blocks };
             })
         );
-        focusTargetRef.current = blockId;
+        focusTargetRef.current = `block:${blockId}`;
+        setAnnouncement("Block moved up");
     }
 
     function moveBlockDown(sectionId: string, blockId: string) {
@@ -238,7 +279,8 @@ export function ComposerCanvas({
                 return { ...section, blocks };
             })
         );
-        focusTargetRef.current = blockId;
+        focusTargetRef.current = `block:${blockId}`;
+        setAnnouncement("Block moved down");
     }
 
     function reorderBlocks(sectionId: string, activeId: string, overId: string) {
@@ -254,6 +296,8 @@ export function ComposerCanvas({
                 return { ...section, blocks };
             })
         );
+        focusTargetRef.current = `block:${activeId}`;
+        setAnnouncement("Block reordered");
     }
 
     // ─── Section drag ────────────────────────────────────────────────────────
@@ -265,12 +309,36 @@ export function ComposerCanvas({
         }
     }
 
+    function confirmDeletion() {
+        if (!pendingDeletion) return;
+        if (pendingDeletion.kind === "section") {
+            deleteSection(pendingDeletion.sectionId);
+        } else {
+            deleteBlock(pendingDeletion.sectionId, pendingDeletion.blockId);
+        }
+        setPendingDeletion(null);
+    }
+
     const sectionIds = sections.map((s) => s.id);
 
     // ─── Render ──────────────────────────────────────────────────────────────
 
     return (
         <div className="flex gap-6 h-full">
+            <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+                {announcement}
+            </div>
+            {pendingDeletion && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4">
+                    <div className="w-full max-w-sm rounded-lg border bg-white p-4 shadow-lg" role="dialog" aria-modal="true" aria-label={`Delete ${pendingDeletion.kind}`}>
+                        <p className="text-sm text-gray-800">This action cannot be undone from the Canvas.</p>
+                        <div className="mt-4 flex justify-end gap-2">
+                            <button type="button" onClick={() => setPendingDeletion(null)} className="rounded px-3 py-2 text-sm">Cancel</button>
+                            <button type="button" onClick={confirmDeletion} className="rounded bg-red-600 px-3 py-2 text-sm text-white" aria-label="Confirm delete">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* Left: Library panels */}
             <aside className="w-64 shrink-0 space-y-6 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4">
                 <SectionLibraryPanel onAddSection={addSection} />
@@ -317,11 +385,11 @@ export function ComposerCanvas({
                                                 setSelectedSectionId(section.id);
                                                 setSelectedBlockId(blockId);
                                             }}
-                                            onDeleteSection={() => deleteSection(section.id)}
+                                            onDeleteSection={() => setPendingDeletion({ kind: "section", sectionId: section.id })}
                                             onDuplicateSection={() => duplicateSection(section.id)}
                                             onMoveUp={() => moveSectionUp(section.id)}
                                             onMoveDown={() => moveSectionDown(section.id)}
-                                            onDeleteBlock={(blockId) => deleteBlock(section.id, blockId)}
+                                            onDeleteBlock={(blockId) => setPendingDeletion({ kind: "block", sectionId: section.id, blockId })}
                                             onDuplicateBlock={(blockId) => duplicateBlock(section.id, blockId)}
                                             onMoveBlockUp={(blockId) => moveBlockUp(section.id, blockId)}
                                             onMoveBlockDown={(blockId) => moveBlockDown(section.id, blockId)}

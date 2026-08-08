@@ -159,41 +159,8 @@ describe('useAutosave', () => {
         });
     });
 
-    describe('error handling and retry', () => {
-        it('retries on transient errors with backoff', async () => {
-            const onSave = vi
-                .fn()
-                .mockRejectedValueOnce(new Error('Network timeout'))
-                .mockRejectedValueOnce(new Error('Network timeout'))
-                .mockResolvedValueOnce(undefined);
-
-            const { result, rerender } = renderHook(
-                ({ data, status }) =>
-                    useAutosave({
-                        data,
-                        status,
-                        onSave,
-                        debounceMs: 1000,
-                        maxRetries: 3,
-                        retryBackoffMs: 100,
-                    }),
-                { initialProps: { data: { title: 'v1' }, status: 'draft' } }
-            );
-
-            rerender({ data: { title: 'v2' }, status: 'draft' });
-
-            // Let debounce fire and all retries complete
-            await act(async () => {
-                vi.advanceTimersByTime(1000); // debounce
-                await vi.runAllTimersAsync();
-            });
-
-            // Should have been called 3 times (initial + 2 retries)
-            expect(onSave).toHaveBeenCalledTimes(3);
-            expect(result.current.autosaveStatus).toBe('saved');
-        });
-
-        it('sets error status after all retries fail', async () => {
+    describe('error handling and in-flight changes', () => {
+        it('does not retry a failed draft save automatically', async () => {
             const onSave = vi.fn().mockRejectedValue(new Error('Server down'));
 
             const { result, rerender } = renderHook(
@@ -203,8 +170,6 @@ describe('useAutosave', () => {
                         status,
                         onSave,
                         debounceMs: 1000,
-                        maxRetries: 2,
-                        retryBackoffMs: 100,
                     }),
                 { initialProps: { data: { title: 'v1' }, status: 'draft' } }
             );
@@ -213,13 +178,36 @@ describe('useAutosave', () => {
 
             await act(async () => {
                 vi.advanceTimersByTime(1000);
-                await vi.runAllTimersAsync();
+                await Promise.resolve();
             });
 
-            // 1 initial + 2 retries = 3 calls
-            expect(onSave).toHaveBeenCalledTimes(3);
+            expect(onSave).toHaveBeenCalledTimes(1);
             expect(result.current.autosaveStatus).toBe('error');
             expect(result.current.lastSavedAt).toBeNull();
+        });
+
+        it('saves the latest edit once after a successful in-flight save', async () => {
+            let resolveFirstSave: (() => void) | undefined;
+            const onSave = vi
+                .fn()
+                .mockImplementationOnce(() => new Promise<void>((resolve) => { resolveFirstSave = resolve; }))
+                .mockResolvedValueOnce(undefined);
+            const { rerender } = renderHook(
+                ({ data }) => useAutosave({ data, status: 'draft', onSave, debounceMs: 100 }),
+                { initialProps: { data: { title: 'v1' } } },
+            );
+
+            rerender({ data: { title: 'v2' } });
+            await act(async () => { vi.advanceTimersByTime(100); });
+            expect(onSave).toHaveBeenCalledWith({ title: 'v2' });
+
+            rerender({ data: { title: 'v3' } });
+            await act(async () => { vi.advanceTimersByTime(100); });
+            expect(onSave).toHaveBeenCalledTimes(1);
+
+            await act(async () => { resolveFirstSave?.(); await Promise.resolve(); });
+            expect(onSave).toHaveBeenCalledWith({ title: 'v3' });
+            expect(onSave).toHaveBeenCalledTimes(2);
         });
     });
 

@@ -47,7 +47,7 @@ describe("ComposerCanvas", () => {
         expect(screen.getAllByText(/cta/i).length).toBeGreaterThanOrEqual(1);
     });
 
-    it("adds a section via the section library", async () => {
+    it("adds a section, focuses its control, and announces the mutation", async () => {
         const user = userEvent.setup();
         const onChange = vi.fn();
         render(<ComposerCanvas onChange={onChange} />);
@@ -61,6 +61,8 @@ describe("ComposerCanvas", () => {
                 expect.objectContaining({ layout: "full-width" }),
             ])
         );
+        expect(screen.getByRole("button", { name: "Select full-width section" })).toHaveFocus();
+        expect(screen.getByText("Section added")).toHaveAttribute("aria-live", "polite");
     });
 
     it("disables block library when no section selected", () => {
@@ -92,7 +94,7 @@ describe("ComposerCanvas", () => {
         });
     });
 
-    it("deletes a section", async () => {
+    it("requires confirmation before deleting a section", async () => {
         const user = userEvent.setup();
         const onChange = vi.fn();
         render(<ComposerCanvas initialSections={makeSections()} onChange={onChange} />);
@@ -100,9 +102,15 @@ describe("ComposerCanvas", () => {
         const deleteButtons = screen.getAllByRole("button", { name: /delete section/i });
         await user.click(deleteButtons[0]);
 
+        expect(screen.getByRole("dialog", { name: "Delete section" })).toBeInTheDocument();
+        expect(onChange).not.toHaveBeenCalled();
+
+        await user.click(screen.getByRole("button", { name: "Confirm delete" }));
+
         const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
         expect(lastCall).toHaveLength(1);
         expect(lastCall[0].id).toBe("section-2");
+        expect(screen.getByText("Section deleted")).toHaveAttribute("aria-live", "polite");
     });
 
     it("duplicates a section", async () => {
@@ -118,6 +126,8 @@ describe("ComposerCanvas", () => {
         expect(lastCall[0].layout).toBe("full-width");
         expect(lastCall[1].layout).toBe("full-width");
         expect(lastCall[1].id).not.toBe(lastCall[0].id);
+        expect(screen.getAllByRole("button", { name: "Select full-width section" })[1]).toHaveFocus();
+        expect(screen.getByText("Section duplicated")).toHaveAttribute("aria-live", "polite");
     });
 
     it("moves a section up via keyboard button", async () => {
@@ -146,9 +156,11 @@ describe("ComposerCanvas", () => {
         const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
         expect(lastCall[0].id).toBe("section-2");
         expect(lastCall[1].id).toBe("section-1");
+        expect(screen.getByRole("button", { name: "Select full-width section" })).toHaveFocus();
+        expect(screen.getByText("Section moved down")).toHaveAttribute("aria-live", "polite");
     });
 
-    it("deletes a block from a section", async () => {
+    it("requires confirmation before deleting a block", async () => {
         const user = userEvent.setup();
         const onChange = vi.fn();
         render(<ComposerCanvas initialSections={makeSections()} onChange={onChange} />);
@@ -156,10 +168,16 @@ describe("ComposerCanvas", () => {
         const deleteBlockBtns = screen.getAllByRole("button", { name: /delete block/i });
         await user.click(deleteBlockBtns[0]);
 
+        expect(screen.getByRole("dialog", { name: "Delete block" })).toBeInTheDocument();
+        expect(onChange).not.toHaveBeenCalled();
+        await user.click(screen.getByRole("button", { name: "Confirm delete" }));
+
         const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
         const firstSection = lastCall.find((s: ComposerSection) => s.id === "section-1");
         expect(firstSection.blocks).toHaveLength(1);
         expect(firstSection.blocks[0].id).toBe("block-2");
+        expect(screen.getByRole("button", { name: "Select text block" })).toHaveFocus();
+        expect(screen.getByText("Block deleted")).toHaveAttribute("aria-live", "polite");
     });
 
     it("duplicates a block", async () => {

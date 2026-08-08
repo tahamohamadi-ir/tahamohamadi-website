@@ -119,6 +119,8 @@ export function SortableSection({
                 <button
                     type="button"
                     onClick={onSelectSection}
+                    aria-label={`Select ${section.layout} section`}
+                    data-composer-focus-target={`section:${section.id}`}
                     className="flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded px-1"
                 >
                     <span className="text-sm font-semibold text-gray-800 capitalize">

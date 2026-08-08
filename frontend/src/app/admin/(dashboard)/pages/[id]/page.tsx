@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ComposerCanvas, PreviewPanel } from "@/components/admin/composer";
 import { adminFetch, formatAdminError } from "@/lib/admin-fetch";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ComposerSection } from "@/components/admin/composer/types";
+import { useAutosave, useCommandStack, useDirtyGuard } from "@/hooks";
 
 interface PageData {
     id: string;
@@ -21,6 +22,22 @@ interface PageData {
     status: string;
     version: number;
     sections: ComposerSection[];
+}
+
+type PageSavePayload = Pick<PageData, "slug_fa" | "slug_en" | "title_fa" | "title_en" | "page_type" | "status"> & {
+    sections: ComposerSection[];
+};
+
+function pageSavePayload(page: PageData, sections: ComposerSection[]): PageSavePayload {
+    return {
+        slug_fa: page.slug_fa,
+        slug_en: page.slug_en,
+        title_fa: page.title_fa,
+        title_en: page.title_en,
+        page_type: page.page_type,
+        status: page.status,
+        sections,
+    };
 }
 
 export default function PageEditorPage() {
@@ -35,6 +52,55 @@ export default function PageEditorPage() {
     const [saveError, setSaveError] = useState<string | null>(null);
     const [sections, setSections] = useState<ComposerSection[]>([]);
     const [showPreview, setShowPreview] = useState(false);
+    const pageRef = useRef<PageData | null>(null);
+    const versionRef = useRef(1);
+    pageRef.current = page;
+    const { isDirty, markDirty, markClean, confirmNavigation } = useDirtyGuard();
+    const commandStack = useCommandStack<ComposerSection[]>([], {
+        onUndo: (restored) => {
+            setSections(restored);
+            markDirty();
+        },
+        onRedo: (restored) => {
+            setSections(restored);
+            markDirty();
+        },
+    });
+    const { canUndo, canRedo, push, undo, redo, reset } = commandStack;
+
+    const saveExistingPage = useCallback(async (payload: PageSavePayload) => {
+        const currentPage = pageRef.current;
+        if (!currentPage || pageId === "new") return;
+        const updated = await adminFetch<PageData>(`/api/admin/pages/${currentPage.id}/`, {
+            method: "PUT",
+            body: JSON.stringify({ ...payload, version: versionRef.current }),
+        });
+        versionRef.current = updated.version;
+        setPage((current) => current ? { ...current, version: updated.version } : current);
+    }, [pageId]);
+
+    const autosaveData = useMemo<PageSavePayload | null>(() => (
+        page ? pageSavePayload(page, sections) : null
+    ), [
+        page?.slug_fa,
+        page?.slug_en,
+        page?.title_fa,
+        page?.title_en,
+        page?.page_type,
+        page?.status,
+        sections,
+    ]);
+
+    useAutosave({
+        data: autosaveData,
+        status: page?.status === "draft" && pageId !== "new" && isDirty ? "draft" : "idle",
+        debounceMs: 750,
+        onSave: async (payload) => {
+            if (payload) await saveExistingPage(payload);
+        },
+        onSuccess: markClean,
+        onError: (error) => setSaveError(formatAdminError(error, "Ø°Ø®ÛŒØ±Ù‡ ØµÙØ­Ù‡")),
+    });
 
     useEffect(() => {
         if (pageId === "new") {
@@ -50,6 +116,9 @@ export default function PageEditorPage() {
                 sections: [],
             });
             setSections([]);
+            versionRef.current = 1;
+            reset();
+            markClean();
             setLoading(false);
             return;
         }
@@ -60,6 +129,10 @@ export default function PageEditorPage() {
                 );
                 setPage(data);
                 setSections(data.sections || []);
+                versionRef.current = data.version;
+                push(data.sections || []);
+                reset();
+                markClean();
             } catch (err) {
                 setLoadError(formatAdminError(err, "بارگذاری صفحه"));
             } finally {
@@ -67,23 +140,14 @@ export default function PageEditorPage() {
             }
         }
         fetchPage();
-    }, [pageId]);
+    }, [pageId, push, reset, markClean]);
 
     const handleSave = useCallback(async () => {
         if (!page) return;
         setSaving(true);
         setSaveError(null);
         try {
-            const payload = {
-                slug_fa: page.slug_fa,
-                slug_en: page.slug_en,
-                title_fa: page.title_fa,
-                title_en: page.title_en,
-                page_type: page.page_type,
-                status: page.status,
-                sections,
-                ...(pageId === "new" ? {} : { version: page.version }),
-            };
+            const payload = pageSavePayload(page, sections);
             if (pageId === "new") {
                 const created = await adminFetch<PageData>("/api/admin/pages/", {
                     method: "POST",
@@ -92,29 +156,34 @@ export default function PageEditorPage() {
                 router.push(`/admin/pages/${created.id}`);
                 return;
             }
-            await adminFetch(`/api/admin/pages/${page.id}/`, {
-                method: "PUT",
-                body: JSON.stringify(payload),
-            });
-            // Refetch to get new version
-            const updated = await adminFetch<PageData>(
-                `/api/admin/pages/${page.id}/`
-            );
-            setPage(updated);
-            setSections(updated.sections || []);
+            await saveExistingPage(payload);
+            reset();
+            markClean();
         } catch (err) {
             setSaveError(formatAdminError(err, "ذخیره صفحه"));
         } finally {
             setSaving(false);
         }
-    }, [page, pageId, router, sections]);
+    }, [page, pageId, router, sections, saveExistingPage, reset, markClean]);
 
     const updatePageField = useCallback(
         (field: keyof Pick<PageData, "title_fa" | "title_en" | "slug_fa" | "slug_en" | "page_type" | "status">, value: string) => {
             setPage((current) => current ? { ...current, [field]: value } : current);
+            markDirty();
         },
-        [],
+        [markDirty],
     );
+
+    const handleSectionsChange = useCallback((next: ComposerSection[]) => {
+        const snapshot = structuredClone(next);
+        setSections(snapshot);
+        push(snapshot);
+        markDirty();
+    }, [push, markDirty]);
+
+    const handleBack = useCallback(() => {
+        if (confirmNavigation()) router.push("/admin/pages");
+    }, [confirmNavigation, router]);
 
     const canSave = Boolean(
         page?.title_fa.trim()
@@ -136,7 +205,7 @@ export default function PageEditorPage() {
         return (
             <div className="rounded-lg border border-red-200 bg-red-50 p-4">
                 <p className="text-red-800">{loadError}</p>
-                <Button className="mt-2" onClick={() => router.push("/admin/pages")}>
+                <Button className="mt-2" onClick={handleBack}>
                     بازگشت به لیست صفحات
                 </Button>
             </div>
@@ -174,6 +243,12 @@ export default function PageEditorPage() {
                     )}
                 </div>
                 <div className="flex items-center gap-2">
+                    <Button variant="outline" aria-label="Undo composition change" onClick={undo} disabled={!canUndo}>
+                        Undo
+                    </Button>
+                    <Button variant="outline" aria-label="Redo composition change" onClick={redo} disabled={!canRedo}>
+                        Redo
+                    </Button>
                     <Button
                         variant="outline"
                         onClick={() => setShowPreview(!showPreview)}
@@ -181,7 +256,7 @@ export default function PageEditorPage() {
                     >
                         {showPreview ? <><EyeOff className="h-4 w-4 mr-2" /> پنهان کردن پیش‌نمایش</> : <><Eye className="h-4 w-4 mr-2" /> نمایش پیش‌نمایش زنده</>}
                     </Button>
-                    <Button variant="outline" onClick={() => router.push("/admin/pages")}>
+                    <Button variant="outline" onClick={handleBack}>
                         بازگشت
                     </Button>
                     {page && (
@@ -234,7 +309,7 @@ export default function PageEditorPage() {
                 <div className="rounded-lg border bg-white p-4 h-[calc(100vh-360px)] min-h-[560px] overflow-hidden flex flex-col">
                     <ComposerCanvas
                         initialSections={sections}
-                        onChange={setSections}
+                        onChange={handleSectionsChange}
                     />
                 </div>
                 {showPreview && (

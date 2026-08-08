@@ -1,5 +1,12 @@
 # موارد معوق، ریسک‌ها و اعتبارسنجی‌های باقی‌مانده
 
+## PHASE2-COMPOSER-04 — Draft recovery and Canvas accessibility
+
+- [ ] Run authenticated touch-device E2E for Composer drag/reorder and destructive confirmations. **Owner:** frontend/QA. **Trigger:** before operational Admin release. **Mitigation:** pointer and keyboard controls have focused component tests; destructive Canvas mutations require in-app confirmation.
+- [ ] Complete the screen-reader matrix (NVDA/Firefox, VoiceOver/Safari) for Canvas focus restoration and polite mutation announcements. **Owner:** accessibility QA. **Trigger:** before accessibility sign-off. **Mitigation:** each Canvas mutation restores focus to a named control and exposes a polite live announcement.
+- [ ] Exercise offline and stale optimistic-lock race E2E for Draft autosave. **Owner:** frontend/backend QA. **Trigger:** before relying on Draft recovery in production. **Mitigation:** autosave is Draft-only, debounced, uses the current version, preserves local state on errors, and performs no automatic retry.
+- [ ] Capture visual QA for confirmation dialogs, Undo/Redo controls, and Draft autosave status across target RTL/LTR viewports. **Owner:** frontend/product. **Trigger:** before release. **Mitigation:** focused component/page tests cover the interaction contracts only.
+
 این فایل برای ثبت شفاف کارهایی است که در توسعهٔ سریع عمداً در همان برش انجام
 نشده‌اند. هر مورد باید پیش از اعلام آماده‌بودن release متناظر بسته یا با تصمیم
 صریح پذیرفته شود.

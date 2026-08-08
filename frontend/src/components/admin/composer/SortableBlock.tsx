@@ -69,6 +69,8 @@ export function SortableBlock({
                 <button
                     type="button"
                     onClick={onSelect}
+                    aria-label={`Select ${block.block_type} block`}
+                    data-composer-focus-target={`block:${block.id}`}
                     className="flex-1 text-left text-sm font-medium text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded px-1"
                 >
                     <span className="inline-flex items-center gap-1.5">
