@@ -218,7 +218,8 @@
 - [x] تست قراردادی API عمومی و اعتبارسنجی لینک/redirect در `backend/tests/test_siteconfig_api.py`
   روی PostgreSQL Compose اجرا شد؛ migration check و `manage.py check` نیز بدون issue گذشتند.
 - [x] Footer SSR به `/api/public/site/` متصل شد؛ فقط متن و navigation منتشرشدهٔ CMS را نمایش می‌دهد و در نبود config، محتوای hardcode نشان نمی‌دهد.
-- [ ] اتصال Header، metadata SEO و CTA فرانت‌اند به `/api/public/site/` و QA مرورگر در هر دو locale. Header/layout دارای تغییرات مستقل stage‌نشده‌اند و در این برش دست‌نخورده ماندند.
+- [x] Header اکنون `navigation.header` همان locale را از `/api/public/site/` می‌گیرد؛ fallback hardcode حذف شده و اگر navigation منتشرشده خالی باشد، منوی ساختگی render نمی‌شود. ۳ تست متمرکز Header/PublicLayout در 2026-08-08 پاس شد.
+- [ ] اتصال metadata SEO و CTA فرانت‌اند به `/api/public/site/` و QA مرورگر در هر دو locale. **Owner:** frontend/product. **Trigger:** پیش از publish عمومیِ Site Settings. **Mitigation:** Header/Footer تنها دادهٔ منتشرشدهٔ همان locale را می‌خوانند و در نبود داده fallback محتوایی ندارند.
 - [x] middleware برای `RedirectRule`‌های active با آزمون 301/302، جلوگیری از loop، مقصد ناسالم و روش غیر GET/HEAD
   در PostgreSQL Compose پیاده و بررسی شد.
 - [x] `SiteSettings` اکنون unique singleton constraint در دیتابیس دارد و API در برخورد race، Problem Details 409 بازمی‌گرداند.

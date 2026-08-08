@@ -57,4 +57,24 @@ describe("PublicLayout", () => {
     expect(screen.getByRole("link", { name: "Published Identity" })).toHaveAttribute("href", "/en");
     expect(screen.getByText("Page content")).toBeInTheDocument();
   });
+
+  it("uses only the published CMS header navigation for the requested locale", async () => {
+    fetchPublicSiteConfigMock.mockResolvedValue({
+      settings: { site_title: "Published Identity" } as NonNullable<
+        Awaited<ReturnType<typeof fetchPublicSiteConfig>>["settings"]
+      >,
+      navigation: {
+        header: [{ label: "Published Research", href: "/en/research" }],
+        footer: [],
+      },
+    });
+    getPublicPageMock.mockResolvedValue(null);
+
+    const result = await PublicLayout({ locale: "en", children: <p>Page content</p> });
+    render(result);
+
+    expect(screen.getAllByRole("link", { name: "Published Research" })).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: "Published Research" })[0]).toHaveAttribute("href", "/en/research");
+    expect(screen.queryByRole("link", { name: "Portfolio" })).not.toBeInTheDocument();
+  });
 });

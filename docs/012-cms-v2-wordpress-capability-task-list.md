@@ -74,7 +74,7 @@
 | گروه | وضعیت توسعه | گیت باقی‌مانده |
 |---|---|---|
 | R1-01 تا R1-04: identity، سوابق، پژوهش و resume | migration، projection public، CRUD Admin و routeهای SSR موجودند | داده/asset تأییدشده، QA fa/en و دانلود واقعی resume |
-| R1-05: Site Settings و navigation | API عمومی/محافظت‌شده و redirect امن موجود است؛ Footer مصرف‌کننده دارد | اتصال Header، metadata و CTA و QA مرورگر |
+| R1-05: Site Settings و navigation | API عمومی/محافظت‌شده، redirect امن، Footer و Header مبتنی بر navigation منتشرشدهٔ CMS موجود است | metadata و CTA و QA مرورگر |
 | R1-06: public aggregate | ETag/cache و suppress locale ناقص موجود است | مصرف‌کننده‌های باقی‌مانده و سنجش query/CDN در production |
 | R1-07 تا R1-09: CRUD، seed و checklist | قراردادهای Admin، seed idempotent و seed review موجودند | QA session/CSRF/keyboard و مرور انسانی locale/privacy |
 | R1-10: CMS collections | source/filter/limit/order محدود و projection بدون UUID خام موجود است | QA collection واقعی fa/en و production build با API در دسترس |

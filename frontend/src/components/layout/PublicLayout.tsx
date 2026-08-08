@@ -42,7 +42,7 @@ export async function PublicLayout({ locale, children }: PublicLayoutProps) {
       >
         {locale === "fa" ? "رفتن به محتوای اصلی" : "Skip to content"}
       </a>
-      <Header locale={locale} brandName={brandName} />
+      <Header locale={locale} brandName={brandName} navigationItems={siteConfig?.navigation.header ?? []} />
       <main id="main-content" className="flex-1">
         {children}
       </main>
