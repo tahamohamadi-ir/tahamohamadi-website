@@ -350,9 +350,9 @@
 
 - [x] aggregate مستقل `ComposerTemplate` برای snapshot قابل‌حمل ساخته شد؛ import همیشه Page جدید می‌سازد و هیچ Page زنده‌ای را تغییر نمی‌دهد.
 - [x] manifest نسخهٔ ۱ شامل sections و مشتقات server-owned برای block typeها، media references و translation completeness است؛ settings از registry موجود اعتبارسنجی می‌شوند.
-- [x] import ابتدا dry-run بدون write انجام می‌دهد و رابط Composer فقط پس از موفقیت آن confirmation واقعی را نمایش می‌دهد.
-- [x] schema ناشناخته، block/settings نامعتبر، HTML خام، URL ناامن و media مفقود/آرشیوشده با Problem Details رد می‌شوند.
-- [x] template و Draft واردشده actorهای audit دارند؛ import واقعی در transaction انجام می‌شود و rollback آن atomic است.
+- [x] import ابتدا dry-run کاملاً بدون write، حتی بدون AuditEvent، انجام می‌دهد؛ رابط Composer پاسخ دیررس را پس از تغییر manifest/identity دور می‌اندازد و فقط برای fingerprint تأییدشده confirmation را نمایش می‌دهد.
+- [x] schema ناشناخته، block/settings نامعتبر، HTML خام، همهٔ URL fieldهای ثبت‌شده (canonical، legacy و animation) و media مفقود/آرشیوشده با Problem Details رد می‌شوند.
+- [x] template و Draft واردشده actorهای audit دارند؛ event به content type و UUID واقعی target با action دقیق create/import متصل است، import واقعی در transaction انجام می‌شود و rollback آن atomic است.
 
 **پذیرش:** template سرعت authoring را بالا می‌برد بدون اینکه ساختار page زنده یا ترجمه‌های مستقل را خراب کند.
 

@@ -3,9 +3,11 @@
 from copy import deepcopy
 
 import pytest
+from django.contrib.contenttypes.models import ContentType
 
-from apps.cms.models import Block, Page, Section
+from apps.cms.models import Block, ComposerTemplate, Page, Section
 from apps.media.models import MediaAsset
+from apps.workflow.models import AuditEvent
 
 
 IMPORT_URL = "/api/admin/pages/templates/import/"
@@ -67,6 +69,9 @@ def make_media(*, status="active"):
 
 @pytest.mark.django_db
 def test_valid_dry_run_derives_manifest_and_writes_nothing(admin_client):
+    tracked_models = (Page, Section, Block, ComposerTemplate, AuditEvent)
+    counts_before = {model: model.objects.count() for model in tracked_models}
+
     response = admin_client.post(IMPORT_URL, import_payload(manifest_with()), format="json")
 
     assert response.status_code == 200
@@ -75,9 +80,7 @@ def test_valid_dry_run_derives_manifest_and_writes_nothing(admin_client):
     assert body["manifest"]["block_types"] == ["text"]
     assert body["manifest"]["media_references"] == []
     assert body["manifest"]["translation_completeness"] == {"fa": True, "en": True}
-    assert Page.objects.count() == 0
-    assert Section.objects.count() == 0
-    assert Block.objects.count() == 0
+    assert {model: model.objects.count() for model in tracked_models} == counts_before
 
 
 @pytest.mark.django_db
@@ -107,6 +110,11 @@ def test_real_import_creates_a_new_audited_draft_without_mutating_live_page(
     assert imported.updated_by == admin_user.get_username()
     assert imported.sections.count() == 1
     assert imported.sections.get().blocks.get().block_type == "text"
+    audit_event = AuditEvent.objects.get()
+    assert audit_event.content_type == ContentType.objects.get_for_model(Page)
+    assert audit_event.object_id == imported.id
+    assert audit_event.to_status == "import"
+    assert audit_event.user == admin_user
     live.refresh_from_db()
     assert live.status == "published"
     assert live.sections.count() == 0
@@ -126,6 +134,56 @@ def test_real_import_creates_a_new_audited_draft_without_mutating_live_page(
 )
 def test_invalid_manifest_returns_problem_details(admin_client, manifest):
     response = admin_client.post(IMPORT_URL, import_payload(manifest), format="json")
+    assert_problem(response)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("block_type", "settings"),
+    [
+        (
+            "hero",
+            {
+                "heading_fa": "قهرمان",
+                "heading_en": "Hero",
+                "cta_link": "javascript:alert(1)",
+            },
+        ),
+        (
+            "parallax",
+            {
+                "title": "Parallax",
+                "media_url": "data:text/html,bad",
+                "speed": 0.5,
+                "duration": 300,
+                "delay": 0,
+                "easing": "ease-out",
+                "trigger": "scroll",
+            },
+        ),
+        (
+            "image_reveal",
+            {
+                "media_url": "javascript:alert(1)",
+                "reveal_direction": "left",
+                "duration": 300,
+                "delay": 0,
+                "easing": "ease-out",
+                "trigger": "scroll",
+            },
+        ),
+    ],
+    ids=["legacy-hero-cta-link", "parallax-media-url", "image-reveal-media-url"],
+)
+def test_every_registered_url_field_rejects_unsafe_schemes(
+    admin_client, block_type, settings
+):
+    response = admin_client.post(
+        IMPORT_URL,
+        import_payload(manifest_with(block_type, settings)),
+        format="json",
+    )
+
     assert_problem(response)
 
 
@@ -166,11 +224,14 @@ def test_template_create_and_list_are_draft_audited_and_do_not_expose_ids(
     assert created["manifest"]["block_types"] == ["text"]
     assert "id" not in created
 
-    from apps.cms.models import ComposerTemplate
-
     template = ComposerTemplate.objects.get()
     assert template.created_by == admin_user.get_username()
     assert template.updated_by == admin_user.get_username()
+    audit_event = AuditEvent.objects.get()
+    assert audit_event.content_type == ContentType.objects.get_for_model(ComposerTemplate)
+    assert audit_event.object_id == template.id
+    assert audit_event.to_status == "create"
+    assert audit_event.user == admin_user
 
     listed = admin_client.get(TEMPLATES_URL)
     assert listed.status_code == 200

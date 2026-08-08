@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { adminFetch, formatAdminError } from "@/lib/admin-fetch";
 import type { ComposerSection } from "./types";
@@ -33,6 +33,10 @@ function safeTemplateError(error: unknown, action: string): string {
     return formatAdminError(error, action).replace(UUID_PATTERN, "media reference");
 }
 
+function inputFingerprint(manifestText: string, identity: TemplatePageIdentity): string {
+    return JSON.stringify({ manifestText, identity });
+}
+
 export function TemplatePanel({ sections, initialIdentity, onImported }: TemplatePanelProps) {
     const [manifestText, setManifestText] = useState("");
     const [identity, setIdentity] = useState(initialIdentity);
@@ -40,8 +44,13 @@ export function TemplatePanel({ sections, initialIdentity, onImported }: Templat
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
+    const currentInputFingerprint = useRef(inputFingerprint("", initialIdentity));
 
-    useEffect(() => setIdentity(initialIdentity), [initialIdentity]);
+    useEffect(() => {
+        setIdentity(initialIdentity);
+        currentInputFingerprint.current = inputFingerprint(manifestText, initialIdentity);
+        invalidateDryRun();
+    }, [initialIdentity]);
 
     const identityComplete = useMemo(
         () => Object.values(identity).every((value) => value.trim().length > 0),
@@ -57,18 +66,26 @@ export function TemplatePanel({ sections, initialIdentity, onImported }: Templat
     function exportManifest(): void {
         const text = JSON.stringify(createTemplateManifest(sections), null, 2);
         setManifestText(text);
+        currentInputFingerprint.current = inputFingerprint(text, identity);
+        invalidateDryRun();
+    }
+
+    function updateManifestText(value: string): void {
+        setManifestText(value);
+        currentInputFingerprint.current = inputFingerprint(value, identity);
         invalidateDryRun();
     }
 
     function updateIdentity(field: keyof TemplatePageIdentity, value: string): void {
-        setIdentity((current) => ({ ...current, [field]: value }));
+        const nextIdentity = { ...identity, [field]: value };
+        setIdentity(nextIdentity);
+        currentInputFingerprint.current = inputFingerprint(manifestText, nextIdentity);
         invalidateDryRun();
     }
 
     async function uploadManifest(file: File | undefined): Promise<void> {
         if (!file) return;
-        setManifestText(await file.text());
-        invalidateDryRun();
+        updateManifestText(await file.text());
     }
 
     function parseManifest(): Record<string, unknown> | null {
@@ -87,6 +104,8 @@ export function TemplatePanel({ sections, initialIdentity, onImported }: Templat
     async function validateImport(): Promise<void> {
         const manifest = parseManifest();
         if (!manifest) return;
+        const submittedFingerprint = inputFingerprint(manifestText, identity);
+        currentInputFingerprint.current = submittedFingerprint;
         setBusy(true);
         setError(null);
         setMessage(null);
@@ -96,9 +115,11 @@ export function TemplatePanel({ sections, initialIdentity, onImported }: Templat
                 method: "POST",
                 body: JSON.stringify({ manifest, dry_run: true, ...identity }),
             });
+            if (currentInputFingerprint.current !== submittedFingerprint) return;
             setValidatedManifest(response.manifest);
             setMessage("Server validation passed. No content was created.");
         } catch (requestError) {
+            if (currentInputFingerprint.current !== submittedFingerprint) return;
             setError(safeTemplateError(requestError, "Template validation"));
         } finally {
             setBusy(false);
@@ -148,7 +169,7 @@ export function TemplatePanel({ sections, initialIdentity, onImported }: Templat
                 <textarea
                     className="mt-1 min-h-28 w-full rounded border p-2 font-mono text-xs"
                     value={manifestText}
-                    onChange={(event) => { setManifestText(event.target.value); invalidateDryRun(); }}
+                    onChange={(event) => updateManifestText(event.target.value)}
                 />
             </label>
             <label className="block text-xs font-medium text-gray-700">

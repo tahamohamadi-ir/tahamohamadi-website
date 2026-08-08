@@ -357,17 +357,12 @@ def validate_page_composition(
                     errors.append(f"{path}: media asset '{mid}' not found")
 
             # --- (f) URL safety validation ---
-            # Check cta_url in hero blocks
-            cta_url = settings.get("cta_url")
-            if cta_url is not None and isinstance(cta_url, str) and cta_url:
-                if not is_safe_url(cta_url):
-                    errors.append(f"{path}: unsafe CTA URL '{cta_url}'")
-
-            # Check url in cta blocks
-            url = settings.get("url")
-            if block_type == "cta" and url is not None and isinstance(url, str) and url:
-                if not is_safe_url(url):
-                    errors.append(f"{path}: unsafe CTA URL '{url}'")
+            # Every URL-bearing field registered by canonical, legacy, and
+            # animation block settings follows the same fail-closed policy.
+            for url_field in ("cta_url", "cta_link", "url", "media_url"):
+                url = settings.get(url_field)
+                if isinstance(url, str) and url and not is_safe_url(url):
+                    errors.append(f"{path}: unsafe URL in {url_field} '{url}'")
 
     return errors
 

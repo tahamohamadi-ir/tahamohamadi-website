@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -129,4 +129,44 @@ describe("TemplatePanel", () => {
         expect(alert).not.toHaveTextContent("{\"");
         expect(screen.queryByRole("button", { name: "Confirm Draft import" })).not.toBeInTheDocument();
     });
+
+    it.each(["manifest", "identity"] as const)(
+        "discards a stale dry-run response after the %s changes",
+        async (changedInput) => {
+            let resolveDryRun: ((value: { valid: true; manifest: typeof manifest }) => void) | undefined;
+            const manifest = {
+                schema_version: 1 as const,
+                sections: [],
+                block_types: [],
+                media_references: [],
+                translation_completeness: { fa: true, en: true },
+            };
+            adminFetchMock.mockImplementationOnce(
+                () => new Promise((resolve) => { resolveDryRun = resolve; }),
+            );
+            render(<TemplatePanel sections={sections} initialIdentity={identity} onImported={vi.fn()} />);
+            fireEvent.change(screen.getByLabelText("Template manifest"), {
+                target: { value: JSON.stringify(manifest) },
+            });
+            await userEvent.click(screen.getByRole("button", { name: "Validate import" }));
+            await waitFor(() => expect(adminFetchMock).toHaveBeenCalledTimes(1));
+
+            if (changedInput === "manifest") {
+                fireEvent.change(screen.getByLabelText("Template manifest"), {
+                    target: { value: JSON.stringify({ ...manifest, sections: [{ ordering: 0 }] }) },
+                });
+            } else {
+                fireEvent.change(screen.getByLabelText("Draft slug (EN)"), {
+                    target: { value: "different-template-copy" },
+                });
+            }
+            await act(async () => {
+                resolveDryRun?.({ valid: true, manifest });
+                await Promise.resolve();
+            });
+
+            expect(screen.queryByText("Server validation passed. No content was created.")).not.toBeInTheDocument();
+            expect(screen.queryByRole("button", { name: "Confirm Draft import" })).not.toBeInTheDocument();
+        },
+    );
 });

@@ -193,6 +193,23 @@ def _manifest_problem(request, errors: list[str]) -> Response:
     )
 
 
+def _set_request_audit(
+    request,
+    *,
+    target=None,
+    action: str | None = None,
+    reason: str | None = None,
+    skip: bool = False,
+) -> None:
+    raw_request = getattr(request, "_request", request)
+    if skip:
+        raw_request._skip_audit_logging = True
+        return
+    raw_request._audit_target = target
+    raw_request._audit_action = action
+    raw_request._audit_reason = reason
+
+
 class AdminComposerTemplateListCreateView(APIView):
     """List or store validated portable templates as Draft-only snapshots."""
 
@@ -214,6 +231,12 @@ class AdminComposerTemplateListCreateView(APIView):
         serializer.is_valid(raise_exception=True)
         actor = request.user.get_username()
         template = serializer.save(created_by=actor, updated_by=actor)
+        _set_request_audit(
+            request,
+            target=template,
+            action="create",
+            reason="Portable Composer template created.",
+        )
         return Response(
             ComposerTemplateSerializer(template).data,
             status=status.HTTP_201_CREATED,
@@ -248,11 +271,18 @@ class AdminComposerTemplateImportView(APIView):
         page_serializer.is_valid(raise_exception=True)
 
         if data["dry_run"]:
+            _set_request_audit(request, skip=True)
             return Response({"valid": True, "manifest": normalized})
 
         actor = request.user.get_username()
         with transaction.atomic():
             page = page_serializer.save(created_by=actor, updated_by=actor)
+        _set_request_audit(
+            request,
+            target=page,
+            action="import",
+            reason="Portable Composer template imported as a new Draft page.",
+        )
         return Response(
             {
                 "valid": True,
