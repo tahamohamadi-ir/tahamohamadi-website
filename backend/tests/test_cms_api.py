@@ -10,11 +10,13 @@ import uuid
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 
 from apps.blog.models import Article
 from apps.cms.models import Block, Page, Section
 from apps.identity.models import ResearchProject
+from apps.media.models import MediaAsset
 from apps.portfolio.models import CaseStudy
 
 User = get_user_model()
@@ -117,6 +119,57 @@ class TestAdminCreatePage:
         assert data["version"] == 1
         assert len(data["sections"]) == 1
         assert len(data["sections"][0]["blocks"]) == 1
+
+    def test_create_page_with_active_media_id_201(self, authed_client, valid_page_payload):
+        """An active media asset referenced by a CMS block persists."""
+        media = MediaAsset.objects.create(
+            file=SimpleUploadedFile("active.png", b"image bytes", content_type="image/png"),
+            original_filename="active.png",
+            mime_type="image/png",
+            file_size=11,
+            checksum="a" * 64,
+            status="active",
+        )
+        valid_page_payload["sections"][0]["blocks"][0]["settings"]["media_id"] = str(media.id)
+
+        resp = authed_client.post("/api/admin/pages/", valid_page_payload, format="json")
+
+        assert resp.status_code == 201
+        assert resp.json()["sections"][0]["blocks"][0]["settings"]["media_id"] == str(media.id)
+
+    def test_create_page_with_archived_media_id_returns_problem_details(
+        self, authed_client, valid_page_payload
+    ):
+        """An archived media asset cannot be referenced by a CMS block."""
+        media = MediaAsset.objects.create(
+            file=SimpleUploadedFile("archived.png", b"image bytes", content_type="image/png"),
+            original_filename="archived.png",
+            mime_type="image/png",
+            file_size=11,
+            checksum="b" * 64,
+            status="archived",
+        )
+        valid_page_payload["sections"][0]["blocks"][0]["settings"]["media_id"] = str(media.id)
+
+        resp = authed_client.post("/api/admin/pages/", valid_page_payload, format="json")
+
+        assert resp.status_code == 400
+        assert resp["Content-Type"].startswith("application/problem+json")
+        assert "not found" in str(resp.json()["errors"]["composition"]).lower()
+
+    def test_create_page_with_nonexistent_media_id_returns_problem_details(
+        self, authed_client, valid_page_payload
+    ):
+        """A nonexistent media UUID cannot be referenced by a CMS block."""
+        valid_page_payload["sections"][0]["blocks"][0]["settings"]["media_id"] = (
+            "11111111-1111-4111-8111-111111111111"
+        )
+
+        resp = authed_client.post("/api/admin/pages/", valid_page_payload, format="json")
+
+        assert resp.status_code == 400
+        assert resp["Content-Type"].startswith("application/problem+json")
+        assert "not found" in str(resp.json()["errors"]["composition"]).lower()
 
     def test_create_page_invalid_block_type_400(self, authed_client, valid_page_payload):
         """Create page with unknown block_type returns 400 or 422 Problem Details."""

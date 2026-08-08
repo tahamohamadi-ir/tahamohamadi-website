@@ -11,6 +11,34 @@ import type { BlockDTO } from "./types";
 
 describe("BlockRenderer", () => {
     describe("CMS block dispatch", () => {
+        it("renders animation blocks in cms context", () => {
+            const block: BlockDTO = {
+                id: "animation-1",
+                block_type: "counter_animation",
+                settings: { label: "Publications", target_number: 3, duration: 300 },
+                ordering: 0,
+            };
+
+            render(<BlockRenderer block={block} locale="en" context="cms" />);
+
+            expect(screen.getByTestId("counter-animation-block")).toBeInTheDocument();
+            expect(screen.getByText("Publications")).toBeInTheDocument();
+        });
+
+        it("does not render article-only paragraph blocks in cms context", () => {
+            const block: BlockDTO = {
+                id: "article-only-1",
+                block_type: "paragraph",
+                settings: { text: "Must not appear" },
+                content: { text: "Must not appear" },
+                ordering: 0,
+            };
+
+            const { container } = render(<BlockRenderer block={block} locale="en" context="cms" />);
+
+            expect(container.innerHTML).toBe("");
+        });
+
         it("renders HeroBlock for block_type='hero'", () => {
             const block: BlockDTO = {
                 id: "1",

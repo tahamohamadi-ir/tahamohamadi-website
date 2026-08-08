@@ -28,6 +28,7 @@ from apps.cms.serializers import (
 from apps.cms.services import validate_page_composition
 from apps.core.exceptions import build_problem, PROBLEM_CONTENT_TYPE
 from apps.core.services import ConflictError, save_with_optimistic_lock
+from apps.media.models import MediaAsset
 
 
 class AdminPageViewSet(ModelViewSet):
@@ -61,7 +62,13 @@ class AdminPageViewSet(ModelViewSet):
 
         # Validate composition before persisting
         sections_data = request.data.get("sections", [])
-        composition_errors = validate_page_composition({"sections": sections_data})
+        active_media_ids = {
+            str(media_id)
+            for media_id in MediaAsset.objects.filter(status="active").values_list("id", flat=True)
+        }
+        composition_errors = validate_page_composition(
+            {"sections": sections_data}, known_media_ids=active_media_ids
+        )
         if composition_errors:
             problem = build_problem(
                 status.HTTP_400_BAD_REQUEST,
@@ -96,7 +103,13 @@ class AdminPageViewSet(ModelViewSet):
 
         # Validate composition before persisting
         sections_data = request.data.get("sections", [])
-        composition_errors = validate_page_composition({"sections": sections_data})
+        active_media_ids = {
+            str(media_id)
+            for media_id in MediaAsset.objects.filter(status="active").values_list("id", flat=True)
+        }
+        composition_errors = validate_page_composition(
+            {"sections": sections_data}, known_media_ids=active_media_ids
+        )
         if composition_errors:
             problem = build_problem(
                 status.HTTP_400_BAD_REQUEST,
