@@ -5,6 +5,7 @@ Business logic for page composition, block validation, and public projection.
 
 from __future__ import annotations
 
+from copy import deepcopy
 import re
 
 from apps.cms.block_registry import BLOCK_SCHEMAS, is_known_block_type, validate_block_settings
@@ -91,6 +92,172 @@ def extract_media_ids(settings: dict) -> list[str]:
                 ids.append(mid)
 
     return ids
+
+
+# ---------------------------------------------------------------------------
+# Portable Composer template manifests
+# ---------------------------------------------------------------------------
+
+_MANIFEST_FIELDS = {
+    "schema_version",
+    "sections",
+    "block_types",
+    "media_references",
+    "translation_completeness",
+}
+_SECTION_FIELDS = {"ordering", "enabled", "layout", "blocks"}
+_BLOCK_FIELDS = {"block_type", "ordering", "settings"}
+_RAW_HTML_RE = re.compile(r"<\s*/?\s*[a-zA-Z][^>]*>")
+
+
+def _contains_raw_html(value) -> bool:
+    if isinstance(value, str):
+        return _RAW_HTML_RE.search(value) is not None
+    if isinstance(value, list):
+        return any(_contains_raw_html(item) for item in value)
+    if isinstance(value, dict):
+        return any(_contains_raw_html(item) for item in value.values())
+    return False
+
+
+def _translation_completeness(value) -> dict[str, bool]:
+    result = {"fa": True, "en": True}
+
+    def visit(item) -> None:
+        if isinstance(item, list):
+            for child in item:
+                visit(child)
+            return
+        if not isinstance(item, dict):
+            return
+
+        localized_bases = {
+            key[:-3]
+            for key in item
+            if isinstance(key, str) and key.endswith(("_fa", "_en"))
+        }
+        for base in localized_bases:
+            for locale in ("fa", "en"):
+                localized = item.get(f"{base}_{locale}")
+                if localized is None or (
+                    isinstance(localized, str) and not localized.strip()
+                ):
+                    result[locale] = False
+        for child in item.values():
+            visit(child)
+
+    visit(value)
+    return result
+
+
+def normalize_template_manifest(
+    manifest,
+    *,
+    known_media_ids: set[str],
+) -> tuple[dict | None, list[str]]:
+    """Validate and normalize a schema-version-1 portable manifest."""
+    errors: list[str] = []
+    if not isinstance(manifest, dict):
+        return None, ["manifest must be an object"]
+
+    unknown_fields = sorted(set(manifest) - _MANIFEST_FIELDS)
+    if unknown_fields:
+        errors.append(f"manifest contains unknown fields: {unknown_fields}")
+    if manifest.get("schema_version") != 1:
+        errors.append("schema_version must be 1")
+
+    sections = manifest.get("sections")
+    if not isinstance(sections, list):
+        errors.append("sections must be a list")
+        return None, errors
+
+    normalized_sections: list[dict] = []
+    block_types: set[str] = set()
+    media_references: set[str] = set()
+    for section_index, section in enumerate(sections):
+        if not isinstance(section, dict):
+            errors.append(f"sections[{section_index}] must be an object")
+            continue
+        unknown_section_fields = sorted(set(section) - _SECTION_FIELDS)
+        if unknown_section_fields:
+            errors.append(
+                f"sections[{section_index}] contains unknown fields: "
+                f"{unknown_section_fields}"
+            )
+        blocks = section.get("blocks")
+        if not isinstance(blocks, list):
+            errors.append(f"sections[{section_index}].blocks must be a list")
+            continue
+
+        normalized_blocks: list[dict] = []
+        for block_index, block in enumerate(blocks):
+            if not isinstance(block, dict):
+                errors.append(
+                    f"sections[{section_index}].blocks[{block_index}] must be an object"
+                )
+                continue
+            unknown_block_fields = sorted(set(block) - _BLOCK_FIELDS)
+            if unknown_block_fields:
+                errors.append(
+                    f"sections[{section_index}].blocks[{block_index}] contains "
+                    f"unknown fields: {unknown_block_fields}"
+                )
+            settings = block.get("settings")
+            if not isinstance(settings, dict):
+                errors.append(
+                    f"sections[{section_index}].blocks[{block_index}].settings "
+                    "must be an object"
+                )
+                continue
+            if _contains_raw_html(settings):
+                errors.append(
+                    f"sections[{section_index}].blocks[{block_index}].settings "
+                    "must not contain raw HTML"
+                )
+            block_type = block.get("block_type")
+            if isinstance(block_type, str):
+                block_types.add(block_type)
+            media_references.update(extract_media_ids(settings))
+            normalized_blocks.append(
+                {
+                    "block_type": block_type,
+                    "ordering": block.get("ordering"),
+                    "settings": deepcopy(settings),
+                }
+            )
+
+        normalized_sections.append(
+            {
+                "ordering": section.get("ordering"),
+                "enabled": section.get("enabled", True),
+                "layout": section.get("layout"),
+                "blocks": normalized_blocks,
+            }
+        )
+
+    derived = {
+        "block_types": sorted(block_types),
+        "media_references": sorted(media_references),
+        "translation_completeness": _translation_completeness(normalized_sections),
+    }
+    for field in ("block_types", "media_references", "translation_completeness"):
+        if field in manifest and manifest[field] != derived[field]:
+            errors.append(f"{field} does not match the supplied sections")
+
+    errors.extend(
+        validate_page_composition(
+            {"sections": normalized_sections},
+            known_media_ids=known_media_ids,
+        )
+    )
+    if errors:
+        return None, errors
+
+    return {
+        "schema_version": 1,
+        "sections": normalized_sections,
+        **derived,
+    }, []
 
 
 # ---------------------------------------------------------------------------

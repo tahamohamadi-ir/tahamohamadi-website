@@ -348,11 +348,11 @@
 
 **نوع:** BUILD، بعد از تثبیت T2.1 تا T2.4
 
-- [ ] aggregate برای reusable section/page template طراحی شود؛ به page زنده وابستگی مخرب نداشته باشد.
-- [ ] manifest شامل schema version، block typeها، settings مجاز، media references و translation completeness باشد.
-- [ ] import ابتدا dry-run validation و سپس confirmation داشته باشد.
-- [ ] schema ناشناخته، HTML/raw code و media reference نامعتبر رد شود.
-- [ ] import/restore audit و rollback note داشته باشند.
+- [x] aggregate مستقل `ComposerTemplate` برای snapshot قابل‌حمل ساخته شد؛ import همیشه Page جدید می‌سازد و هیچ Page زنده‌ای را تغییر نمی‌دهد.
+- [x] manifest نسخهٔ ۱ شامل sections و مشتقات server-owned برای block typeها، media references و translation completeness است؛ settings از registry موجود اعتبارسنجی می‌شوند.
+- [x] import ابتدا dry-run بدون write انجام می‌دهد و رابط Composer فقط پس از موفقیت آن confirmation واقعی را نمایش می‌دهد.
+- [x] schema ناشناخته، block/settings نامعتبر، HTML خام، URL ناامن و media مفقود/آرشیوشده با Problem Details رد می‌شوند.
+- [x] template و Draft واردشده actorهای audit دارند؛ import واقعی در transaction انجام می‌شود و rollback آن atomic است.
 
 **پذیرش:** template سرعت authoring را بالا می‌برد بدون اینکه ساختار page زنده یا ترجمه‌های مستقل را خراب کند.
 

@@ -310,6 +310,14 @@ export default function PageEditorPage() {
                     <ComposerCanvas
                         initialSections={sections}
                         onChange={handleSectionsChange}
+                        templatePageIdentity={{
+                            slug_fa: page?.slug_fa ?? "",
+                            slug_en: page?.slug_en ?? "",
+                            title_fa: page?.title_fa ?? "",
+                            title_en: page?.title_en ?? "",
+                            page_type: page?.page_type ?? "custom",
+                        }}
+                        onTemplateImported={(createdPageId) => router.push(`/admin/pages/${createdPageId}`)}
                     />
                 </div>
                 {showPreview && (

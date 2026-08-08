@@ -301,6 +301,13 @@
 - [ ] lint backend برای فایل‌های تغییرکرده: image تست Compose فعلاً `ruff` را
   نصب ندارد؛ تا افزودن ابزار به محیط توسعه، فقط compile/test اجرا شده است.
 
+## T2.5 — portable Draft templates
+
+- [ ] QA دستی import با فایل JSON واقعی و paste در هر دو جهت RTL/LTR، شامل تغییر slugهای مقصد و تأیید اینکه فقط Draft جدید باز می‌شود. **Owner:** CMS/frontend. **Trigger:** پیش از انتشار Composer templates. **Mitigation:** dry-run سمت Django اجباری است و confirmation تا پاسخ موفق نمایش داده نمی‌شود.
+- [ ] QA مرورگر session/CSRF، keyboard/focus و screen reader برای TemplatePanel و حالت‌های validation/import failure. **Owner:** frontend/QA. **Trigger:** پیش از انتشار Admin Composer. **Mitigation:** تمام درخواست‌ها از `adminFetch` و پیام‌های status/alert ساختاریافته استفاده می‌کنند.
+- [ ] اجرای migration و import روی staging با media واقعی active/archived و بررسی audit/rollback در PostgreSQL production-like. **Owner:** backend/operations. **Trigger:** پیش از rollout production. **Mitigation:** import در transaction است، media فقط از مجموعهٔ active پذیرفته می‌شود و هیچ Page موجودی update نمی‌شود.
+- [ ] full frontend/backend suite، build production و visual QA در viewportهای هدف در این برش متمرکز اجرا نشد. **Owner:** release. **Trigger:** Task 6 evidence gate. **Mitigation:** تست‌های متمرکز backend و TemplatePanel قرارداد امنیتی و Draft-only را پوشش می‌دهند.
+
 ## ریسک محیط مشترک
 
 - [ ] اجرای دوبارهٔ کل collection backend پس از commitهای R1؛ برای سرعت فقط suiteهای متمرکز

@@ -20,6 +20,7 @@ import { AnimatePresence } from "framer-motion";
 import { SortableSection } from "./SortableSection";
 import { SectionLibraryPanel } from "./SectionLibraryPanel";
 import { BlockLibraryPanel } from "./BlockLibraryPanel";
+import { TemplatePanel, type TemplatePageIdentity } from "./TemplatePanel";
 import type {
     ComposerSection,
     ComposerBlock,
@@ -44,6 +45,10 @@ export interface ComposerCanvasProps {
     initialSections?: ComposerSection[];
     /** Called when composition changes */
     onChange?: (sections: ComposerSection[]) => void;
+    /** Identity for the new Draft created by a template import. */
+    templatePageIdentity?: TemplatePageIdentity;
+    /** Called only after the server creates a separate Draft page. */
+    onTemplateImported?: (pageId: string) => void;
 }
 
 type PendingDeletion =
@@ -55,6 +60,8 @@ type PendingDeletion =
 export function ComposerCanvas({
     initialSections = EMPTY_SECTIONS,
     onChange,
+    templatePageIdentity,
+    onTemplateImported,
 }: ComposerCanvasProps) {
     const [sections, setSections] = useState<ComposerSection[]>(initialSections);
     const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
@@ -380,6 +387,16 @@ export function ComposerCanvas({
                     onAddBlock={addBlock}
                     disabled={!selectedSectionId}
                 />
+                {templatePageIdentity && onTemplateImported && (
+                    <>
+                        <div className="border-t border-gray-200" />
+                        <TemplatePanel
+                            sections={sections}
+                            initialIdentity={templatePageIdentity}
+                            onImported={onTemplateImported}
+                        />
+                    </>
+                )}
             </aside>
 
             {/* Center: Canvas */}
