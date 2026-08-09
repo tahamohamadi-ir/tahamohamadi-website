@@ -142,6 +142,42 @@ describe("TemplatePanel", () => {
         expect(screen.getByRole("button", { name: "Homepage section" })).toBeInTheDocument();
     });
 
+    it("merges a late initial library result with the created template without duplicates", async () => {
+        let resolveInitialList: ((value: unknown[]) => void) | undefined;
+        const existingTemplate = {
+            name: "Existing template",
+            manifest: { schema_version: 1, sections: [], block_types: [], media_references: [], translation_completeness: { fa: true, en: true } },
+            status: "draft",
+            version: 1,
+            created_at: "2026-08-01T00:00:00Z",
+            updated_at: "2026-08-01T00:00:00Z",
+        };
+        const createdTemplate = {
+            name: "Homepage section",
+            manifest: { schema_version: 1, sections: [], block_types: [], media_references: [], translation_completeness: { fa: true, en: true } },
+            status: "draft",
+            version: 1,
+            created_at: "2026-08-08T00:00:00Z",
+            updated_at: "2026-08-08T00:00:00Z",
+        };
+        adminFetchMock
+            .mockImplementationOnce(() => new Promise((resolve) => { resolveInitialList = resolve; }))
+            .mockResolvedValueOnce(createdTemplate);
+        render(<TemplatePanel sections={sections} initialIdentity={identity} onImported={vi.fn()} />);
+
+        await userEvent.type(screen.getByLabelText("Template name"), "Homepage section");
+        await userEvent.click(screen.getByRole("button", { name: "Save current template" }));
+        await screen.findByRole("button", { name: "Homepage section" });
+
+        await act(async () => {
+            resolveInitialList?.([existingTemplate, createdTemplate]);
+            await Promise.resolve();
+        });
+
+        expect(screen.getByRole("button", { name: "Existing template" })).toBeInTheDocument();
+        expect(screen.getAllByRole("button", { name: "Homepage section" })).toHaveLength(1);
+    });
+
     it("requires a successful dry-run and an explicit confirmation before importing", async () => {
         const onImported = vi.fn();
         const manifest = {

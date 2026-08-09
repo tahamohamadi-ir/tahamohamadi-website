@@ -43,3 +43,10 @@ Updated T2.5 only after the UI and focused tests existed: the Composer UI now ex
 - GREEN implementation: the initial list request captures the library generation. A successful create increments that generation before appending its server response, so the mounted initial request can no longer overwrite a newer create result. Mounted cleanup, sanitized error handling, and import dry-run fingerprint behavior are unchanged.
 - GREEN command: `npm.cmd run test:run -- --run "src/app/admin/(dashboard)/pages/[id]/page.test.tsx" src/components/admin/composer/TemplatePanel.test.tsx`
 - GREEN result: 2 test files passed; 27 tests passed; 0 failures.
+
+## Round 2 reviewer follow-up — reconcile late initial list
+
+- RED regression test: `merges a late initial library result with the created template without duplicates` deferred the initial list, created a second template, then resolved the list with both a pre-existing template and the server's created template. Before the fix, the generation guard discarded the entire late list and hid the pre-existing item. Focused RED result: 1 failed, 8 passed (9 total).
+- GREEN implementation: successful creates are recorded while the initial list is in flight; its mounted response is merged with that create set instead of being discarded. Entries are deduplicated using the existing endpoint projection's `name`/`version`/`updated_at` identity. The serializer intentionally does not expose a template id, so no unsupported client field was introduced.
+- GREEN command: `npm.cmd run test:run -- --run "src/app/admin/(dashboard)/pages/[id]/page.test.tsx" src/components/admin/composer/TemplatePanel.test.tsx`
+- GREEN result: 2 test files passed; 28 tests passed; 0 failures.
