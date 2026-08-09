@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import type { CaseStudyListItem } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 
@@ -40,11 +41,12 @@ export function CaseStudyCard({
         >
             {/* Media Image */}
             {firstMedia && (
-                <div className="aspect-video w-full overflow-hidden bg-muted">
-                    <img
+                <div className="aspect-video w-full overflow-hidden bg-muted relative">
+                    <OptimizedImage
                         src={firstMedia.file || ""}
                         alt={firstMedia.alt_text_fa || firstMedia.alt_text_en || title}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                 </div>
             )}

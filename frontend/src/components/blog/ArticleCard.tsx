@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Clock, Calendar } from "lucide-react";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import type { Locale } from "@/lib/i18n";
 import type { ArticleListItemDTO } from "@/lib/types/blog";
 
@@ -44,11 +46,12 @@ export function ArticleCard({ article, locale, featured = false }: ArticleCardPr
                 >
                     {article.featured_image && (
                         <div className="relative aspect-video w-full md:aspect-auto md:w-1/2">
-                            <img
+                            <OptimizedImage
                                 src={article.featured_image.file_url}
                                 alt={alt || title}
-                                className="h-full w-full object-cover"
-                                loading="eager"
+                                fill
+                                className="object-cover"
+                                priority
                             />
                         </div>
                     )}
