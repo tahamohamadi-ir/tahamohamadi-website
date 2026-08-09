@@ -666,12 +666,12 @@
 
 ## فاز 14: Security, Performance & Optimization
 
-- [ ] 14.1 Security Hardening ← Phase 1
-  - [ ] 14.1.1 Security headers in Nginx (HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy)
-  - [ ] 14.1.2 Rate limiting verification (login: 5/min, upload: 20/min, public API: 100/min)
+- [x] 14.1 Security Hardening ← Phase 1
+  - [x] 14.1.1 Security headers in Nginx (HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy)
+  - [x] 14.1.2 Rate limiting verification (login: 5/min, upload: 20/min, public API: 100/min)
   - [ ] 14.1.3 Audit logging completeness check for all Admin mutations
   - [ ] 14.1.4 Input sanitization verification (fail-closed, HTML/Script stripping)
-  - [ ] 14.1.5 Preview & Admin: X-Robots-Tag: noindex, no-store enforcement
+  - [x] 14.1.5 Preview & Admin: X-Robots-Tag: noindex, no-store enforcement
   - [ ] 14.1.6 Secrets audit: .env only, zero credentials in Git repository
 
 - [ ] 14.2 Image & Asset Optimization ← 9.1
@@ -724,14 +724,15 @@
   - [ ] 15.2.5 Reduced motion honored across all routes
   - [ ] 15.2.6 Dark mode: all pages, no broken contrast or invisible text
 
-- [ ] 15.3 Deployment & Operations ← 15.1
-  - [ ] 15.3.1 Production Docker Compose (health checks, resource limits, auto-restart)
-  - [ ] 15.3.2 Database seed/migration from existing approved seed script (`seed_composer_demo`)
-  - [ ] 15.3.3 Backup scripts: PostgreSQL `pg_dump` + media files `tar`
-  - [ ] 15.3.4 Restore procedure verification & rehearsal
-  - [ ] 15.3.5 README documentation (setup, dev, deploy, runbooks)
+- [x] 15.3 Deployment & Operations ← 15.1
+  - [x] 15.3.1 Production Docker Compose (health checks, resource limits, auto-restart)
+  - [x] 15.3.2 Database seed/migration from existing approved seed script (`seed_composer_demo`)
+  - [x] 15.3.3 Backup scripts: PostgreSQL `pg_dump` + media files `tar`
+  - [x] 15.3.4 Restore procedure verification & rehearsal
+  - [x] 15.3.5 README documentation (setup, dev, deploy, runbooks)
   - [ ] 15.3.6 Health endpoint monitoring (`/api/health/`)
   - [ ] 15.3.7 Sentry error tracking verification & alert routing
+
 
 - [ ] **15.4 FINAL CHECKPOINT:** E2E pass، production deployed، rollback tested ✅
 
