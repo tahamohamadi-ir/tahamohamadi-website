@@ -43,10 +43,30 @@ interface RecentActivityItem {
     reason: string;
 }
 
+interface TranslationIssueItem {
+    title: string;
+    locales: string[];
+    statuses: Record<string, string>;
+    action_path: string;
+}
+
+interface ActionableWidgets {
+    translation_issues: {
+        count: number;
+        items: TranslationIssueItem[];
+        action_path: string;
+    };
+    unread_messages: {
+        count: number;
+        action_path: string;
+    };
+}
+
 interface DashboardData {
     content_stats: ContentStats;
     workflow_status: WorkflowStatus;
     recent_activity: RecentActivityItem[];
+    actionable_widgets?: ActionableWidgets;
 }
 
 // ---------------------------------------------------------------------------
@@ -187,6 +207,96 @@ export default function AdminDashboard() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Actionable Widgets */}
+            {data?.actionable_widgets && (
+                <section aria-label="هشدارهای عملیاتی">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">نیاز به اقدام</h2>
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {/* Translation Issues */}
+                        <Link href={data.actionable_widgets.translation_issues.action_path}>
+                            <Card
+                                className={`cursor-pointer hover:shadow-md transition-shadow h-full ${
+                                    data.actionable_widgets.translation_issues.count > 0
+                                        ? "border-amber-300 bg-amber-50"
+                                        : "border-green-200 bg-green-50"
+                                }`}
+                            >
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                        <span>{data.actionable_widgets.translation_issues.count > 0 ? "⚠️" : "✅"}</span>
+                                        مشکلات ترجمه
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-3xl font-bold">
+                                        {data.actionable_widgets.translation_issues.count}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {data.actionable_widgets.translation_issues.count > 0
+                                            ? "محتوا با ترجمه ناقص یا قدیمی"
+                                            : "همه محتواها ترجمه دارند"}
+                                    </p>
+                                    {data.actionable_widgets.translation_issues.items.length > 0 && (
+                                        <ul className="mt-2 space-y-1">
+                                            {data.actionable_widgets.translation_issues.items.slice(0, 3).map((item, i) => (
+                                                <li key={i} className="text-xs text-gray-600 truncate">
+                                                    • {item.title}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </Link>
+
+                        {/* Unread Messages */}
+                        <Link href={data.actionable_widgets.unread_messages.action_path}>
+                            <Card
+                                className={`cursor-pointer hover:shadow-md transition-shadow h-full ${
+                                    data.actionable_widgets.unread_messages.count > 0
+                                        ? "border-blue-300 bg-blue-50"
+                                        : "border-green-200 bg-green-50"
+                                }`}
+                            >
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                        <span>{data.actionable_widgets.unread_messages.count > 0 ? "📬" : "📭"}</span>
+                                        پیام‌های خوانده‌نشده
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-3xl font-bold">
+                                        {data.actionable_widgets.unread_messages.count}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {data.actionable_widgets.unread_messages.count > 0
+                                            ? "پیام جدید در صندوق ورودی"
+                                            : "صندوق ورودی خالی است"}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </Link>
+
+                        {/* SEO Health — links to content-health page */}
+                        <Link href="/admin/content-health">
+                            <Card className="cursor-pointer hover:shadow-md transition-shadow h-full border-gray-200">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                        <span>🔍</span>
+                                        سلامت محتوا
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-sm text-gray-600">
+                                        بررسی تصاویر بدون alt، رسانه‌های بی‌استفاده و زمان‌بندی‌های ناموفق
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </Link>
+                    </div>
+                </section>
+            )}
 
             {/* Quick Links */}
             <section>

@@ -214,6 +214,7 @@ class AdminDashboardView(APIView):
         from apps.portfolio.models import CaseStudy
         from apps.media.models import MediaAsset
         from apps.workflow.models import AuditEvent
+        from apps.core.content_health import _translation_issues
 
         # Content statistics
         content_stats = {
@@ -263,11 +264,30 @@ class AdminDashboardView(APIView):
                 }
             )
 
+        # Actionable widgets: surface issues directly on the dashboard
+        translation_issues = _translation_issues()
+        unread_messages = ContactMessage.objects.filter(
+            status=ContactMessage.Status.NEW
+        ).count()
+
+        actionable_widgets = {
+            "translation_issues": {
+                "count": len(translation_issues),
+                "items": translation_issues[:5],
+                "action_path": "/admin/content-health",
+            },
+            "unread_messages": {
+                "count": unread_messages,
+                "action_path": "/admin/contact",
+            },
+        }
+
         return Response(
             {
                 "content_stats": content_stats,
                 "workflow_status": workflow_status,
                 "recent_activity": recent_activity,
+                "actionable_widgets": actionable_widgets,
             },
             status=status.HTTP_200_OK,
         )
