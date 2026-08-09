@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
+import { adminFetch } from "@/lib/admin-fetch";
+import type { MediaAssetDTO } from "@/lib/types/media";
 import type { ComposerSection } from "./types";
 import type { Locale } from "@/components/blocks/types";
 import { projectSettingsForLocale } from "./project-settings";
@@ -26,6 +28,59 @@ const LOCALE_OPTIONS: { value: Locale; label: string; dir: "rtl" | "ltr" }[] = [
     { value: "fa", label: "فارسی", dir: "rtl" },
     { value: "en", label: "English", dir: "ltr" },
 ];
+
+const PREVIEW_MEDIA_BLOCK_TYPES = new Set(["parallax", "image_reveal"]);
+
+function usePreviewMediaUrls(sections: ComposerSection[]) {
+    const mediaIds = useMemo(() => Array.from(new Set(
+        sections.flatMap((section) => section.blocks)
+            .filter((block) => PREVIEW_MEDIA_BLOCK_TYPES.has(block.block_type))
+            .map((block) => block.settings.media_id)
+            .filter((mediaId): mediaId is string => typeof mediaId === "string" && mediaId.length > 0),
+    )).sort(), [sections]);
+    const mediaIdsKey = mediaIds.join(",");
+    const [mediaUrls, setMediaUrls] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        let cancelled = false;
+
+        if (mediaIds.length === 0) {
+            setMediaUrls({});
+            return;
+        }
+
+        void Promise.all(mediaIds.map(async (mediaId) => {
+            try {
+                const asset = await adminFetch<MediaAssetDTO>(`/api/admin/media/${mediaId}/`);
+                return asset.status === "active" && asset.file ? [mediaId, asset.file] as const : null;
+            } catch {
+                return null;
+            }
+        })).then((resolved) => {
+            if (!cancelled) {
+                setMediaUrls(Object.fromEntries(resolved.filter((entry): entry is readonly [string, string] => entry !== null)));
+            }
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [mediaIds, mediaIdsKey]);
+
+    return mediaUrls;
+}
+
+function projectPreviewSettings(
+    blockType: ComposerSection["blocks"][number]["block_type"],
+    settings: Record<string, unknown>,
+    locale: Locale,
+    mediaUrls: Record<string, string>,
+) {
+    const projected = projectSettingsForLocale(blockType, settings, locale);
+    const mediaId = projected.media_id;
+    const mediaUrl = typeof mediaId === "string" ? mediaUrls[mediaId] : undefined;
+    return mediaUrl ? { ...projected, media_url: mediaUrl } : projected;
+}
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
 
@@ -53,6 +108,7 @@ export function PreviewPanel({ sections }: PreviewPanelProps) {
 
     const currentDevice = DEVICE_PRESETS[device];
     const currentLocale = LOCALE_OPTIONS.find((l) => l.value === locale)!;
+    const mediaUrls = usePreviewMediaUrls(sections);
 
     return (
         <div className="flex flex-col h-full border rounded-lg bg-muted/30 overflow-hidden">
@@ -145,7 +201,7 @@ export function PreviewPanel({ sections }: PreviewPanelProps) {
                                                     block={{
                                                         id: block.id,
                                                         block_type: block.block_type,
-                                                        settings: projectSettingsForLocale(block.block_type, block.settings, locale),
+                                                        settings: projectPreviewSettings(block.block_type, block.settings, locale, mediaUrls),
                                                         ordering: block.ordering,
                                                     }}
                                                     locale={locale}

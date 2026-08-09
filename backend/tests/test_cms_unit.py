@@ -409,7 +409,7 @@ class TestValidatePageComposition:
         errors = validate_page_composition(page_data)
 
         assert errors
-        assert any("media_id" in error for error in errors)
+        assert any("media_url" in error for error in errors)
 
     def test_rejects_archived_animation_media_asset(self):
         """Animation media IDs must be present in the supplied active-media set."""

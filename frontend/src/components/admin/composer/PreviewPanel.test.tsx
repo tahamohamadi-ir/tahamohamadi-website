@@ -1,10 +1,14 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { PreviewPanel } from "./PreviewPanel";
 import type { ComposerSection } from "./types";
 import { BLOCK_LIBRARY } from "./library-data";
 import { createBlockSettings } from "./block-defaults";
+
+const { mockAdminFetch } = vi.hoisted(() => ({ mockAdminFetch: vi.fn() }));
+
+vi.mock("@/lib/admin-fetch", () => ({ adminFetch: mockAdminFetch }));
 
 function makeSections(overrides: Partial<ComposerSection>[] = []): ComposerSection[] {
     if (overrides.length === 0) {
@@ -36,6 +40,64 @@ function makeSections(overrides: Partial<ComposerSection>[] = []): ComposerSecti
 }
 
 describe("PreviewPanel", () => {
+    it("resolves selected animation media IDs into local preview URLs", async () => {
+        mockAdminFetch.mockImplementation((path: string) => Promise.resolve({
+            id: path.includes("parallax-media") ? "parallax-media" : "image-media",
+            file: path.includes("parallax-media") ? "/media/parallax.jpg" : "/media/reveal.jpg",
+            original_filename: "preview.jpg",
+            mime_type: "image/jpeg",
+            file_size: 1024,
+            alt_text_fa: "",
+            alt_text_en: "Preview image",
+            caption_fa: "",
+            caption_en: "",
+            status: "active",
+            checksum: "a".repeat(64),
+            created_at: "2026-08-08T00:00:00Z",
+            updated_at: "2026-08-08T00:00:00Z",
+        }));
+        const sections = makeSections([{
+            blocks: [
+                {
+                    id: "parallax",
+                    block_type: "parallax",
+                    settings: {
+                        title: "Depth",
+                        media_id: "parallax-media",
+                        speed: 0.5,
+                        duration: 600,
+                        delay: 0,
+                        easing: "ease-out",
+                        trigger: "scroll",
+                    },
+                    ordering: 0,
+                },
+                {
+                    id: "image-reveal",
+                    block_type: "image_reveal",
+                    settings: {
+                        media_id: "image-media",
+                        alt: "Preview image",
+                        duration: 600,
+                        delay: 0,
+                        easing: "ease-out",
+                        trigger: "scroll",
+                    },
+                    ordering: 1,
+                },
+            ],
+        }]);
+
+        render(<PreviewPanel sections={sections} />);
+
+        await waitFor(() => expect(screen.getByAltText("Preview image")).toHaveAttribute("src", "/media/reveal.jpg"));
+        expect(screen.getByTestId("parallax-block").querySelector(".bg-cover")).toHaveStyle({
+            backgroundImage: "url(/media/parallax.jpg)",
+        });
+        expect(mockAdminFetch).toHaveBeenCalledWith("/api/admin/media/parallax-media/");
+        expect(mockAdminFetch).toHaveBeenCalledWith("/api/admin/media/image-media/");
+    });
+
     it("renders device toggle buttons for desktop, tablet, and mobile", () => {
         render(<PreviewPanel sections={[]} />);
 

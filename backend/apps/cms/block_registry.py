@@ -227,7 +227,7 @@ BLOCK_SCHEMAS: dict[str, dict] = {
     "image_reveal": {
         "type": "object",
         "properties": {
-            "media_id": {"type": "string", "pattern": _UUID_PATTERN},
+            "media_id": {"type": ["string", "null"], "pattern": _UUID_PATTERN},
             "alt": {"type": ["string", "null"]},
             "reveal_direction": {"type": "string", "enum": ["left", "right", "top", "bottom", "center"]},
             "duration": {"type": "integer", "minimum": 50, "maximum": 3000},
@@ -235,7 +235,7 @@ BLOCK_SCHEMAS: dict[str, dict] = {
             "easing": {"type": "string", "enum": ["ease-in", "ease-out", "ease-in-out", "linear", "spring", "cubic-bezier"]},
             "trigger": {"type": "string", "enum": ["scroll", "load", "hover", "click"]},
         },
-        "required": ["media_id", "duration", "delay", "easing", "trigger"],
+        "required": ["duration", "delay", "easing", "trigger"],
         "additionalProperties": False,
     },
     "section_transition": {

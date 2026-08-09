@@ -137,6 +137,27 @@ class TestAdminCreatePage:
         assert resp.status_code == 201
         assert resp.json()["sections"][0]["blocks"][0]["settings"]["media_id"] == str(media.id)
 
+    def test_create_page_with_unselected_image_reveal_default_201(
+        self, authed_client, valid_page_payload
+    ):
+        """An inserted image reveal block remains a valid draft before media selection."""
+        valid_page_payload["sections"][0]["blocks"][0] = {
+            "block_type": "image_reveal",
+            "ordering": 0,
+            "settings": {
+                "media_id": None,
+                "duration": 600,
+                "delay": 0,
+                "easing": "ease-out",
+                "trigger": "scroll",
+            },
+        }
+
+        resp = authed_client.post("/api/admin/pages/", valid_page_payload, format="json")
+
+        assert resp.status_code == 201
+        assert resp.json()["sections"][0]["blocks"][0]["settings"]["media_id"] is None
+
     def test_create_page_with_archived_media_id_returns_problem_details(
         self, authed_client, valid_page_payload
     ):
