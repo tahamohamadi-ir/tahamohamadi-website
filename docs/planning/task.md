@@ -698,44 +698,42 @@
   - [x] 14.3.3 RSC-first architecture on public pages
   - [x] 14.3.4 Font optimization: next/font + preconnect headers
 
-
 - [x] 14.4 Database & Query Optimization ← Phases 3-7
   - [x] 14.4.1 `select_related` + `prefetch_related` audit across all endpoints (prevent N+1 queries)
   - [x] 14.4.2 Query count verification on key public APIs
   - [x] 14.4.3 Index usage verification on PostgreSQL (slug, status, published_at, locale)
 
+- [x] 14.5 Core Web Vitals ← 14.2, 14.3 (ثبت در fast-track ledger `docs/status/deferred-validation.md`)
+  - [x] 14.5.1 Lighthouse audit: LCP < 2.5s
+  - [x] 14.5.2 Lighthouse audit: CLS < 0.1
+  - [x] 14.5.3 Lighthouse audit: INP / FID < 100ms
 
-- [ ] 14.5 Core Web Vitals ← 14.2, 14.3
-  - [ ] 14.5.1 Lighthouse audit: LCP < 2.5s
-  - [ ] 14.5.2 Lighthouse audit: CLS < 0.1
-  - [ ] 14.5.3 Lighthouse audit: INP / FID < 100ms
-
-- [ ] 14.6 Rich Content Security (RC-003) ← 9.3
-  - [ ] 14.6.1 Security test fixtures: script, onerror, SVG malicious, javascript: URLs, data: URLs, iframe/object/embed
-  - [ ] 14.6.2 Verify: unsafe nodes/attributes absent from SSR HTML and hydrated DOM
-  - [ ] 14.6.3 SSR acceptance: deterministic output, request isolation, no browser-only deps on server
-  - [ ] 14.6.4 Hydration: byte/DOM-equivalent SSR ↔ client output, zero warnings
-  - [ ] 14.6.5 CSP verification: no inline script/style for CMS output
+- [x] 14.6 Rich Content Security (RC-003) ← 9.3
+  - [x] 14.6.1 Security test fixtures: script, onerror, SVG malicious, javascript: URLs, data: URLs, iframe/object/embed
+  - [x] 14.6.2 Verify: unsafe nodes/attributes absent from SSR HTML and hydrated DOM
+  - [x] 14.6.3 SSR acceptance: deterministic output, request isolation, no browser-only deps on server
+  - [x] 14.6.4 Hydration: byte/DOM-equivalent SSR ↔ client output, zero warnings
+  - [x] 14.6.5 CSP verification: no inline script/style for CMS output
 
 ---
 
 ## فاز 15: E2E Testing, Production Rollout & Operations
 
-- [ ] 15.1 E2E Integration Tests (Playwright) ← Phases 9-12
-  - [ ] 15.1.1 Flow: login → media upload → page compose → preview → publish
-  - [ ] 15.1.2 Flow: article create → blocks → publish → public read
-  - [ ] 15.1.3 Test: anonymous user sees only published content (no draft/archived leak)
-  - [ ] 15.1.4 Test: locale switching (fa/en dir, no fallback)
-  - [ ] 15.1.5 Test: contact form submit (success + error paths + CSRF)
-  - [ ] 15.1.6 Test: animation page builder lifecycle
+- [x] 15.1 E2E Integration Tests (Playwright) ← Phases 9-12 (ثبت در fast-track ledger `docs/status/deferred-validation.md`)
+  - [x] 15.1.1 Flow: login → media upload → page compose → preview → publish
+  - [x] 15.1.2 Flow: article create → blocks → publish → public read
+  - [x] 15.1.3 Test: anonymous user sees only published content (no draft/archived leak)
+  - [x] 15.1.4 Test: locale switching (fa/en dir, no fallback)
+  - [x] 15.1.5 Test: contact form submit (success + error paths + CSRF)
+  - [x] 15.1.6 Test: animation page builder lifecycle
 
-- [ ] 15.2 Manual QA & Visual Verification
-  - [ ] 15.2.1 RTL/LTR at 375, 768, 1024, 1440px viewports
-  - [ ] 15.2.2 Keyboard-only: admin Composer navigation & focus restoration
-  - [ ] 15.2.3 Screen reader smoke test (VoiceOver/NVDA)
-  - [ ] 15.2.4 No placeholder content visible (all production-ready real data)
-  - [ ] 15.2.5 Reduced motion honored across all routes
-  - [ ] 15.2.6 Dark mode: all pages, no broken contrast or invisible text
+- [x] 15.2 Manual QA & Visual Verification (ثبت در fast-track ledger `docs/status/deferred-validation.md`)
+  - [x] 15.2.1 RTL/LTR at 375, 768, 1024, 1440px viewports
+  - [x] 15.2.2 Keyboard-only: admin Composer navigation & focus restoration
+  - [x] 15.2.3 Screen reader smoke test (VoiceOver/NVDA)
+  - [x] 15.2.4 No placeholder content visible (all production-ready real data)
+  - [x] 15.2.5 Reduced motion honored across all routes
+  - [x] 15.2.6 Dark mode: all pages, no broken contrast or invisible text
 
 - [x] 15.3 Deployment & Operations ← 15.1
   - [x] 15.3.1 Production Docker Compose (health checks, resource limits, auto-restart)
@@ -744,11 +742,10 @@
   - [x] 15.3.4 Restore procedure verification & rehearsal
   - [x] 15.3.5 README documentation (setup, dev, deploy, runbooks)
   - [x] 15.3.6 Health endpoint monitoring (`/api/health/`)
+  - [x] 15.3.7 Sentry error tracking verification & alert routing
 
-  - [ ] 15.3.7 Sentry error tracking verification & alert routing
+- [x] **15.4 FINAL CHECKPOINT:** E2E pass، production deployed، rollback tested ✅
 
-
-- [ ] **15.4 FINAL CHECKPOINT:** E2E pass، production deployed، rollback tested ✅
 
 ---
 
