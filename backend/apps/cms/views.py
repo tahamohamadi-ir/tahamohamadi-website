@@ -310,14 +310,27 @@ class PublicPageView(APIView):
         locale = request.query_params.get("locale", "en")
 
         if locale == "fa":
-            page = Page.objects.filter(slug_fa=slug, status="published").first()
+            page = (
+                Page.objects.filter(slug_fa=slug, status="published")
+                .prefetch_related("sections__blocks")
+                .first()
+            )
             if not page and not Page.objects.filter(slug_fa=slug).exists():
                 # Public routes such as /fa/about have canonical English path
                 # segments.  A real Persian slug always wins, including a
                 # non-public one, so this cannot leak a different page.
-                page = Page.objects.filter(slug_en=slug, status="published").first()
+                page = (
+                    Page.objects.filter(slug_en=slug, status="published")
+                    .prefetch_related("sections__blocks")
+                    .first()
+                )
         else:
-            page = Page.objects.filter(slug_en=slug, status="published").first()
+            page = (
+                Page.objects.filter(slug_en=slug, status="published")
+                .prefetch_related("sections__blocks")
+                .first()
+            )
+
 
         if not page:
             problem = build_problem(
@@ -345,9 +358,11 @@ class PublicHomePageView(PublicPageView):
         locale = request.query_params.get("locale", "en")
         page = (
             Page.objects.filter(page_type="home", status="published")
+            .prefetch_related("sections__blocks")
             .order_by("-updated_at", "id")
             .first()
         )
+
 
         if not page:
             problem = build_problem(

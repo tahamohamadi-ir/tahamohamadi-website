@@ -688,10 +688,11 @@
   - [x] 14.3.4 Font optimization: next/font + preconnect headers
 
 
-- [ ] 14.4 Database & Query Optimization ← Phases 3-7
-  - [ ] 14.4.1 `select_related` + `prefetch_related` audit across all endpoints (prevent N+1 queries)
-  - [ ] 14.4.2 Query count verification on key public APIs
-  - [ ] 14.4.3 Index usage verification on PostgreSQL (slug, status, published_at, locale)
+- [x] 14.4 Database & Query Optimization ← Phases 3-7
+  - [x] 14.4.1 `select_related` + `prefetch_related` audit across all endpoints (prevent N+1 queries)
+  - [x] 14.4.2 Query count verification on key public APIs
+  - [x] 14.4.3 Index usage verification on PostgreSQL (slug, status, published_at, locale)
+
 
 - [ ] 14.5 Core Web Vitals ← 14.2, 14.3
   - [ ] 14.5.1 Lighthouse audit: LCP < 2.5s
