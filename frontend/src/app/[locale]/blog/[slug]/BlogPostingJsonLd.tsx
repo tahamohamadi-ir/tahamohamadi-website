@@ -97,11 +97,12 @@ export function BlogPostingJsonLd({
             "@id": `${SITE_URL}/${locale}/blog/${slug}`,
         },
     };
+    const serializedJsonLd = JSON.stringify(jsonLd).replace(/</g, "\\u003c");
 
     return (
         <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            dangerouslySetInnerHTML={{ __html: serializedJsonLd }}
         />
     );
 }

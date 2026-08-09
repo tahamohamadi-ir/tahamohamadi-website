@@ -101,7 +101,7 @@ class ArticleSerializer(serializers.ModelSerializer):
         required=False,
     )
     featured_image = serializers.PrimaryKeyRelatedField(
-        queryset=MediaAsset.objects.all(),
+        queryset=MediaAsset.objects.filter(status="active"),
         required=False,
         allow_null=True,
     )
@@ -249,7 +249,7 @@ class PublicArticleSerializer(serializers.ModelSerializer):
     published_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
     topics = TopicSerializer(many=True, read_only=True)
-    featured_image = MediaAssetSerializer(read_only=True)
+    featured_image = serializers.SerializerMethodField()
     blocks = serializers.SerializerMethodField()
     reading_time = serializers.SerializerMethodField()
 
@@ -294,6 +294,13 @@ class PublicArticleSerializer(serializers.ModelSerializer):
         }
         return project_article_blocks(blocks, media_assets, locale)
 
+    def get_featured_image(self, article: Article) -> dict | None:
+        if not article.featured_image or article.featured_image.status != "active":
+            return None
+        return MediaAssetSerializer(
+            article.featured_image, context=self.context
+        ).data
+
     def get_reading_time(self, article: Article) -> int:
         """Return reading_time for the requested locale."""
         locale = self.context.get("locale", "en")
@@ -318,7 +325,7 @@ class PublicArticleListSerializer(serializers.ModelSerializer):
     published_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
     topics = TopicSerializer(many=True, read_only=True)
-    featured_image = MediaAssetSerializer(read_only=True)
+    featured_image = serializers.SerializerMethodField()
     reading_time = serializers.SerializerMethodField()
 
     class Meta:
@@ -346,6 +353,13 @@ class PublicArticleListSerializer(serializers.ModelSerializer):
         if locale == "fa":
             return article.reading_time_fa
         return article.reading_time_en
+
+    def get_featured_image(self, article: Article) -> dict | None:
+        if not article.featured_image or article.featured_image.status != "active":
+            return None
+        return MediaAssetSerializer(
+            article.featured_image, context=self.context
+        ).data
 
 
 def _article_block_media_ids(content: object) -> list[str]:

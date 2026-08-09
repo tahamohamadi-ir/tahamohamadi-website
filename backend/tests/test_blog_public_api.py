@@ -146,6 +146,33 @@ class TestPublicArticleDetailAccess:
         resp = api_client.get("/api/public/blog/articles/does-not-exist/")
         assert resp.status_code == 404
 
+    def test_featured_image_projects_only_while_media_asset_is_active(
+        self, api_client, published_article, db
+    ):
+        featured = MediaAsset.objects.create(
+            file="media/2026/08/featured.jpg",
+            original_filename="featured.jpg",
+            mime_type="image/jpeg",
+            file_size=123,
+            checksum="f" * 64,
+            status="active",
+        )
+        published_article.featured_image = featured
+        published_article.save(update_fields=["featured_image", "updated_at"])
+
+        active_response = api_client.get(
+            "/api/public/blog/articles/published-article/"
+        )
+        assert active_response.json()["featured_image"]["id"] == str(featured.id)
+
+        featured.status = "archived"
+        featured.save(update_fields=["status", "updated_at"])
+
+        archived_response = api_client.get(
+            "/api/public/blog/articles/published-article/"
+        )
+        assert archived_response.json()["featured_image"] is None
+
 
 # ---------------------------------------------------------------------------
 # Public Article List — Only Published
@@ -450,6 +477,13 @@ class TestPublicArticleRelated:
             content={"url": "https://example.com/widget"},
             ordering=3,
         )
+        ArticleBlock.objects.create(
+            article=published_article,
+            locale="en",
+            block_type="heading",
+            content={"text": "<b>Unsafe heading</b>", "level": 2},
+            ordering=4,
+        )
 
         resp = api_client.get("/api/public/blog/articles/published-article/")
 
@@ -470,3 +504,4 @@ class TestPublicArticleRelated:
                 "ordering": 0,
             }
         ]
+        assert resp.json()["toc"] == []

@@ -334,11 +334,8 @@ class PublicArticleDetailView(APIView):
         serializer = PublicArticleSerializer(article, context={"locale": locale})
         data = serializer.data
 
-        # Generate TOC from heading blocks
-        blocks = list(
-            article.blocks.values("block_type", "content", "locale", "ordering")
-        )
-        data["toc"] = generate_toc(blocks, locale)
+        # Generate TOC only from the validated public block projection.
+        data["toc"] = generate_toc(data["blocks"], locale)
 
         # Related articles: same topics, published, excluding self, max 3
         topic_ids = article.topics.values_list("id", flat=True)
