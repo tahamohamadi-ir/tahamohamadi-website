@@ -203,11 +203,11 @@ def _set_request_audit(
 ) -> None:
     raw_request = getattr(request, "_request", request)
     if skip:
-        raw_request._skip_audit_logging = True
+        setattr(raw_request, "_skip_audit_logging", True)
         return
-    raw_request._audit_target = target
-    raw_request._audit_action = action
-    raw_request._audit_reason = reason
+    setattr(raw_request, "_audit_target", target)
+    setattr(raw_request, "_audit_action", action)
+    setattr(raw_request, "_audit_reason", reason)
 
 
 class AdminComposerTemplateListCreateView(APIView):
@@ -368,7 +368,7 @@ class PublicHomePageView(PublicPageView):
     Home is identified by its content type, not by a locale-specific slug.
     """
 
-    def get(self, request):
+    def get(self, request, slug: str = ""):
         locale = request.query_params.get("locale", "en")
         page = (
             Page.objects.filter(page_type="home", status="published")
