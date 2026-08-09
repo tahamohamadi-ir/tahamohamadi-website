@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 import { BlockInspector } from "./BlockInspector";
@@ -309,12 +309,35 @@ describe("BlockInspector", () => {
     });
 
     describe("Animation editors", () => {
-        it("exposes every parallax field through its label and preserves a zero speed", () => {
+        it("selects active Media Library assets as the parallax media_id", async () => {
             const onChange = vi.fn();
+            vi.spyOn(global, "fetch").mockResolvedValue({
+                ok: true,
+                json: async () => ({
+                    count: 1,
+                    next: null,
+                    previous: null,
+                    results: [{
+                        id: "active-image-id",
+                        file: "/media/depth.jpg",
+                        original_filename: "depth.jpg",
+                        mime_type: "image/jpeg",
+                        file_size: 1024,
+                        alt_text_fa: "",
+                        alt_text_en: "Depth",
+                        caption_fa: "",
+                        caption_en: "",
+                        status: "active",
+                        checksum: "a".repeat(64),
+                        created_at: "2026-08-08T00:00:00Z",
+                        updated_at: "2026-08-08T00:00:00Z",
+                    }],
+                }),
+            } as Response);
             const settings = {
                 title: "Depth",
                 subtitle: "Layered",
-                media_url: "/media/depth.jpg",
+                media_id: null,
                 speed: 0.5,
                 duration: 600,
                 delay: 0,
@@ -332,7 +355,13 @@ describe("BlockInspector", () => {
 
             expect(screen.getByLabelText("Title")).toHaveValue("Depth");
             expect(screen.getByLabelText("Subtitle")).toHaveValue("Layered");
-            expect(screen.getByLabelText("Media URL")).toHaveValue("/media/depth.jpg");
+            await userEvent.click(screen.getByRole("button", { name: "Choose media..." }));
+            await waitFor(() => expect(screen.getByRole("button", { name: "Select depth.jpg" })).toBeInTheDocument());
+            await userEvent.click(screen.getByRole("button", { name: "Select depth.jpg" }));
+            expect(onChange).toHaveBeenLastCalledWith("block-1", {
+                ...settings,
+                media_id: "active-image-id",
+            });
             fireEvent.change(screen.getByLabelText("Speed"), { target: { value: "0" } });
             expect(onChange).toHaveBeenLastCalledWith("block-1", { ...settings, speed: 0 });
         });

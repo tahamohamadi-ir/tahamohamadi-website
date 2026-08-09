@@ -51,11 +51,11 @@ const FIELD_NAMES_BY_CONTROL: Record<string, string[]> = {
     "anim-duration": ["duration"], "anim-delay": ["delay"], "anim-easing": ["easing"],
     "anim-trigger": ["trigger"], "sr-title": ["title"], "sr-desc": ["description"],
     "sr-dir": ["direction"], "px-title": ["title"], "px-sub": ["subtitle"],
-    "px-media": ["media_url"], "px-speed": ["speed"], "ts-content": ["content"],
+    "px-media": ["media_id"], "px-speed": ["speed"], "ts-content": ["content"],
     "ts-stagger": ["stagger_delay"], "fi-items": ["items"], "hc-title": ["title"],
     "hc-desc": ["description"], "hc-icon": ["icon"], "hc-effect": ["hover_effect"],
     "ca-label": ["label"], "ca-target": ["target_number"], "ca-suffix": ["suffix"],
-    "ir-media": ["media_url"], "ir-alt": ["alt"], "ir-dir": ["reveal_direction"],
+    "ir-media": ["media_id"], "ir-alt": ["alt"], "ir-dir": ["reveal_direction"],
     "st-type": ["transition_type"],
 };
 
@@ -108,6 +108,11 @@ function MediaReferencePicker({
             <MediaPicker allowedTypes={["image"]} onSelect={(asset) => onSelect(asset.id)} />
         </div>
     );
+}
+
+function withMediaReference(settings: Record<string, unknown>, mediaId: string | null) {
+    const { media_url: _legacyMediaUrl, ...nextSettings } = settings;
+    return { ...nextSettings, media_id: mediaId };
 }
 
 // ─── Hero Settings Editor ──────────────────────────────────────────────────────
@@ -680,9 +685,11 @@ function ParallaxEditor({ settings, onChange }: { settings: Record<string, unkno
             <Field label="Subtitle" htmlFor="px-sub">
                 <Input id="px-sub" value={(settings.subtitle as string) ?? ""} onChange={(e) => onChange({ ...settings, subtitle: e.target.value || null })} />
             </Field>
-            <Field label="Media URL" htmlFor="px-media">
-                <Input id="px-media" value={(settings.media_url as string) ?? ""} onChange={(e) => onChange({ ...settings, media_url: e.target.value || null })} />
-            </Field>
+            <MediaReferencePicker
+                selected={typeof settings.media_id === "string" && settings.media_id.length > 0}
+                onSelect={(mediaId) => onChange(withMediaReference(settings, mediaId))}
+                onClear={() => onChange(withMediaReference(settings, null))}
+            />
             <Field label="Speed" htmlFor="px-speed">
                 <Input id="px-speed" type="number" step="0.1" value={(settings.speed as number) ?? 0.5} onChange={(e) => onChange({ ...settings, speed: numberOrFallback(e.target.value, 0.5) })} />
             </Field>
@@ -768,9 +775,11 @@ function CounterAnimationEditor({ settings, onChange }: { settings: Record<strin
 function ImageRevealEditor({ settings, onChange }: { settings: Record<string, unknown>; onChange: (s: Record<string, unknown>) => void }) {
     return (
         <div className="space-y-4">
-            <Field label="Media URL" htmlFor="ir-media">
-                <Input id="ir-media" value={(settings.media_url as string) ?? ""} onChange={(e) => onChange({ ...settings, media_url: e.target.value })} />
-            </Field>
+            <MediaReferencePicker
+                selected={typeof settings.media_id === "string" && settings.media_id.length > 0}
+                onSelect={(mediaId) => onChange(withMediaReference(settings, mediaId))}
+                onClear={() => onChange(withMediaReference(settings, null))}
+            />
             <Field label="Alt Text" htmlFor="ir-alt">
                 <Input id="ir-alt" value={(settings.alt as string) ?? ""} onChange={(e) => onChange({ ...settings, alt: e.target.value || null })} />
             </Field>

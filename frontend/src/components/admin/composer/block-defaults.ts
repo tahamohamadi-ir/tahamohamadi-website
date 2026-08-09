@@ -34,7 +34,7 @@ const BLOCK_DEFAULTS: Record<BlockType, Record<string, unknown>> = {
   parallax: {
     title: "",
     subtitle: null,
-    media_url: null,
+    media_id: null,
     speed: 0.5,
     ...animationDefaults,
   },
@@ -54,7 +54,7 @@ const BLOCK_DEFAULTS: Record<BlockType, Record<string, unknown>> = {
     ...animationDefaults,
   },
   image_reveal: {
-    media_url: "",
+    media_id: null,
     alt: null,
     reveal_direction: "left",
     ...animationDefaults,
