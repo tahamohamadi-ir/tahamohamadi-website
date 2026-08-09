@@ -25,6 +25,7 @@ interface TemplateImportResponse {
 }
 
 interface StoredTemplate {
+    id: string;
     name: string;
     manifest: TemplateManifest;
     status: string;
@@ -48,7 +49,7 @@ function inputFingerprint(manifestText: string, identity: TemplatePageIdentity):
 }
 
 function templateKey(template: StoredTemplate): string {
-    return `${template.name}:${template.version}:${template.updated_at}`;
+    return template.id;
 }
 
 function mergeTemplates(...groups: StoredTemplate[][]): StoredTemplate[] {
@@ -238,7 +239,7 @@ export function TemplatePanel({ sections, initialIdentity, onImported }: Templat
                     <div className="space-y-1" aria-label="Stored template list">
                         {storedTemplates.map((template) => (
                             <button
-                                key={`${template.name}-${template.version}-${template.updated_at}`}
+                                key={template.id}
                                 type="button"
                                 className="w-full rounded border bg-white px-2 py-1.5 text-left text-xs"
                                 disabled={busy}

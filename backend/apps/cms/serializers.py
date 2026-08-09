@@ -208,8 +208,9 @@ class PageListSerializer(serializers.ModelSerializer):
 
 
 class ComposerTemplateSerializer(serializers.ModelSerializer):
-    """Admin projection for portable Draft templates without raw object IDs."""
+    """Admin projection for portable Draft templates with stable identifiers."""
 
+    id = serializers.UUIDField(read_only=True)
     version = serializers.IntegerField(read_only=True)
     status = serializers.CharField(read_only=True)
     created_at = serializers.DateTimeField(read_only=True)
@@ -217,7 +218,7 @@ class ComposerTemplateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ComposerTemplate
-        fields = ["name", "manifest", "status", "version", "created_at", "updated_at"]
+        fields = ["id", "name", "manifest", "status", "version", "created_at", "updated_at"]
 
 
 class ComposerTemplateImportSerializer(serializers.Serializer):

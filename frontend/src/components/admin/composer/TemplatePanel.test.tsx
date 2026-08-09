@@ -142,10 +142,11 @@ describe("TemplatePanel", () => {
         expect(screen.getByRole("button", { name: "Homepage section" })).toBeInTheDocument();
     });
 
-    it("merges a late initial library result with the created template without duplicates", async () => {
+    it("keeps distinct templates with matching metadata when the initial library resolves late", async () => {
         let resolveInitialList: ((value: unknown[]) => void) | undefined;
         const existingTemplate = {
-            name: "Existing template",
+            id: "00000000-0000-4000-8000-000000000001",
+            name: "Shared template",
             manifest: { schema_version: 1, sections: [], block_types: [], media_references: [], translation_completeness: { fa: true, en: true } },
             status: "draft",
             version: 1,
@@ -153,29 +154,29 @@ describe("TemplatePanel", () => {
             updated_at: "2026-08-01T00:00:00Z",
         };
         const createdTemplate = {
-            name: "Homepage section",
+            id: "00000000-0000-4000-8000-000000000002",
+            name: "Shared template",
             manifest: { schema_version: 1, sections: [], block_types: [], media_references: [], translation_completeness: { fa: true, en: true } },
             status: "draft",
             version: 1,
-            created_at: "2026-08-08T00:00:00Z",
-            updated_at: "2026-08-08T00:00:00Z",
+            created_at: "2026-08-01T00:00:00Z",
+            updated_at: "2026-08-01T00:00:00Z",
         };
         adminFetchMock
             .mockImplementationOnce(() => new Promise((resolve) => { resolveInitialList = resolve; }))
             .mockResolvedValueOnce(createdTemplate);
         render(<TemplatePanel sections={sections} initialIdentity={identity} onImported={vi.fn()} />);
 
-        await userEvent.type(screen.getByLabelText("Template name"), "Homepage section");
+        await userEvent.type(screen.getByLabelText("Template name"), "Shared template");
         await userEvent.click(screen.getByRole("button", { name: "Save current template" }));
-        await screen.findByRole("button", { name: "Homepage section" });
+        await screen.findByRole("button", { name: "Shared template" });
 
         await act(async () => {
             resolveInitialList?.([existingTemplate, createdTemplate]);
             await Promise.resolve();
         });
 
-        expect(screen.getByRole("button", { name: "Existing template" })).toBeInTheDocument();
-        expect(screen.getAllByRole("button", { name: "Homepage section" })).toHaveLength(1);
+        expect(screen.getAllByRole("button", { name: "Shared template" })).toHaveLength(2);
     });
 
     it("requires a successful dry-run and an explicit confirmation before importing", async () => {

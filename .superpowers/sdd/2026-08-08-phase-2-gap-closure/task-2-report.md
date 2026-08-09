@@ -50,3 +50,12 @@ Updated T2.5 only after the UI and focused tests existed: the Composer UI now ex
 - GREEN implementation: successful creates are recorded while the initial list is in flight; its mounted response is merged with that create set instead of being discarded. Entries are deduplicated using the existing endpoint projection's `name`/`version`/`updated_at` identity. The serializer intentionally does not expose a template id, so no unsupported client field was introduced.
 - GREEN command: `npm.cmd run test:run -- --run "src/app/admin/(dashboard)/pages/[id]/page.test.tsx" src/components/admin/composer/TemplatePanel.test.tsx`
 - GREEN result: 2 test files passed; 28 tests passed; 0 failures.
+
+## Round 3 reviewer follow-up — stable template identifiers
+
+- RED regression tests: the frontend late-list test made two distinct templates share name, version, and timestamps while assigning distinct UUIDs; before the fix the metadata-key reconciliation collapsed them to one item. The focused frontend RED result was 1 failed, 8 passed (9 total). The updated backend API contract test expected the existing serializer's create and list responses to include the persisted UUID; local pytest was blocked before assertions by unavailable local PostgreSQL credentials.
+- GREEN implementation: `ComposerTemplateSerializer` now returns its read-only UUID through the existing templates list/create endpoint. `TemplatePanel` now requires that `id`, reconciles and React-keys by it, and keeps both same-metadata templates while deduplicating the same UUID.
+- GREEN frontend command: `npm.cmd run test:run -- --run "src/app/admin/(dashboard)/pages/[id]/page.test.tsx" src/components/admin/composer/TemplatePanel.test.tsx`
+- GREEN frontend result: 2 test files passed; 28 tests passed; 0 failures.
+- GREEN backend command: `docker compose -f docker-compose.dev.yml --profile test run --rm backend-test tests/test_cms_templates.py -q`
+- GREEN backend result: 18 passed. The command emitted only a pre-existing orphan-container warning.

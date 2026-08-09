@@ -241,7 +241,7 @@ def test_template_create_rejects_unimportable_section_shape(
 
 
 @pytest.mark.django_db
-def test_template_create_and_list_are_draft_audited_and_do_not_expose_ids(
+def test_template_create_and_list_are_draft_audited_and_expose_stable_ids(
     admin_client, admin_user
 ):
     response = admin_client.post(
@@ -254,9 +254,9 @@ def test_template_create_and_list_are_draft_audited_and_do_not_expose_ids(
     created = response.json()
     assert created["status"] == "draft"
     assert created["manifest"]["block_types"] == ["text"]
-    assert "id" not in created
 
     template = ComposerTemplate.objects.get()
+    assert created["id"] == str(template.id)
     assert template.created_by == admin_user.get_username()
     assert template.updated_by == admin_user.get_username()
     audit_event = AuditEvent.objects.get()
@@ -268,7 +268,7 @@ def test_template_create_and_list_are_draft_audited_and_do_not_expose_ids(
     listed = admin_client.get(TEMPLATES_URL)
     assert listed.status_code == 200
     assert listed.json()[0]["name"] == "Bilingual text"
-    assert "id" not in listed.json()[0]
+    assert listed.json()[0]["id"] == str(template.id)
 
 
 @pytest.mark.django_db
