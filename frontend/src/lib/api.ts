@@ -22,6 +22,7 @@ import type {
   PublicSiteAggregateDTO,
 } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
+import type { BlockDTO } from "@/components/blocks";
 
 /**
  * Error returned by a non-successful public API response.
@@ -118,6 +119,39 @@ export interface FetchArticlesParams {
   pageSize?: number;
 }
 
+export interface PublicMediaAssetDTO {
+  id: string;
+  file: string | null;
+  alt_text_fa: string;
+  alt_text_en: string;
+  caption_fa: string;
+  caption_en: string;
+  width: number | null;
+  height: number | null;
+}
+
+export interface PublicArticleSummaryDTO {
+  id: string;
+  slug_fa: string;
+  slug_en: string;
+  title_fa: string;
+  title_en: string;
+  excerpt_fa: string;
+  excerpt_en: string;
+  featured_image: PublicMediaAssetDTO | null;
+  topics: TopicDTO[];
+  status: string;
+  published_at: string | null;
+  updated_at: string;
+  reading_time: number;
+}
+
+export interface PublicArticleDetailDTO extends PublicArticleSummaryDTO {
+  blocks: BlockDTO[];
+  toc: Array<{ id: string; text: string; level: number }>;
+  related: PublicArticleSummaryDTO[];
+}
+
 /**
  * Fetch paginated articles from the public blog API.
  * Endpoint: GET /api/public/blog/articles?locale={locale}&page={n}&topic={slug}
@@ -150,6 +184,21 @@ export async function fetchArticles(
  */
 export async function fetchTopics(): Promise<TopicDTO[]> {
   return fetchPublicAPI<TopicDTO[]>("/public/blog/topics/");
+}
+
+export async function getArticle(
+  slug: string,
+  locale: Locale,
+): Promise<PublicArticleDetailDTO | null> {
+  const path = `/public/blog/articles/${encodeURIComponent(slug)}/?locale=${locale}`;
+  try {
+    return await fetchPublicAPI<PublicArticleDetailDTO>(path);
+  } catch (error) {
+    if (error instanceof PublicApiError && error.status === 404) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export async function fetchResearchProjects(

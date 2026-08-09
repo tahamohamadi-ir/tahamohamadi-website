@@ -25,6 +25,7 @@ from rest_framework import serializers
 from apps.blog.models import Article, ArticleBlock, Topic
 from apps.media.models import MediaAsset
 from apps.media.serializers import MediaAssetSerializer
+from apps.blog.services import project_article_blocks
 
 
 # ---------------------------------------------------------------------------
@@ -246,6 +247,7 @@ class PublicArticleSerializer(serializers.ModelSerializer):
 
     id = serializers.UUIDField(read_only=True)
     published_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
     topics = TopicSerializer(many=True, read_only=True)
     featured_image = MediaAssetSerializer(read_only=True)
     blocks = serializers.SerializerMethodField()
@@ -265,16 +267,32 @@ class PublicArticleSerializer(serializers.ModelSerializer):
             "topics",
             "status",
             "published_at",
+            "updated_at",
             "reading_time",
             "blocks",
         ]
         read_only_fields = fields
 
     def get_blocks(self, article: Article) -> list[dict]:
-        """Return blocks filtered by the locale in context."""
+        """Return validated locale blocks with active media resolved."""
         locale = self.context.get("locale", "en")
-        blocks_qs = article.blocks.filter(locale=locale).order_by("ordering")
-        return ArticleBlockSerializer(blocks_qs, many=True).data
+        blocks = list(
+            article.blocks.filter(locale=locale)
+            .order_by("ordering")
+            .values("id", "locale", "block_type", "content", "ordering")
+        )
+        referenced_ids = {
+            media_id
+            for block in blocks
+            for media_id in _article_block_media_ids(block["content"])
+        }
+        media_assets = {
+            str(asset.id): asset
+            for asset in MediaAsset.objects.filter(
+                id__in=referenced_ids, status="active"
+            )
+        }
+        return project_article_blocks(blocks, media_assets, locale)
 
     def get_reading_time(self, article: Article) -> int:
         """Return reading_time for the requested locale."""
@@ -298,6 +316,7 @@ class PublicArticleListSerializer(serializers.ModelSerializer):
 
     id = serializers.UUIDField(read_only=True)
     published_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
     topics = TopicSerializer(many=True, read_only=True)
     featured_image = MediaAssetSerializer(read_only=True)
     reading_time = serializers.SerializerMethodField()
@@ -316,6 +335,7 @@ class PublicArticleListSerializer(serializers.ModelSerializer):
             "topics",
             "status",
             "published_at",
+            "updated_at",
             "reading_time",
         ]
         read_only_fields = fields
@@ -326,3 +346,16 @@ class PublicArticleListSerializer(serializers.ModelSerializer):
         if locale == "fa":
             return article.reading_time_fa
         return article.reading_time_en
+
+
+def _article_block_media_ids(content: object) -> list[str]:
+    if not isinstance(content, dict):
+        return []
+    media_ids: list[str] = []
+    media_id = content.get("media_id")
+    if isinstance(media_id, str):
+        media_ids.append(media_id)
+    configured = content.get("media_ids")
+    if isinstance(configured, list):
+        media_ids.extend(value for value in configured if isinstance(value, str))
+    return media_ids

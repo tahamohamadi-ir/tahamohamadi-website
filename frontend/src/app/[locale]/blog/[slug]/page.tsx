@@ -6,67 +6,34 @@ import {
     SITE_URL,
     type Locale,
 } from "@/lib/i18n";
-import { fetchPublicAPI } from "@/lib/api";
+import {
+    getArticle,
+    type PublicArticleDetailDTO,
+    type PublicArticleSummaryDTO,
+} from "@/lib/api";
 import { BlockRenderer, filterKnownBlocks } from "@/components/blocks";
 import type { BlockDTO } from "@/components/blocks";
 import { TableOfContents } from "./TableOfContents";
 import { RelatedArticles } from "./RelatedArticles";
-import { ArticleNavigation } from "./ArticleNavigation";
 import { BlogPostingJsonLd } from "./BlogPostingJsonLd";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
-
-interface TopicDTO {
-    id: string;
-    slug: string;
-    name_fa: string;
-    name_en: string;
-}
-
-interface MediaAssetDTO {
-    id: string;
-    file_url: string;
-    alt_text_fa: string;
-    alt_text_en: string;
-    caption_fa: string;
-    caption_en: string;
-    width: number | null;
-    height: number | null;
-}
-
-interface ArticleDetailDTO {
-    id: string;
-    slug_fa: string;
-    slug_en: string;
-    title_fa: string;
-    title_en: string;
-    excerpt_fa: string;
-    excerpt_en: string;
-    featured_image: MediaAssetDTO | null;
-    topics: TopicDTO[];
-    status: string;
-    published_at: string | null;
-    reading_time_fa: number;
-    reading_time_en: number;
-    blocks: BlockDTO[];
-    related_articles: RelatedArticleDTO[];
-    previous_article: ArticleNavItemDTO | null;
-    next_article: ArticleNavItemDTO | null;
-}
 
 interface RelatedArticleDTO {
     id: string;
     slug: string;
     title: string;
     excerpt: string;
-    featured_image: MediaAssetDTO | null;
+    featured_image: {
+        id: string;
+        file_url: string;
+        alt_text_fa: string;
+        alt_text_en: string;
+        width: number | null;
+        height: number | null;
+    } | null;
     published_at: string | null;
     reading_time: number;
-}
-
-interface ArticleNavItemDTO {
-    slug: string;
-    title: string;
 }
 
 interface TOCItem {
@@ -78,11 +45,11 @@ interface TOCItem {
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function getLocalizedString(
-    obj: ArticleDetailDTO,
+    obj: PublicArticleDetailDTO | PublicArticleSummaryDTO,
     field: "title" | "excerpt" | "slug",
     locale: Locale
 ): string {
-    const key = `${field}_${locale}` as keyof ArticleDetailDTO;
+    const key = `${field}_${locale}` as keyof PublicArticleDetailDTO;
     return (obj[key] as string) ?? "";
 }
 
@@ -138,16 +105,6 @@ function calculateWordCount(blocks: BlockDTO[]): number {
 
 // ─── Data Fetching ─────────────────────────────────────────────────────────────
 
-async function getArticle(slug: string, locale: Locale): Promise<ArticleDetailDTO | null> {
-    try {
-        return await fetchPublicAPI<ArticleDetailDTO>(
-            `/public/blog/articles/${slug}?locale=${locale}`
-        );
-    } catch {
-        return null;
-    }
-}
-
 // ─── Metadata ──────────────────────────────────────────────────────────────────
 
 interface BlogDetailPageProps {
@@ -170,7 +127,7 @@ export async function generateMetadata({
     const images: { url: string; width?: number; height?: number; alt?: string }[] = [];
     if (article.featured_image) {
         images.push({
-            url: article.featured_image.file_url,
+            url: article.featured_image.file ?? "",
             width: article.featured_image.width ?? undefined,
             height: article.featured_image.height ?? undefined,
             alt: locale === "fa"
@@ -199,6 +156,7 @@ export async function generateMetadata({
             alternateLocale: altLocale === "fa" ? "fa_IR" : "en_US",
             type: "article",
             publishedTime: article.published_at ?? undefined,
+            modifiedTime: article.updated_at,
             authors: [locale === "fa" ? "طاها محمدی" : "Taha Mohamadi"],
             tags: article.topics.map((t) =>
                 locale === "fa" ? t.name_fa : t.name_en
@@ -209,7 +167,7 @@ export async function generateMetadata({
             card: "summary_large_image",
             title,
             description,
-            images: article.featured_image ? [article.featured_image.file_url] : undefined,
+            images: article.featured_image?.file ? [article.featured_image.file] : undefined,
         },
         robots: {
             index: true,
@@ -236,7 +194,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
 
     const title = getLocalizedString(article, "title", validLocale);
     const excerpt = getLocalizedString(article, "excerpt", validLocale);
-    const readingTime = validLocale === "fa" ? article.reading_time_fa : article.reading_time_en;
+    const readingTime = article.reading_time;
     const knownBlocks = filterKnownBlocks(article.blocks, "article");
     const tocItems = generateTOC(knownBlocks);
 
@@ -252,12 +210,45 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
             { year: "numeric", month: "long", day: "numeric" }
         )
         : null;
+    const formattedUpdatedDate = new Date(article.updated_at).toLocaleDateString(
+        validLocale === "fa" ? "fa-IR" : "en-US",
+        { year: "numeric", month: "long", day: "numeric" }
+    );
+    const relatedArticles: RelatedArticleDTO[] = article.related.map((related) => ({
+        id: related.id,
+        slug: getLocalizedString(related, "slug", validLocale),
+        title: getLocalizedString(related, "title", validLocale),
+        excerpt: getLocalizedString(related, "excerpt", validLocale),
+        featured_image: related.featured_image
+            ? {
+                id: related.featured_image.id,
+                file_url: related.featured_image.file ?? "",
+                alt_text_fa: related.featured_image.alt_text_fa,
+                alt_text_en: related.featured_image.alt_text_en,
+                width: related.featured_image.width,
+                height: related.featured_image.height,
+            }
+            : null,
+        published_at: related.published_at,
+        reading_time: related.reading_time,
+    }));
+    const structuredArticle = {
+        ...article,
+        featured_image: article.featured_image
+            ? {
+                ...article.featured_image,
+                file_url: article.featured_image.file ?? "",
+            }
+            : null,
+        reading_time_fa: readingTime,
+        reading_time_en: readingTime,
+    };
 
     return (
         <>
             {/* Structured Data — only for published, complete articles (Req 6.9) */}
             <BlogPostingJsonLd
-                article={article}
+                article={structuredArticle}
                 locale={validLocale}
                 slug={slug}
                 wordCount={calculateWordCount(knownBlocks)}
@@ -300,6 +291,10 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                                 {formattedDate}
                             </time>
                         )}
+                        <time dateTime={article.updated_at}>
+                            {validLocale === "fa" ? "Ø¨Ù‡â€ŒØ±ÙˆØ²Ø´Ø¯Ù‡" : "Updated"}{" "}
+                            {formattedUpdatedDate}
+                        </time>
                         {readingTime > 0 && (
                             <span className="flex items-center gap-1">
                                 <svg
@@ -328,7 +323,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                 {article.featured_image && (
                     <figure className="mb-8 overflow-hidden rounded-lg">
                         <img
-                            src={article.featured_image.file_url}
+                            src={article.featured_image.file ?? ""}
                             alt={featuredImageAlt}
                             width={article.featured_image.width ?? undefined}
                             height={article.featured_image.height ?? undefined}
@@ -359,18 +354,12 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                     )}
                 </div>
 
-                {/* Previous/Next Navigation */}
-                <ArticleNavigation
-                    previous={article.previous_article}
-                    next={article.next_article}
-                    locale={validLocale}
-                />
             </article>
 
             {/* Related Articles */}
-            {article.related_articles.length > 0 && (
+            {relatedArticles.length > 0 && (
                 <RelatedArticles
-                    articles={article.related_articles}
+                    articles={relatedArticles}
                     locale={validLocale}
                 />
             )}

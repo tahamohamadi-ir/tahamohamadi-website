@@ -176,13 +176,15 @@ class TestSanitizeBlockContent:
         with pytest.raises(ValidationError, match="must be a list"):
             sanitize_block_content("gallery", content)
 
-    def test_image_block_sanitizes_alt_text(self):
+    def test_image_block_discards_caller_supplied_alt_text(self):
         content = {
             "media_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
             "alt": "A <b>bold</b> image",
         }
         result = sanitize_block_content("image", content)
-        assert result["alt"] == "A bold image"
+        assert result == {
+            "media_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        }
 
     # --- Reference blocks ---
 
@@ -377,3 +379,75 @@ class TestValidateArticleContent:
         errors = validate_article_content(blocks)
         assert len(errors) == 1
         assert "dangerous content" in errors[0]
+
+    @pytest.mark.parametrize("block_type", ["video", "embed", "caption"])
+    def test_rejects_blocks_outside_document_v1_allowlist(self, block_type):
+        errors = validate_article_content(
+            [{"block_type": block_type, "content": {"text": "unsupported"}}]
+        )
+
+        assert errors == [
+            f"blocks[0]: unsupported block_type '{block_type}' for document-v1."
+        ]
+
+    def test_rejects_code_language_outside_bounded_allowlist(self):
+        errors = validate_article_content(
+            [
+                {
+                    "block_type": "code",
+                    "content": {"code": "++++", "language": "brainfuck"},
+                }
+            ]
+        )
+
+        assert errors == [
+            "blocks[0] (code): unsupported language 'brainfuck'."
+        ]
+
+    @pytest.mark.parametrize("block_type,content", [
+        ("image", {"media_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"}),
+        (
+            "gallery",
+            {"media_ids": ["a1b2c3d4-e5f6-7890-abcd-ef1234567890"]},
+        ),
+    ])
+    def test_rejects_missing_or_inactive_media_uuid(
+        self, block_type, content
+    ):
+        errors = validate_article_content(
+            [{"block_type": block_type, "content": content}],
+            known_media_ids=set(),
+        )
+
+        assert len(errors) == 1
+        assert "does not reference an active MediaAsset" in errors[0]
+
+    def test_media_sanitization_persists_references_not_projection_metadata(self):
+        media_id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        blocks = [
+            {
+                "block_type": "image",
+                "content": {
+                    "media_id": media_id,
+                    "url": "https://caller.invalid/image.jpg",
+                    "alt": "Caller alt",
+                    "caption": "Caller caption",
+                },
+            },
+            {
+                "block_type": "gallery",
+                "content": {
+                    "media_ids": [media_id],
+                    "layout": "carousel",
+                    "items": [{"url": "https://caller.invalid/image.jpg"}],
+                },
+            },
+        ]
+
+        sanitized, _warnings = sanitize_article_blocks(blocks)
+
+        assert sanitized[0]["content"] == {"media_id": media_id}
+        assert sanitized[1]["content"] == {
+            "media_ids": [media_id],
+            "layout": "carousel",
+        }

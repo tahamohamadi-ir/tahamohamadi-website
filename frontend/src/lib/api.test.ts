@@ -10,6 +10,7 @@ import {
   fetchPublicSiteConfig,
   fetchPublicSiteAggregate,
   fetchTopics,
+  getArticle,
   getPublicPage,
   PublicApiError,
 } from "./api";
@@ -113,6 +114,44 @@ describe("public blog API paths", () => {
       "https://api.example.test/api/public/blog/topics/",
       expect.any(Object),
     );
+  });
+
+  it("loads a localized public article detail using the canonical path", async () => {
+    const article = { id: "article-1", reading_time: 4, related: [] };
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(article),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getArticle("safe paths", "en")).resolves.toEqual(article);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/api/public/blog/articles/safe%20paths/?locale=en",
+      expect.any(Object),
+    );
+  });
+
+  it("returns null only for a missing public article", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 404 }));
+
+    await expect(getArticle("missing", "fa")).resolves.toBeNull();
+  });
+
+  it("keeps article server failures visible as PublicApiError", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 503 }));
+
+    await expect(getArticle("unavailable", "en")).rejects.toMatchObject({
+      name: "PublicApiError",
+      status: 503,
+      path: "/public/blog/articles/unavailable/?locale=en",
+    } satisfies Partial<PublicApiError>);
+  });
+
+  it("keeps article network failures visible", async () => {
+    const networkError = new TypeError("Failed to fetch");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(networkError));
+
+    await expect(getArticle("offline", "en")).rejects.toBe(networkError);
   });
 });
 

@@ -13,9 +13,11 @@ Validates that:
 
 import pytest
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from rest_framework.test import APIClient
 
 from apps.blog.models import Article, ArticleBlock, Topic
+from apps.media.models import MediaAsset
 
 
 # ---------------------------------------------------------------------------
@@ -362,3 +364,109 @@ class TestPublicArticleRelated:
         data = resp.json()
         related_slugs = [a["slug_en"] for a in data["related"]]
         assert "published-article" not in related_slugs
+
+    def test_detail_contract_uses_localized_reading_time_topic_related_and_updated_at(
+        self, api_client, published_article, topic, db
+    ):
+        related = Article.objects.create(
+            slug_fa="related-fa",
+            slug_en="related-en",
+            title_fa="Related FA",
+            title_en="Related EN",
+            status="published",
+            published_at=timezone.now(),
+            reading_time_fa=7,
+            reading_time_en=4,
+        )
+        related.topics.add(topic)
+
+        resp = api_client.get(
+            "/api/public/blog/articles/published-article/?locale=en"
+        )
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["reading_time"] == 2
+        assert parse_datetime(data["updated_at"]) == published_article.updated_at
+        assert [item["slug_en"] for item in data["related"]] == ["related-en"]
+        assert data["related"][0]["reading_time"] == 4
+        assert "related_articles" not in data
+        assert "previous_article" not in data
+        assert "next_article" not in data
+
+    def test_public_projection_resolves_active_media_and_omits_invalid_blocks(
+        self, api_client, published_article, db
+    ):
+        active = MediaAsset.objects.create(
+            file="media/2026/08/active.jpg",
+            original_filename="active.jpg",
+            mime_type="image/jpeg",
+            file_size=123,
+            width=640,
+            height=480,
+            checksum="a" * 64,
+            alt_text_en="Active alt",
+            caption_en="Active caption",
+            status="active",
+        )
+        archived = MediaAsset.objects.create(
+            file="media/2026/08/archived.jpg",
+            original_filename="archived.jpg",
+            mime_type="image/jpeg",
+            file_size=123,
+            checksum="b" * 64,
+            status="archived",
+        )
+        published_article.blocks.all().delete()
+        ArticleBlock.objects.create(
+            article=published_article,
+            locale="en",
+            block_type="image",
+            content={
+                "media_id": str(active.id),
+                "url": "https://caller.invalid/image.jpg",
+                "alt": "Caller alt",
+            },
+            ordering=0,
+        )
+        ArticleBlock.objects.create(
+            article=published_article,
+            locale="en",
+            block_type="image",
+            content={"media_id": str(archived.id)},
+            ordering=1,
+        )
+        ArticleBlock.objects.create(
+            article=published_article,
+            locale="en",
+            block_type="paragraph",
+            content={"text": "<b>legacy raw HTML</b>"},
+            ordering=2,
+        )
+        ArticleBlock.objects.create(
+            article=published_article,
+            locale="en",
+            block_type="embed",
+            content={"url": "https://example.com/widget"},
+            ordering=3,
+        )
+
+        resp = api_client.get("/api/public/blog/articles/published-article/")
+
+        assert resp.status_code == 200
+        assert resp.json()["blocks"] == [
+            {
+                "id": str(published_article.blocks.get(ordering=0).id),
+                "locale": "en",
+                "block_type": "image",
+                "content": {
+                    "media_id": str(active.id),
+                    "url": "/media/media/2026/08/active.jpg",
+                    "alt": "Active alt",
+                    "caption": "Active caption",
+                    "width": 640,
+                    "height": 480,
+                },
+                "ordering": 0,
+            }
+        ]

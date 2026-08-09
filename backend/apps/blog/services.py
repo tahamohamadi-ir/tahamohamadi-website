@@ -37,6 +37,41 @@ _TEXT_BLOCK_TYPES = frozenset(
 # Block types that reference media
 _MEDIA_BLOCK_TYPES = frozenset({"image", "gallery"})
 
+ARTICLE_DOCUMENT_VERSION = 1
+ARTICLE_BLOCK_TYPES = frozenset(
+    {
+        "paragraph",
+        "heading",
+        "list",
+        "image",
+        "gallery",
+        "quote",
+        "code",
+        "divider",
+        "callout",
+        "reference",
+    }
+)
+ARTICLE_CODE_LANGUAGES = frozenset(
+    {
+        "",
+        "bash",
+        "css",
+        "html",
+        "javascript",
+        "json",
+        "jsx",
+        "markdown",
+        "plaintext",
+        "python",
+        "shell",
+        "sql",
+        "tsx",
+        "typescript",
+        "yaml",
+    }
+)
+
 
 # ---------------------------------------------------------------------------
 # URL safety (reuses the same logic as apps.cms.services.is_safe_url)
@@ -173,8 +208,8 @@ def _sanitize_list_values(block_type: str, field: str, items: list) -> list:
 
 
 def _sanitize_media_block(block_type: str, content: dict) -> dict:
-    """Validate media blocks (image, gallery) have valid UUID references."""
-    sanitized = dict(content)
+    """Keep only media references and non-derived presentation settings."""
+    sanitized = {}
 
     # Validate single media_id
     media_id = content.get("media_id")
@@ -183,6 +218,7 @@ def _sanitize_media_block(block_type: str, content: dict) -> dict:
             raise ValidationError(
                 f"Invalid media_id in {block_type} block: must be a valid UUID."
             )
+        sanitized["media_id"] = media_id
 
     # Validate media_ids list
     media_ids = content.get("media_ids")
@@ -196,17 +232,10 @@ def _sanitize_media_block(block_type: str, content: dict) -> dict:
                 raise ValidationError(
                     f"Invalid media_ids[{idx}] in {block_type} block: must be a valid UUID."
                 )
+        sanitized["media_ids"] = list(media_ids)
 
-    # Sanitize any text fields (e.g., alt text, caption) in media blocks
-    for key, value in content.items():
-        if key in ("media_id", "media_ids"):
-            continue
-        if isinstance(value, str):
-            if _contains_dangerous_content(value):
-                raise ValidationError(
-                    f"Dangerous content detected in {block_type} block field '{key}'."
-                )
-            sanitized[key] = _strip_html_tags(value)
+    if block_type == "gallery" and "layout" in content:
+        sanitized["layout"] = content["layout"]
 
     return sanitized
 
@@ -294,8 +323,19 @@ def sanitize_article_blocks(blocks: list[dict]) -> tuple[list[dict], list[str]]:
         if not isinstance(block_type, str) or not block_type:
             raise ValidationError(f"blocks[{idx}]: 'block_type' is required and must be a non-empty string.")
 
+        if block_type not in ARTICLE_BLOCK_TYPES:
+            raise ValidationError(
+                f"blocks[{idx}]: unsupported block_type '{block_type}' "
+                f"for document-v{ARTICLE_DOCUMENT_VERSION}."
+            )
+
         if not isinstance(content, dict):
             raise ValidationError(f"blocks[{idx}]: 'content' must be a dict.")
+
+        if block_type == "code":
+            code_errors = _validate_code_content(idx, content)
+            if code_errors:
+                raise ValidationError(code_errors)
 
         # Check if content contains HTML before sanitization (for warnings)
         original_content_str = str(content)
@@ -326,7 +366,9 @@ def sanitize_article_blocks(blocks: list[dict]) -> tuple[list[dict], list[str]]:
 # Validation-only (no modification)
 # ---------------------------------------------------------------------------
 
-def validate_article_content(blocks: list[dict]) -> list[str]:
+def validate_article_content(
+    blocks: list[dict], known_media_ids: set[str] | None = None
+) -> list[str]:
     """Validate article blocks without modifying them.
 
     Returns a list of validation error strings. Empty list means valid.
@@ -358,25 +400,31 @@ def validate_article_content(blocks: list[dict]) -> list[str]:
             errors.append(f"blocks[{idx}]: 'content' must be a dict.")
             continue
 
+        if block_type not in ARTICLE_BLOCK_TYPES:
+            errors.append(
+                f"blocks[{idx}]: unsupported block_type '{block_type}' "
+                f"for document-v{ARTICLE_DOCUMENT_VERSION}."
+            )
+            continue
+
         # Check text fields for dangerous/HTML content
         if block_type in _TEXT_BLOCK_TYPES:
             errors.extend(_validate_text_content(idx, block_type, content))
 
         # Check media blocks for valid UUIDs
         elif block_type in _MEDIA_BLOCK_TYPES:
-            errors.extend(_validate_media_content(idx, block_type, content))
+            errors.extend(
+                _validate_media_content(
+                    idx, block_type, content, known_media_ids=known_media_ids
+                )
+            )
 
         # Check reference blocks for URL safety
         elif block_type == "reference":
             errors.extend(_validate_reference_content(idx, content))
 
-        # Skip code and divider (no validation needed)
-        elif block_type in ("code", "divider"):
-            pass
-
-        # Unknown types: check for dangerous content
-        else:
-            errors.extend(_validate_generic_content(idx, block_type, content))
+        elif block_type == "code":
+            errors.extend(_validate_code_content(idx, content))
 
     return errors
 
@@ -413,19 +461,33 @@ def _validate_text_content(idx: int, block_type: str, content: dict) -> list[str
     return errors
 
 
-def _validate_media_content(idx: int, block_type: str, content: dict) -> list[str]:
+def _validate_media_content(
+    idx: int,
+    block_type: str,
+    content: dict,
+    known_media_ids: set[str] | None = None,
+) -> list[str]:
     """Validate media block references."""
     errors: list[str] = []
 
     media_id = content.get("media_id")
-    if media_id is not None:
+    if block_type == "image" and media_id is None:
+        errors.append(f"blocks[{idx}] (image): media_id is required.")
+    elif media_id is not None:
         if not isinstance(media_id, str) or not _UUID_RE.match(media_id):
             errors.append(
                 f"blocks[{idx}] ({block_type}): invalid media_id (must be UUID)."
             )
+        elif known_media_ids is not None and media_id not in known_media_ids:
+            errors.append(
+                f"blocks[{idx}] ({block_type}): media_id does not reference "
+                "an active MediaAsset."
+            )
 
     media_ids = content.get("media_ids")
-    if media_ids is not None:
+    if block_type == "gallery" and media_ids is None:
+        errors.append(f"blocks[{idx}] (gallery): media_ids is required.")
+    elif media_ids is not None:
         if not isinstance(media_ids, list):
             errors.append(f"blocks[{idx}] ({block_type}): media_ids must be a list.")
         else:
@@ -435,6 +497,39 @@ def _validate_media_content(idx: int, block_type: str, content: dict) -> list[st
                         f"blocks[{idx}] ({block_type}): invalid media_ids[{mid_idx}] "
                         "(must be UUID)."
                     )
+                elif known_media_ids is not None and mid not in known_media_ids:
+                    errors.append(
+                        f"blocks[{idx}] ({block_type}): media_ids[{mid_idx}] does "
+                        "not reference an active MediaAsset."
+                    )
+
+    if block_type == "gallery" and content.get("layout", "grid") not in (
+        "grid",
+        "carousel",
+    ):
+        errors.append(
+            f"blocks[{idx}] (gallery): layout must be 'grid' or 'carousel'."
+        )
+
+    return errors
+
+
+def _validate_code_content(idx: int, content: dict) -> list[str]:
+    """Validate code text and its bounded display-language label."""
+    errors: list[str] = []
+    code = content.get("code", "")
+    language = content.get("language", "")
+
+    if not isinstance(code, str):
+        errors.append(f"blocks[{idx}] (code): 'code' must be a string.")
+    if language is None:
+        language = ""
+    if not isinstance(language, str):
+        errors.append(f"blocks[{idx}] (code): 'language' must be a string.")
+    elif language.lower() not in ARTICLE_CODE_LANGUAGES:
+        errors.append(
+            f"blocks[{idx}] (code): unsupported language '{language}'."
+        )
 
     return errors
 
@@ -467,8 +562,56 @@ def _validate_reference_content(idx: int, content: dict) -> list[str]:
                 errors.append(
                     f"blocks[{idx}] (reference): dangerous content in field '{key}'."
                 )
+            elif _HTML_TAG_RE.search(value):
+                errors.append(
+                    f"blocks[{idx}] (reference): raw HTML detected in field '{key}'."
+                )
 
     return errors
+
+
+def project_article_blocks(
+    blocks: list[dict], media_assets: dict[str, object], locale: str
+) -> list[dict]:
+    """Return safe document-v1 blocks with localized active-media projections."""
+    known_media_ids = set(media_assets)
+    projected: list[dict] = []
+
+    for block in blocks:
+        if validate_article_content([block], known_media_ids=known_media_ids):
+            continue
+
+        sanitized, _warnings = sanitize_article_blocks([block])
+        output = sanitized[0]
+        content = dict(output["content"])
+
+        if output["block_type"] == "image":
+            asset = media_assets[content["media_id"]]
+            content.update(_project_media_asset(asset, locale))
+        elif output["block_type"] == "gallery":
+            content["items"] = [
+                {
+                    "media_id": media_id,
+                    **_project_media_asset(media_assets[media_id], locale),
+                }
+                for media_id in content["media_ids"]
+            ]
+
+        output["content"] = content
+        projected.append(output)
+
+    return projected
+
+
+def _project_media_asset(asset: object, locale: str) -> dict:
+    file_field = getattr(asset, "file", None)
+    return {
+        "url": file_field.url if file_field else None,
+        "alt": getattr(asset, f"alt_text_{locale}", ""),
+        "caption": getattr(asset, f"caption_{locale}", ""),
+        "width": getattr(asset, "width", None),
+        "height": getattr(asset, "height", None),
+    }
 
 
 def _validate_generic_content(idx: int, block_type: str, content: dict) -> list[str]:

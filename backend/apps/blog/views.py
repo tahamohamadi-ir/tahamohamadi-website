@@ -24,6 +24,7 @@ from rest_framework.viewsets import ModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.blog.models import Article, Topic
+from apps.media.models import MediaAsset
 from apps.blog.serializers import (
     ArticleListSerializer,
     ArticleSerializer,
@@ -39,6 +40,15 @@ from apps.blog.services import (
 )
 from apps.core.exceptions import build_problem, PROBLEM_CONTENT_TYPE
 from apps.core.services import ConflictError, save_with_optimistic_lock
+
+
+def _active_media_ids() -> set[str]:
+    return {
+        str(media_id)
+        for media_id in MediaAsset.objects.filter(status="active").values_list(
+            "id", flat=True
+        )
+    }
 
 
 class AdminArticleViewSet(ModelViewSet):
@@ -74,7 +84,9 @@ class AdminArticleViewSet(ModelViewSet):
 
         # Validate and sanitize blocks before persisting
         blocks_data = request.data.get("blocks", [])
-        content_errors = validate_article_content(blocks_data)
+        content_errors = validate_article_content(
+            blocks_data, known_media_ids=_active_media_ids()
+        )
         if content_errors:
             problem = build_problem(
                 status.HTTP_400_BAD_REQUEST,
@@ -122,7 +134,9 @@ class AdminArticleViewSet(ModelViewSet):
 
         # Validate and sanitize blocks before persisting
         blocks_data = request.data.get("blocks", [])
-        content_errors = validate_article_content(blocks_data)
+        content_errors = validate_article_content(
+            blocks_data, known_media_ids=_active_media_ids()
+        )
         if content_errors:
             problem = build_problem(
                 status.HTTP_400_BAD_REQUEST,
