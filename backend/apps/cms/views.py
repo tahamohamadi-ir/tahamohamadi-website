@@ -20,7 +20,9 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.exceptions import PermissionDenied
 
+from apps.core.permissions import IsContentEditorRole, Roles, user_has_role
 from apps.cms.models import ComposerTemplate, Page
 from apps.cms.serializers import (
     ComposerTemplateImportSerializer,
@@ -46,6 +48,7 @@ class AdminPageViewSet(ModelViewSet):
     - update: validates composition, uses optimistic locking via version field
     """
 
+    permission_classes = [IsContentEditorRole]
     queryset = Page.objects.all().order_by("-updated_at", "id")
     filterset_fields = ["status", "page_type"]
     search_fields = ["title_fa", "title_en", "slug_fa", "slug_en"]
@@ -67,6 +70,10 @@ class AdminPageViewSet(ModelViewSet):
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
+        new_status = serializer.validated_data.get("status")
+        if new_status in ["PUBLISHED", "SCHEDULED"] and not user_has_role(request.user, Roles.PUBLISHER):
+            raise PermissionDenied("You do not have permission to publish or schedule content.")
 
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
@@ -126,6 +133,13 @@ class AdminPageViewSet(ModelViewSet):
         instance.refresh_from_db()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
+
+        new_status = serializer.validated_data.get("status")
+        # Check permission if status is changing to published or scheduled
+        if new_status in ["PUBLISHED", "SCHEDULED"] and instance.status != new_status:
+            if not user_has_role(request.user, Roles.PUBLISHER):
+                raise PermissionDenied("You do not have permission to publish or schedule content.")
+
         self.perform_update(serializer)
 
         if getattr(instance, "_prefetched_objects_cache", None):

@@ -27,6 +27,14 @@
     --input: 0 0% 89.8%;
     --ring: 0 0% 3.9%;
     --radius: 0.5rem;
+    
+    /* Brand Tokens (ADR-014) */
+    --brand-primary: 221 83% 53%; /* #1d4ed8 */
+    --brand-secondary: 210 40% 96%; /* #f1f5f9 */
+    --brand-accent: 38 92% 50%; /* #f59e0b */
+    --surface-light: 0 0% 100%;
+    --surface-dark: 222 47% 11%;
+    --surface-muted: 210 40% 96%;
   }
 
   .dark {
@@ -49,6 +57,13 @@
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
+    
+    /* Brand Tokens Dark Mode */
+    --brand-primary: 217 91% 60%;
+    --brand-secondary: 217 19% 27%;
+    --surface-light: 222 47% 11%;
+    --surface-dark: 222 47% 7%;
+    --surface-muted: 217 19% 27%;
   }
 }
 

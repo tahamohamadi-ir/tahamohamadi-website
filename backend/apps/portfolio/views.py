@@ -22,7 +22,9 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.exceptions import PermissionDenied
 
+from apps.core.permissions import IsContentEditorRole, Roles, user_has_role
 from apps.core.exceptions import build_problem, PROBLEM_CONTENT_TYPE
 from apps.core.services import ConflictError, save_with_optimistic_lock
 from apps.media.models import MediaAsset
@@ -51,6 +53,7 @@ class AdminCaseStudyViewSet(ModelViewSet):
     Requirements: 1.3, 7.1
     """
 
+    permission_classes = [IsContentEditorRole]
     queryset = CaseStudy.objects.all().order_by("-created_at")
     filterset_fields = ["status", "featured"]
     search_fields = ["title_fa", "title_en", "slug_fa", "slug_en"]
@@ -81,6 +84,11 @@ class AdminCaseStudyViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
+        new_status = serializer.validated_data.get("status")
+        if new_status in ["PUBLISHED", "SCHEDULED"] and not user_has_role(request.user, Roles.PUBLISHER):
+            raise PermissionDenied("You do not have permission to publish or schedule content.")
+
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(
@@ -135,6 +143,12 @@ class AdminCaseStudyViewSet(ModelViewSet):
         instance.refresh_from_db()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
+
+        new_status = serializer.validated_data.get("status")
+        if new_status in ["PUBLISHED", "SCHEDULED"] and instance.status != new_status:
+            if not user_has_role(request.user, Roles.PUBLISHER):
+                raise PermissionDenied("You do not have permission to publish or schedule content.")
+
         self.perform_update(serializer)
 
         if getattr(instance, "_prefetched_objects_cache", None):

@@ -20,9 +20,11 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.exceptions import PermissionDenied
 
 from django_filters.rest_framework import DjangoFilterBackend
 
+from apps.core.permissions import IsContentEditorRole, Roles, user_has_role
 from apps.blog.models import Article, Topic
 from apps.media.models import MediaAsset
 from apps.blog.serializers import (
@@ -64,6 +66,7 @@ class AdminArticleViewSet(ModelViewSet):
     Requirements: 1.3, 6.1
     """
 
+    permission_classes = [IsContentEditorRole]
     queryset = Article.objects.prefetch_related("blocks", "topics").all()
     filterset_fields = ["status", "topics"]
     search_fields = ["title_fa", "title_en", "slug_fa", "slug_en"]
@@ -105,6 +108,10 @@ class AdminArticleViewSet(ModelViewSet):
 
         # Replace blocks in serializer's validated data with sanitized version
         serializer.validated_data["blocks"] = sanitized_blocks
+
+        new_status = serializer.validated_data.get("status")
+        if new_status in ["PUBLISHED", "SCHEDULED"] and not user_has_role(request.user, Roles.PUBLISHER):
+            raise PermissionDenied("You do not have permission to publish or schedule content.")
 
         self.perform_create(serializer)
 
@@ -190,6 +197,12 @@ class AdminArticleViewSet(ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         serializer.validated_data["blocks"] = sanitized_blocks
+
+        new_status = serializer.validated_data.get("status")
+        if new_status in ["PUBLISHED", "SCHEDULED"] and instance.status != new_status:
+            if not user_has_role(request.user, Roles.PUBLISHER):
+                raise PermissionDenied("You do not have permission to publish or schedule content.")
+
         self.perform_update(serializer)
 
         # Recalculate reading times after blocks are updated

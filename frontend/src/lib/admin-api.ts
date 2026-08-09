@@ -26,6 +26,7 @@ export interface AdminUser {
     username: string;
     email: string;
     is_staff: boolean;
+    roles?: string[];
 }
 
 export interface LoginCredentials {

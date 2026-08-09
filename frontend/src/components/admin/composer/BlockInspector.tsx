@@ -115,6 +115,40 @@ function withMediaReference(settings: Record<string, unknown>, mediaId: string |
     return { ...nextSettings, media_id: mediaId };
 }
 
+// ─── Visual Variant Selector ───────────────────────────────────────────────────
+
+const VISUAL_VARIANTS = [
+    { value: "default", label: "Default", color: "bg-white border-gray-200" },
+    { value: "muted", label: "Muted", color: "bg-gray-100 border-gray-200" },
+    { value: "brand", label: "Brand", color: "bg-blue-600 border-blue-700" },
+    { value: "dark", label: "Dark", color: "bg-gray-900 border-gray-800" },
+];
+
+function VisualVariantSelector({ value, onChange }: { value: string; onChange: (val: string) => void }) {
+    return (
+        <div className="space-y-2">
+            <Label>Visual Variant</Label>
+            <div className="grid grid-cols-2 gap-2">
+                {VISUAL_VARIANTS.map((v) => (
+                    <button
+                        key={v.value}
+                        type="button"
+                        className={`flex flex-col items-center justify-center rounded-md border p-2 text-sm transition-all ${
+                            value === v.value
+                                ? "border-blue-500 ring-1 ring-blue-500 bg-blue-50"
+                                : "border-gray-200 hover:border-gray-300 bg-white"
+                        }`}
+                        onClick={() => onChange(v.value)}
+                    >
+                        <div className={`mb-1.5 h-6 w-full rounded border ${v.color}`} />
+                        <span className="text-xs">{v.label}</span>
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 // ─── Hero Settings Editor ──────────────────────────────────────────────────────
 
 interface HeroEditorProps {
@@ -153,6 +187,10 @@ function HeroEditor({ settings, onChange }: HeroEditorProps) {
                     selected={typeof settings.media_id === "string" && settings.media_id.length > 0}
                     onSelect={(mediaId) => onChange({ ...settings, media_id: mediaId })}
                     onClear={() => onChange({ ...settings, media_id: null })}
+                />
+                <VisualVariantSelector
+                    value={(settings.variant as string) ?? "default"}
+                    onChange={(variant) => onChange({ ...settings, variant })}
                 />
             </div>
         );
@@ -197,6 +235,10 @@ function HeroEditor({ settings, onChange }: HeroEditorProps) {
                     placeholder="/about or https://…"
                 />
             </Field>
+            <VisualVariantSelector
+                value={(settings.variant as string) ?? "default"}
+                onChange={(variant) => onChange({ ...settings, variant })}
+            />
         </div>
     );
 }
@@ -252,6 +294,10 @@ function TextEditor({ settings, onChange }: TextEditorProps) {
                 <Field label="Alignment" htmlFor="text-alignment">
                     <Select id="text-alignment" value={(settings.alignment as string) ?? "start"} onChange={(e) => onChange({ ...settings, alignment: e.target.value })} options={ALIGNMENT_OPTIONS} />
                 </Field>
+                <VisualVariantSelector
+                    value={(settings.variant as string) ?? "default"}
+                    onChange={(variant) => onChange({ ...settings, variant })}
+                />
             </div>
         );
     }
@@ -289,6 +335,10 @@ function TextEditor({ settings, onChange }: TextEditorProps) {
                     options={ALIGNMENT_OPTIONS}
                 />
             </Field>
+            <VisualVariantSelector
+                value={(settings.variant as string) ?? "default"}
+                onChange={(variant) => onChange({ ...settings, variant })}
+            />
         </div>
     );
 }

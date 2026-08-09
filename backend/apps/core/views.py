@@ -26,6 +26,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from apps.core.exceptions import PROBLEM_CONTENT_TYPE, build_problem, problem_json_response
 from apps.core.content_health import content_health_report
 from apps.core.models import ContactMessage
+from apps.core.permissions import get_user_roles
 from apps.core.seed_review import seed_review_report
 from apps.core.serializers import (
     ContactMessageDetailSerializer,
@@ -129,7 +130,13 @@ class AdminHealthView(APIView):
         return Response(
             {
                 "status": "ok",
-                "user": request.user.get_username(),
+                "user": {
+                    "id": request.user.id,
+                    "username": request.user.get_username(),
+                    "email": request.user.email,
+                    "is_staff": request.user.is_staff,
+                    "roles": get_user_roles(request.user),
+                },
             },
             status=status.HTTP_200_OK,
         )
@@ -180,7 +187,13 @@ class SessionLoginView(APIView):
         return Response(
             {
                 "status": "authenticated",
-                "user": user.get_username(),
+                "user": {
+                    "id": user.id,
+                    "username": user.get_username(),
+                    "email": user.email,
+                    "is_staff": user.is_staff,
+                    "roles": get_user_roles(user),
+                },
             },
             status=status.HTTP_200_OK,
         )

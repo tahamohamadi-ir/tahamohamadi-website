@@ -32,6 +32,7 @@ export interface AuthContextValue extends AuthState {
     ) => Promise<{ success: boolean; error?: string }>;
     logout: () => Promise<void>;
     refreshSession: () => Promise<void>;
+    hasRole: (role: string) => boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -100,15 +101,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setState({ user: null, isAuthenticated: false, isLoading: false });
     }, []);
 
+    const hasRole = useCallback(
+        (role: string) => {
+            if (!state.user?.roles) return false;
+            return state.user.roles.includes(role) || state.user.roles.includes("Site Owner");
+        },
+        [state.user]
+    );
+
+    const value: AuthContextValue = {
+        ...state,
+        login,
+        logout,
+        refreshSession,
+        hasRole,
+    };
+
     return (
-        <AuthContext.Provider
-            value={{
-                ...state,
-                login,
-                logout,
-                refreshSession,
-            }}
-        >
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );

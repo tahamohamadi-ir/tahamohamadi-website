@@ -6,19 +6,28 @@ import type { MouseEvent } from "react";
 import { useAuth } from "./auth-context";
 import { useAdminNavigationGuard } from "./admin-navigation-guard";
 
-const navItems = [
-    { href: "/admin", label: "داشبورد", icon: "📊" },
-    { href: "/admin/pages", label: "صفحات", icon: "📄" },
-    { href: "/admin/blog", label: "مقالات", icon: "✍️" },
-    { href: "/admin/portfolio", label: "نمونه‌کارها", icon: "💼" },
-    { href: "/admin/media", label: "رسانه‌ها", icon: "🖼️" },
-    { href: "/admin/workflow", label: "گردش‌کار", icon: "🔄" },
-];
+
 
 export function AdminNavbar() {
-    const { user, logout } = useAuth();
+    const { user, logout, hasRole } = useAuth();
     const pathname = usePathname();
     const { confirmNavigation } = useAdminNavigationGuard();
+
+    const navItems = [
+        { href: "/admin", label: "داشبورد", icon: "📊" },
+        { href: "/admin/pages", label: "صفحات", icon: "📄" },
+        { href: "/admin/blog", label: "مقالات", icon: "✍️" },
+        { href: "/admin/portfolio", label: "نمونه‌کارها", icon: "💼" },
+        { href: "/admin/media", label: "رسانه‌ها", icon: "🖼️" },
+    ];
+
+    if (hasRole("Admin") || hasRole("Publisher") || hasRole("Reviewer")) {
+        navItems.push({ href: "/admin/workflow", label: "گردش‌کار", icon: "🔄" });
+    }
+    
+    if (hasRole("Admin")) {
+        navItems.push({ href: "/admin/settings", label: "تنظیمات سایت", icon: "⚙️" });
+    }
 
     async function handleLogout() {
         if (!confirmNavigation()) return;

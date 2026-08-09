@@ -10,6 +10,7 @@ from django.db import IntegrityError, transaction
 from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.core.exceptions import PROBLEM_CONTENT_TYPE, build_problem
+from apps.core.permissions import IsAdminRole
 from apps.core.services import ConflictError, save_with_optimistic_lock
 from apps.identity.public import public_identity_payload
 from apps.siteconfig.models import NavigationItem, RedirectRule, SiteSettings
@@ -24,6 +25,7 @@ from apps.siteconfig.services import conditional_public_response, public_site_pa
 
 
 class SiteConfigAdminViewSet(ModelViewSet):
+    permission_classes = [IsAdminRole]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     ordering_fields = "__all__"
 
