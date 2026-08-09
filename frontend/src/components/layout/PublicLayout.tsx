@@ -72,8 +72,10 @@ export async function PublicLayout({ locale, children }: PublicLayoutProps) {
       : null;
 
   // Extract design tokens
-  const primaryColorFa = siteConfig?.settings?.design_tokens?.colors?.fa?.primary;
-  const primaryColorEn = siteConfig?.settings?.design_tokens?.colors?.en?.primary;
+  interface ColorTokens { primary?: string }
+  const tokens = siteConfig?.settings?.design_tokens as { colors?: { fa?: ColorTokens; en?: ColorTokens } } | undefined;
+  const primaryColorFa = tokens?.colors?.fa?.primary;
+  const primaryColorEn = tokens?.colors?.en?.primary;
   const activePrimaryColor = locale === "fa" ? primaryColorFa : primaryColorEn;
   const hslPrimary = activePrimaryColor ? hexToHSL(activePrimaryColor) : null;
 
