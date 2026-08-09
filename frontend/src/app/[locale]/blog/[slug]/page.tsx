@@ -49,9 +49,12 @@ function getLocalizedString(
     field: "title" | "excerpt" | "slug",
     locale: Locale
 ): string {
-    const key = `${field}_${locale}` as keyof PublicArticleDetailDTO;
-    return (obj[key] as string) ?? "";
+    const key = `${field}_${locale}`;
+    const value = (obj as unknown as Record<string, unknown>)[key];
+    return typeof value === "string" ? value : "";
 }
+
+
 
 function generateTOC(blocks: BlockDTO[]): TOCItem[] {
     return blocks

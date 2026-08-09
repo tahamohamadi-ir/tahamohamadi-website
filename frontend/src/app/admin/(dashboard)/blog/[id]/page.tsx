@@ -149,9 +149,21 @@ export default function ArticleEditorPage() {
         [locale]
     );
 
+    const [isDirty, setIsDirty] = useState(false);
+
+    const handleBack = () => {
+        if (isDirty) {
+            const confirmed = window.confirm("You have unsaved changes. Leave?");
+            if (!confirmed) return;
+        }
+        router.push("/admin/blog");
+    };
+
     const updateField = (field: keyof EditorArticle, value: string) => {
         setArticle((current) => current ? { ...current, [field]: value } : current);
+        setIsDirty(true);
     };
+
 
     if (loading) {
         return (
@@ -198,7 +210,7 @@ export default function ArticleEditorPage() {
                         aria-label="Back to articles"
                         variant="outline"
                         disabled={editorWarnings.length > 0}
-                        onClick={() => router.push("/admin/blog")}
+                        onClick={handleBack}
                     >
                         بازگشت
                     </Button>
@@ -247,6 +259,7 @@ export default function ArticleEditorPage() {
                     onSave={handleSave}
                     onPreview={handlePreview}
                     onWarningsChange={setEditorWarnings}
+                    onDirtyChange={setIsDirty}
                 />
             </div>
 
