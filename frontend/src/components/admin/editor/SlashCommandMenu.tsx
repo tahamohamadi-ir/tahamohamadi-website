@@ -76,13 +76,6 @@ const SLASH_COMMANDS: SlashCommandItem[] = [
         icon: "▦",
         command: "gallery",
     },
-    {
-        id: "callout",
-        label: "Callout",
-        description: "Highlighted info box",
-        icon: "ℹ",
-        command: "callout",
-    },
 ];
 
 // ─── Props ───────────────────────────────────────────────────────────────────
@@ -154,7 +147,7 @@ export function SlashCommandMenu({
         const menu = menuRef.current;
         if (!menu) return;
         const item = menu.children[selectedIndex] as HTMLElement | undefined;
-        item?.scrollIntoView({ block: "nearest" });
+        item?.scrollIntoView?.({ block: "nearest" });
     }, [selectedIndex]);
 
     if (filteredCommands.length === 0) {

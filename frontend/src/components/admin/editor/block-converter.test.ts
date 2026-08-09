@@ -7,6 +7,39 @@ import type { ArticleBlock } from "./types";
 import type { JSONContent } from "@tiptap/react";
 
 describe("tiptapDocToArticleBlocks", () => {
+    it("preserves the editing locale and reports unsupported nodes instead of dropping them silently", () => {
+        const doc: JSONContent = {
+            type: "doc",
+            content: [
+                {
+                    type: "paragraph",
+                    content: [{ type: "text", text: "Locale-owned copy" }],
+                },
+                {
+                    type: "youtube",
+                    attrs: { src: "https://example.com/embed" },
+                },
+            ],
+        };
+
+        const result = tiptapDocToArticleBlocks(doc, "fa") as unknown as {
+            blocks: ArticleBlock[];
+            warnings: string[];
+        };
+
+        expect(result.blocks).toEqual([
+            {
+                block_type: "paragraph",
+                content: { text: "Locale-owned copy" },
+                locale: "fa",
+                ordering: 0,
+            },
+        ]);
+        expect(result.warnings).toEqual([
+            'Unsupported editor node "youtube" at position 2 was not converted.',
+        ]);
+    });
+
     it("converts a paragraph node", () => {
         const doc: JSONContent = {
             type: "doc",

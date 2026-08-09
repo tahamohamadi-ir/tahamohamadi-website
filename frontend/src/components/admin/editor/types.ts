@@ -7,6 +7,7 @@ import type { Locale, ArticleBlockType } from "@/components/blocks/types";
 /** Article block as used by the editor and API */
 export interface ArticleBlock {
     id?: string;
+    locale?: Locale;
     block_type: ArticleBlockType;
     content: Record<string, unknown>;
     ordering: number;
@@ -19,6 +20,9 @@ export interface EditorArticle {
     title_en?: string;
     slug_fa?: string;
     slug_en?: string;
+    excerpt_fa?: string;
+    excerpt_en?: string;
+    status?: "draft" | "in_review" | "scheduled" | "published" | "archived";
     blocks: ArticleBlock[];
     version?: number;
 }
@@ -33,6 +37,12 @@ export interface ArticleEditorProps {
     onSave?: (blocks: ArticleBlock[]) => void;
     /** Called with converted ArticleBlock[] for preview */
     onPreview?: (blocks: ArticleBlock[]) => void;
+}
+
+/** Result of a potentially lossy editor/document conversion. */
+export interface ArticleBlockConversionResult {
+    blocks: ArticleBlock[];
+    warnings: string[];
 }
 
 /** Slash command menu item */

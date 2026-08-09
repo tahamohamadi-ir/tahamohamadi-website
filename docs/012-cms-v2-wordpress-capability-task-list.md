@@ -399,12 +399,14 @@
 
 **نوع:** BUILD
 
-- [ ] slash command یا command palette فقط برای catalog مجاز.
+- [x] slash command یا command palette فقط برای catalog مجاز.
 - [ ] keyboard shortcuts و move controls با focus قابل پیش‌بینی.
 - [ ] paste cleanup برای HTML/Office/Markdown.
-- [ ] inline media picker؛ بدون تایپ raw media ID.
+- [x] inline media picker؛ بدون تایپ raw media ID.
 - [ ] reading time از محتوای واقعی و نه metric ساختگی محاسبه شود.
-- [ ] preview امن و public renderer parity برقرار باشد.
+- [x] preview امن و public renderer parity برقرار باشد.
+
+**شاهد اجرا — 2026-08-08:** editor بلاک‌ها را با locale صریح و warning برای node پشتیبانی‌نشده تبدیل می‌کند؛ image/gallery فقط از Media Library انتخاب می‌شوند و payload ذخیره فقط UUID reference مجاز را نگه می‌دارد. فرم Admin متادیتای اجباری دوزبانه و status را می‌فرستد و preview از همان `BlockRenderer` با context مقاله استفاده می‌کند. 23 تست متمرکز Vitest این قراردادها را پوشش دادند.
 
 ### T3.4 — Blog listing/detail و SEO
 
