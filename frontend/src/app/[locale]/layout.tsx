@@ -11,6 +11,7 @@ import {
 import { fetchPublicSiteConfig } from "@/lib/api";
 import { inter, vazirmatn } from "@/lib/fonts";
 import { PublicLayout } from "@/components/layout";
+import { A11yProvider } from "@/components/a11y-provider";
 import "../globals.css";
 
 interface LocaleLayoutProps {
@@ -100,7 +101,9 @@ export default async function LocaleLayout({
   return (
     <html lang={validLocale} dir={dir} suppressHydrationWarning>
       <body className={`${fontClass} antialiased`}>
-        <PublicLayout locale={validLocale}>{children}</PublicLayout>
+        <A11yProvider>
+          <PublicLayout locale={validLocale}>{children}</PublicLayout>
+        </A11yProvider>
       </body>
     </html>
   );

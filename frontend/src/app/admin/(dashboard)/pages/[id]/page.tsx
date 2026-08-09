@@ -2,13 +2,15 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import {
-    ComposerCanvas,
     ConflictDialog,
-    PreviewPanel,
     extractComposerValidationIssues,
     type ComposerValidationIssue,
 } from "@/components/admin/composer";
+
+const ComposerCanvas = dynamic(() => import("@/components/admin/composer").then((mod) => mod.ComposerCanvas), { ssr: false, loading: () => <Skeleton className="h-[600px] w-full" /> });
+const PreviewPanel = dynamic(() => import("@/components/admin/composer").then((mod) => mod.PreviewPanel), { ssr: false, loading: () => <Skeleton className="h-[600px] w-full" /> });
 import {
     clearDraftRecoveryMarker,
     consumeDraftRecoveryMarker,
