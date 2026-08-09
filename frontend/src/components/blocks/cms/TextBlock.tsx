@@ -11,11 +11,12 @@ export function TextBlock({ data, locale }: BlockComponentProps<TextSettings>) {
     return (
         <div
             className={cn(
-                "prose prose-lg max-w-none dark:prose-invert",
+                "prose prose-lg max-w-none whitespace-pre-wrap dark:prose-invert",
                 alignmentClass,
                 locale === "fa" && "prose-rtl font-vazirmatn"
             )}
-            dangerouslySetInnerHTML={{ __html: data.content }}
-        />
+        >
+            {data.content}
+        </div>
     );
 }

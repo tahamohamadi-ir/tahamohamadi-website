@@ -24,6 +24,7 @@ from apps.cms.block_registry import (
 )
 from apps.cms.collections import resolve_identity_collection
 from apps.cms.models import Block, ComposerTemplate, Page, Section
+from apps.cms.services import is_safe_public_block
 from apps.media.models import MediaAsset
 
 
@@ -337,8 +338,7 @@ class PublicSectionSerializer(serializers.ModelSerializer):
         valid_blocks = [
             block
             for block in section.blocks.all().order_by("ordering")
-            if is_known_block_type(block.block_type)
-            and not validate_block_settings(block.block_type, block.settings)
+            if is_safe_public_block(block.block_type, block.settings)
         ]
         return PublicBlockSerializer(valid_blocks, many=True, context=self.context).data
 

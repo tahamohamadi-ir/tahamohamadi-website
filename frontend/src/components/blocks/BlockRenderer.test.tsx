@@ -254,6 +254,23 @@ describe("BlockRenderer", () => {
             const { container } = render(<BlockRenderer block={block} locale="en" />);
             expect(container.innerHTML).toBe("");
         });
+
+        it("renders CMS text as inert text instead of an HTML sink", () => {
+            const content = '<img src=x onerror="alert(1)">';
+            const block: BlockDTO = {
+                id: "historical-text",
+                block_type: "text",
+                settings: { content, alignment: "start" },
+                ordering: 0,
+            };
+
+            const { container } = render(
+                <BlockRenderer block={block} locale="en" context="cms" />
+            );
+
+            expect(container.querySelector("img")).not.toBeInTheDocument();
+            expect(container).toHaveTextContent(content);
+        });
     });
 
     describe("RTL/LTR locale handling", () => {

@@ -360,6 +360,14 @@ def _make_unique_slug(model_class, field_name: str, base_slug: str) -> str:
 def _restore_page(model_class, snapshot: dict, username: str):
     """Create a new Page draft from a revision snapshot."""
     from apps.cms.models import Block, Section
+    from apps.cms.services import validate_page_composition
+
+    composition_errors = validate_page_composition(snapshot)
+    if composition_errors:
+        raise ValueError(
+            "Page revision contains invalid composition: "
+            + "; ".join(composition_errors)
+        )
 
     slug_fa = _make_unique_slug(model_class, "slug_fa", snapshot.get("slug_fa", "page"))
     slug_en = _make_unique_slug(model_class, "slug_en", snapshot.get("slug_en", "page"))

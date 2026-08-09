@@ -10,7 +10,7 @@ from django.core.files import File
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from apps.cms.models import Block, Page, Section
+from apps.cms.models import Block, ComposerTemplate, Page, Section
 from apps.identity.models import (
     Affiliation, Certification, Education, Experience, LanguageProficiency,
     Publication, ResearchInterest, ResearchProject, ResumeVariant, SiteProfile,
@@ -67,7 +67,7 @@ class Command(BaseCommand):
             for model in (
                 Affiliation, Certification, Education, Experience, LanguageProficiency,
                 Publication, ResearchInterest, ResearchProject, ResumeVariant, Skill,
-                SocialLink, RedirectRule, CaseStudyBlock,
+                SocialLink, RedirectRule, CaseStudyBlock, ComposerTemplate,
             )
         ):
             return False
@@ -158,9 +158,9 @@ class Command(BaseCommand):
             model.objects.exists()
             for model in (
                 Page, SiteProfile, SiteSettings, NavigationItem, CaseStudy,
-                MediaAsset, Affiliation, Certification, Education,
+                MediaAsset, ComposerTemplate, Affiliation, Certification, Education,
                 Experience, LanguageProficiency, Publication, ResearchInterest,
-                ResearchProject, Skill, SocialLink, RedirectRule,
+                ResearchProject, ResumeVariant, Skill, SocialLink, RedirectRule,
             )
         )
 

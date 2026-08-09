@@ -243,6 +243,15 @@ class TestPreviewContentProjection:
             ordering=2,
         )
         Block.objects.create(
+            section=enabled,
+            block_type="text",
+            settings={
+                "content": '<img src=x onerror="alert(1)">',
+                "alignment": "start",
+            },
+            ordering=3,
+        )
+        Block.objects.create(
             section=disabled,
             block_type="text",
             settings={"content": "Disabled section", "alignment": "start"},

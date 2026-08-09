@@ -184,6 +184,19 @@ def normalize_template_manifest(
                 f"sections[{section_index}] contains unknown fields: "
                 f"{unknown_section_fields}"
             )
+        if "enabled" not in section:
+            errors.append(f"sections[{section_index}].enabled is required")
+        elif not isinstance(section["enabled"], bool):
+            errors.append(f"sections[{section_index}].enabled must be a boolean")
+        if "layout" not in section:
+            errors.append(f"sections[{section_index}].layout is required")
+        elif not isinstance(section["layout"], str):
+            errors.append(f"sections[{section_index}].layout must be a string")
+        elif not section["layout"].strip() or len(section["layout"]) > 50:
+            errors.append(
+                f"sections[{section_index}].layout must be a non-empty string "
+                "of at most 50 characters"
+            )
         blocks = section.get("blocks")
         if not isinstance(blocks, list):
             errors.append(f"sections[{section_index}].blocks must be a list")
@@ -229,7 +242,7 @@ def normalize_template_manifest(
         normalized_sections.append(
             {
                 "ordering": section.get("ordering"),
-                "enabled": section.get("enabled", True),
+                "enabled": section.get("enabled"),
                 "layout": section.get("layout"),
                 "blocks": normalized_blocks,
             }
@@ -410,3 +423,23 @@ def _validate_ordering(orderings: list, label: str) -> list[str]:
             break
 
     return errors
+
+
+def is_safe_public_block(block_type: str, settings: dict) -> bool:
+    """Apply the complete stored-composition policy before public projection."""
+    return not validate_page_composition(
+        {
+            "sections": [
+                {
+                    "ordering": 0,
+                    "blocks": [
+                        {
+                            "block_type": block_type,
+                            "settings": settings,
+                            "ordering": 0,
+                        }
+                    ],
+                }
+            ]
+        }
+    )

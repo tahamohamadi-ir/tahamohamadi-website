@@ -209,6 +209,38 @@ def test_caller_supplied_derived_fields_must_match_sections(admin_client):
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("field", "value", "remove"),
+    [
+        ("layout", None, False),
+        ("layout", None, True),
+        ("enabled", "true", False),
+        ("enabled", None, True),
+    ],
+    ids=["layout-wrong-type", "layout-missing", "enabled-wrong-type", "enabled-missing"],
+)
+def test_template_create_rejects_unimportable_section_shape(
+    admin_client, field, value, remove
+):
+    manifest = manifest_with()
+    if remove:
+        manifest["sections"][0].pop(field)
+    else:
+        manifest["sections"][0][field] = value
+
+    response = admin_client.post(
+        TEMPLATES_URL,
+        {"name": "Invalid section", "manifest": manifest},
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert response["Content-Type"].startswith("application/problem+json")
+    assert field in str(response.json()["errors"]["manifest"])
+    assert not ComposerTemplate.objects.exists()
+
+
+@pytest.mark.django_db
 def test_template_create_and_list_are_draft_audited_and_do_not_expose_ids(
     admin_client, admin_user
 ):

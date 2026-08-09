@@ -304,6 +304,7 @@
 
 ## T2.5 — portable Draft templates
 
+- [x] بازبینی whole-branch در 2026-08-08 با 114 آزمون متمرکز backend و 34 آزمون `BlockRenderer` بسته شد: restore/public/preview مرز raw HTML را fail closed می‌کنند، guard فرمان seed ریشه‌های `ComposerTemplate` و `ResumeVariant` را پوشش می‌دهد و template POST شکل اجباری `layout`/`enabled` را پیش از ذخیره رد می‌کند. این شاهد جای full suite، build production یا QA مرورگر را نمی‌گیرد.
 - [ ] QA دستی import با فایل JSON واقعی و paste در هر دو جهت RTL/LTR، شامل تغییر slugهای مقصد و تأیید اینکه فقط Draft جدید باز می‌شود. **Owner:** CMS/frontend. **Trigger:** پیش از انتشار Composer templates. **Mitigation:** dry-run سمت Django اجباری است و confirmation تا پاسخ موفق نمایش داده نمی‌شود.
 - [ ] QA مرورگر session/CSRF، keyboard/focus و screen reader برای TemplatePanel و حالت‌های validation/import failure. **Owner:** frontend/QA. **Trigger:** پیش از انتشار Admin Composer. **Mitigation:** تمام درخواست‌ها از `adminFetch` و پیام‌های status/alert ساختاریافته استفاده می‌کنند.
 - [ ] اجرای migration و import روی staging با media واقعی active/archived و بررسی audit/rollback در PostgreSQL production-like. **Owner:** backend/operations. **Trigger:** پیش از rollout production. **Mitigation:** import در transaction است، media فقط از مجموعهٔ active پذیرفته می‌شود و هیچ Page موجودی update نمی‌شود.

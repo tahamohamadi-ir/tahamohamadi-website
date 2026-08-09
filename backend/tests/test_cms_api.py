@@ -492,6 +492,35 @@ class TestPublicPageEndpoint:
         assert len(blocks) == 1
         assert blocks[0]["block_type"] == "text"
 
+    def test_historical_raw_html_block_is_excluded_from_public_projection(
+        self, api_client, db
+    ):
+        page = Page.objects.create(
+            slug_fa="historical-xss-fa",
+            slug_en="historical-xss",
+            title_fa="Historical XSS",
+            title_en="Historical XSS",
+            page_type="custom",
+            status="published",
+        )
+        section = Section.objects.create(
+            page=page, ordering=0, enabled=True, layout="default"
+        )
+        Block.objects.create(
+            section=section,
+            block_type="text",
+            ordering=0,
+            settings={
+                "content": '<img src=x onerror="alert(1)">',
+                "alignment": "start",
+            },
+        )
+
+        response = api_client.get("/api/public/pages/historical-xss/")
+
+        assert response.status_code == 200
+        assert response.json()["sections"][0]["blocks"] == []
+
     def test_locale_fa_matches_slug_fa(self, api_client, db):
         """locale=fa matches slug_fa."""
         Page.objects.create(

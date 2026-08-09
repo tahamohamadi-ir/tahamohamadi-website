@@ -280,7 +280,7 @@
 **نوع:** BUILD، فقط توسعه
 
 - [ ] وضعیت واقعی `main` در 2026-08-08: `seed_data` فقط بخشی از identity/siteconfig را به‌صورت draft می‌سازد، اما profile-guard نیست، نمونهٔ رسانه‌دار ندارد و pageهای منتشرشدهٔ قدیمی ایجاد می‌کند؛ این رفتار نباید به‌عنوان محتوای قابل‌انتشار تلقی شود.
-- [x] `seed_composer_demo` صریح، idempotent و محدود به `DEBUG=true` برای dataset خالی، یک صفحهٔ دوزبانهٔ Draft با Hero/Text/Gallery، هویت و تنظیمات سایت Draft، navigation header Draft و یک CaseStudy گالری‌دار Draft ایجاد می‌کند. آزمون Compose در 2026-08-08 guard، refusal، روابط، private بودن public endpoint و idempotence را تأیید کرد.
+- [x] `seed_composer_demo` صریح، idempotent و محدود به `DEBUG=true` برای dataset کاملاً خالی است؛ guard علاوه بر ریشه‌های CMS/identity/siteconfig/portfolio، وجود `ComposerTemplate` یا `ResumeVariant` را نیز رد می‌کند. این فرمان یک صفحهٔ دوزبانهٔ Draft با Hero/Text/Gallery، هویت و تنظیمات سایت Draft، navigation header Draft و یک CaseStudy گالری‌دار Draft ایجاد می‌کند. آزمون متمرکز Compose در 2026-08-08 guard همهٔ ریشه‌ها، refusal، روابط، private بودن public endpoint و idempotence را تأیید کرد.
 - [x] دو SVG خنثیِ توسعه‌ای با alt فارسی/انگلیسی به‌صورت MediaAsset فعال ثبت می‌شوند و blockها فقط UUID آن‌ها را نگه می‌دارند، نه URL یا کد frontend.
 - [x] راهنمای فرمان، شرط database خالی و منع مطلق production در `scripts/seed/README.md` ثبت شد. QA SSR مرورگر و بازبینی انسانی محتوا/asset هنوز deferred هستند. مرجع: `CMS-DEMO-SEED-010` در ledger.
 
@@ -303,7 +303,7 @@
 - [x] برای هر block، default settings، validation schema، media policy و fields محلی مستند شود.
 - [x] settings ناشناخته، block type ناشناخته، ترتیب نامعتبر و media inactive با Problem Details رد شوند.
 - [x] public renderer block ناشناخته را fail closed کند و Admin diagnostic نشان دهد.
-- [x] composition عادی و template import هر دو raw HTML را پیش از ذخیره رد می‌کنند و renderer نیز sink برای HTML خام ندارد.
+- [x] composition عادی، template import و restore نسخهٔ Page همگی raw HTML را پیش از ذخیره رد می‌کنند؛ projection عمومی و token preview نیز block تاریخی نامعتبر را fail closed حذف می‌کنند و Text renderer محتوا را فقط به‌شکل متن inert نمایش می‌دهد، نه HTML sink.
 
 **پذیرش:** یک block تنها در صورتی قابل ذخیره است که frontend، server، preview و public renderer آن را بفهمند.
 
@@ -349,7 +349,7 @@
 **نوع:** BUILD، بعد از تثبیت T2.1 تا T2.4
 
 - [x] aggregate مستقل `ComposerTemplate` برای snapshot قابل‌حمل ساخته شد؛ import همیشه Page جدید می‌سازد و هیچ Page زنده‌ای را تغییر نمی‌دهد.
-- [x] manifest نسخهٔ ۱ شامل sections و مشتقات server-owned برای block typeها، media references و translation completeness است؛ settings از registry موجود اعتبارسنجی می‌شوند.
+- [x] manifest نسخهٔ ۱ شامل sections و مشتقات server-owned برای block typeها، media references و translation completeness است؛ settings از registry موجود اعتبارسنجی می‌شوند و `enabled` اجباری/boolean و `layout` اجباری/non-empty string پیش از ذخیرهٔ template کنترل می‌شوند تا snapshot ذخیره‌شده importable بماند.
 - [x] import ابتدا dry-run کاملاً بدون write، حتی بدون AuditEvent، انجام می‌دهد؛ رابط Composer پاسخ دیررس را پس از تغییر manifest/identity دور می‌اندازد و فقط برای fingerprint تأییدشده confirmation را نمایش می‌دهد.
 - [x] schema ناشناخته، block/settings نامعتبر، HTML خام، همهٔ URL fieldهای ثبت‌شده (canonical، legacy و animation) و media مفقود/آرشیوشده با Problem Details رد می‌شوند.
 - [x] template و Draft واردشده actorهای audit دارند؛ event به content type و UUID واقعی target با action دقیق create/import متصل است، import واقعی در transaction انجام می‌شود و rollback آن atomic است.

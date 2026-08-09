@@ -7,7 +7,7 @@ from django.core.management.base import CommandError
 from django.test import override_settings
 from rest_framework.test import APIClient
 
-from apps.cms.models import Block, Page, Section
+from apps.cms.models import Block, ComposerTemplate, Page, Section
 from apps.identity.models import (
     Affiliation, Certification, Education, Experience, LanguageProficiency,
     Publication, ResearchInterest, ResearchProject, ResumeVariant, SiteProfile,
@@ -45,6 +45,9 @@ def _create_in_scope_record(kind):
         "navigation": lambda: NavigationItem.objects.create(label_fa="نمونه", label_en="Sample", href="/en", location="header"),
         "redirect": lambda: RedirectRule.objects.create(source_path="/old", target_url="/en"),
         "case_study": case_study,
+        "composer_template": lambda: ComposerTemplate.objects.create(
+            name="Existing template", manifest={}
+        ),
         "media": _media_asset,
         "affiliation": lambda: Affiliation.objects.create(organization_fa="نمونه", organization_en="Sample"),
         "certification": lambda: Certification.objects.create(title_fa="نمونه", title_en="Sample", issuer_fa="نمونه", issuer_en="Sample"),
@@ -54,6 +57,13 @@ def _create_in_scope_record(kind):
         "publication": lambda: Publication.objects.create(slug_fa="انتشار-موجود", slug_en="existing-publication", title_fa="نمونه", title_en="Sample", publication_type="article"),
         "interest": lambda: ResearchInterest.objects.create(name_fa="نمونه", name_en="Sample"),
         "project": lambda: ResearchProject.objects.create(slug_fa="پروژه-موجود", slug_en="existing-project", title_fa="نمونه", title_en="Sample"),
+        "resume_variant": lambda: ResumeVariant.objects.create(
+            slug="existing-resume",
+            label_fa="رزومه",
+            label_en="Resume",
+            variant_type="general",
+            file=_media_asset(),
+        ),
         "skill": lambda: Skill.objects.create(name_fa="نمونه", name_en="Sample"),
         "social": lambda: SocialLink.objects.create(label_fa="نمونه", label_en="Sample", url="https://example.test"),
     }
@@ -68,9 +78,9 @@ class TestSeedComposerDemo:
 
     @pytest.mark.parametrize("kind", [
         "page", "profile", "settings", "navigation", "redirect", "case_study",
-        "media", "affiliation", "certification",
+        "composer_template", "media", "affiliation", "certification",
         "education", "experience", "language", "publication", "interest", "project",
-        "skill", "social",
+        "resume_variant", "skill", "social",
     ])
     def test_refuses_every_non_empty_in_scope_model(self, kind):
         existing = _create_in_scope_record(kind)
