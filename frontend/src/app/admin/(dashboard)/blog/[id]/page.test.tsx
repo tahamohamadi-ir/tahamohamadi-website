@@ -138,6 +138,7 @@ describe("ArticleEditorPage", () => {
                 caption_en: "Hero caption",
                 width: 1200,
                 height: 800,
+                status: "active",
             })
             .mockResolvedValueOnce({
                 id: "66666666-7777-4888-8999-000000000000",
@@ -148,6 +149,7 @@ describe("ArticleEditorPage", () => {
                 caption_en: "Gallery caption",
                 width: 900,
                 height: 600,
+                status: "active",
             });
         render(<ArticleEditorPage />);
 
@@ -158,6 +160,50 @@ describe("ArticleEditorPage", () => {
         expect(screen.getByAltText("Resolved gallery image")).toHaveAttribute("src", "/media/gallery.jpg");
         expect(screen.getByText("Hero caption")).toBeInTheDocument();
         expect(screen.getByText("Gallery caption")).toBeInTheDocument();
+    });
+
+    it("omits image and gallery preview blocks backed by an archived media asset", async () => {
+        const archivedId = "11111111-2222-4333-8444-555555555555";
+        previewBlocksMock.current = [
+            {
+                block_type: "paragraph",
+                content: { text: "Safe preview content" },
+                locale: "en",
+                ordering: 0,
+            },
+            {
+                block_type: "image",
+                content: { media_id: archivedId },
+                locale: "en",
+                ordering: 1,
+            },
+            {
+                block_type: "gallery",
+                content: { media_ids: [archivedId], layout: "grid" },
+                locale: "en",
+                ordering: 2,
+            },
+        ];
+        adminFetchMock.mockResolvedValueOnce({
+            id: archivedId,
+            file: "/media/archived.jpg",
+            alt_text_fa: "آرشیو",
+            alt_text_en: "Archived image",
+            caption_fa: "",
+            caption_en: "Archived caption",
+            width: 1200,
+            height: 800,
+            status: "archived",
+        });
+        render(<ArticleEditorPage />);
+
+        await userEvent.selectOptions(await screen.findByLabelText("Editing locale"), "en");
+        await userEvent.click(screen.getByRole("button", { name: "Preview editor" }));
+
+        const preview = await screen.findByRole("region", { name: "Article preview" });
+        expect(preview).toHaveTextContent("Safe preview content");
+        expect(preview.querySelectorAll("img")).toHaveLength(0);
+        expect(preview).not.toHaveTextContent("Archived caption");
     });
 
     it("gates route and locale navigation while conversion warnings are unresolved", async () => {

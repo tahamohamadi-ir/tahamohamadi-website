@@ -322,7 +322,7 @@
 
 - [ ] جریان واقعی Admin با session/CSRF در create/update مقاله و انتخاب media بررسی شود. **Owner:** CMS/frontend QA. **Trigger:** پیش از release مقاله. **Mitigation:** requestها از `adminFetch` و `MediaPicker` موجود استفاده می‌کنند و contract payload با test متمرکز پوشش داده شد.
 - [ ] QA زندهٔ fa/en برای RTL/LTR، keyboard/focus، screen reader، alt/caption محلی و move shortcut انجام شود. **Owner:** accessibility/product QA. **Trigger:** پیش از release. **Mitigation:** locale در block payload صریح است و inputها و preview با label و renderer مشترک اجرا می‌شوند.
-- [ ] visual snapshotها، full frontend regression، production build و live feed review در این برش fast-track اجرا نشدند. **Owner:** release. **Trigger:** acceptance نهایی Phase 3. **Mitigation:** فقط 4 فایل متمرکز Vitest با 29 test اجرا شدند؛ conversion lossless نبودن را gate می‌کند و هیچ قابلیت embed/raw HTML افزوده نشد.
+- [ ] visual snapshotها، full frontend regression، production build و live feed review در این برش fast-track اجرا نشدند. **Owner:** release. **Trigger:** acceptance نهایی Phase 3. **Mitigation:** فقط 4 فایل متمرکز Vitest با 30 test اجرا شدند؛ conversion lossless نبودن را gate می‌کند، preview فقط media فعال را می‌پذیرد و هیچ قابلیت embed/raw HTML افزوده نشد.
 
 - [ ] اجرای دوبارهٔ کل collection backend پس از commitهای R1؛ برای سرعت فقط suiteهای متمرکز
   CMS/identity/siteconfig/seed روی PostgreSQL Compose اجرا شدند. اجرای کامل 730/730 مربوط به پیش از این برش‌هاست.

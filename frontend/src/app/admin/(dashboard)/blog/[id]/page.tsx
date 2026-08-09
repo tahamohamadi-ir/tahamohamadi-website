@@ -136,10 +136,10 @@ export default function ArticleEditorPage() {
                 );
                 const assetsById = new Map(assets.map((asset) => [asset.id, asset]));
                 setPreviewBlocks(
-                    blocks.map((block) => ({
-                        ...block,
-                        content: projectPreviewContent(block, locale, assetsById),
-                    }))
+                    blocks.flatMap((block) => {
+                        const projected = projectPreviewBlock(block, locale, assetsById);
+                        return projected ? [projected] : [];
+                    })
                 );
             } catch (err) {
                 setPreviewBlocks([]);
@@ -273,38 +273,47 @@ export default function ArticleEditorPage() {
     );
 }
 
-function projectPreviewContent(
+function projectPreviewBlock(
     block: ArticleBlock,
     locale: "fa" | "en",
     assetsById: Map<string, MediaAssetDTO>
-): Record<string, unknown> {
+): ArticleBlock | null {
     if (block.block_type === "image" && typeof block.content.media_id === "string") {
         const asset = assetsById.get(block.content.media_id);
-        if (!asset) return block.content;
+        if (!asset || asset.status !== "active") return null;
         return {
-            ...block.content,
-            url: asset.file ?? "",
-            alt: locale === "fa" ? asset.alt_text_fa : asset.alt_text_en,
-            caption: locale === "fa" ? asset.caption_fa : asset.caption_en,
-            width: asset.width ?? undefined,
-            height: asset.height ?? undefined,
+            ...block,
+            content: {
+                ...block.content,
+                url: asset.file ?? "",
+                alt: locale === "fa" ? asset.alt_text_fa : asset.alt_text_en,
+                caption: locale === "fa" ? asset.caption_fa : asset.caption_en,
+                width: asset.width ?? undefined,
+                height: asset.height ?? undefined,
+            },
         };
     }
     if (block.block_type === "gallery" && Array.isArray(block.content.media_ids)) {
+        const mediaIds = block.content.media_ids.filter(
+            (mediaId): mediaId is string => typeof mediaId === "string"
+        );
+        const assets = mediaIds.map((mediaId) => assetsById.get(mediaId));
+        const activeAssets = assets.filter(
+            (asset): asset is MediaAssetDTO => Boolean(asset && asset.status === "active")
+        );
+        if (activeAssets.length !== mediaIds.length) return null;
         return {
-            ...block.content,
-            items: block.content.media_ids.flatMap((mediaId) => {
-                if (typeof mediaId !== "string") return [];
-                const asset = assetsById.get(mediaId);
-                if (!asset) return [];
-                return [{
+            ...block,
+            content: {
+                ...block.content,
+                items: activeAssets.map((asset) => ({
                     media_id: asset.id,
                     url: asset.file ?? "",
                     alt: locale === "fa" ? asset.alt_text_fa : asset.alt_text_en,
                     caption: locale === "fa" ? asset.caption_fa : asset.caption_en,
-                }];
-            }),
+                })),
+            },
         };
     }
-    return block.content;
+    return block;
 }
