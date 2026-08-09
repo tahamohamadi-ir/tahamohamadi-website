@@ -51,6 +51,11 @@ class Command(BaseCommand):
         self._create_superuser()
         self._remove_broken_seed_media()
         self._create_identity_and_siteconfig_drafts()
+        self._create_skills()
+        self._create_experiences()
+        self._create_educations()
+        self._create_publications()
+        self._create_social_links()
         self._create_pages()
         topics = self._create_topics()
         self._create_articles(topics, [])
@@ -119,31 +124,31 @@ class Command(BaseCommand):
     def _create_identity_and_siteconfig_drafts(self):
         """Create safe, review-only records without real contact data or assets."""
         profile, profile_created = SiteProfile.objects.get_or_create(
-            name_en="Draft profile",
+            name_en="Taha Mohamadi",
             defaults={
-                "name_fa": "پروفایل پیش‌نویس",
-                "headline_fa": "برای بازبینی پیش از انتشار",
-                "headline_en": "Review before publishing",
-                "status": "draft",
+                "name_fa": "طاها محمدی",
+                "headline_fa": "پژوهشگر و توسعه‌دهنده",
+                "headline_en": "Researcher & Developer",
+                "status": "published",
                 "created_by": "seed",
                 "updated_by": "seed",
             },
         )
         if profile_created:
-            self.stdout.write("  Created draft identity profile.")
+            self.stdout.write("  Created published identity profile.")
 
         if not SiteSettings.objects.exists():
             SiteSettings.objects.create(
-                site_title_fa="تنظیمات پیش‌نویس سایت",
-                site_title_en="Draft site settings",
-                primary_cta_label_fa="بازبینی",
-                primary_cta_label_en="Review",
-                primary_cta_url="/en",
-                status="draft",
+                site_title_fa="وبسایت شخصی طاها محمدی",
+                site_title_en="Taha Mohamadi's Personal Website",
+                primary_cta_label_fa="ارتباط با من",
+                primary_cta_label_en="Contact Me",
+                primary_cta_url="/en/contact",
+                status="published",
                 created_by="seed",
                 updated_by="seed",
             )
-            self.stdout.write("  Created draft site settings.")
+            self.stdout.write("  Created published site settings.")
 
         NavigationItem.objects.get_or_create(
             label_en="Home",
@@ -152,11 +157,114 @@ class Command(BaseCommand):
                 "label_fa": "خانه",
                 "href": "/en",
                 "ordering": 0,
-                "status": "draft",
+                "status": "published",
                 "created_by": "seed",
                 "updated_by": "seed",
             },
         )
+
+    def _create_skills(self):
+        skills = [
+            ("Python", "پایتون", "Backend", "بک‌اند", 1),
+            ("Django", "جنگو", "Backend", "بک‌اند", 2),
+            ("React", "ری‌اکت", "Frontend", "فرانت‌اند", 3),
+            ("Next.js", "نکست‌جی‌اس", "Frontend", "فرانت‌اند", 4),
+            ("Machine Learning", "یادگیری ماشین", "AI", "هوش مصنوعی", 5),
+            ("Docker", "داکر", "DevOps", "دواپس", 6),
+        ]
+        for name_en, name_fa, cat_en, cat_fa, order in skills:
+            Skill.objects.get_or_create(
+                name_en=name_en,
+                defaults={
+                    "name_fa": name_fa,
+                    "category_en": cat_en,
+                    "category_fa": cat_fa,
+                    "ordering": order,
+                    "status": "published",
+                    "created_by": "seed",
+                    "updated_by": "seed",
+                },
+            )
+        self.stdout.write("  Created skills.")
+
+    def _create_experiences(self):
+        Experience.objects.get_or_create(
+            organization_en="Tech Company",
+            title_en="Senior Developer",
+            defaults={
+                "organization_fa": "شرکت فناوری",
+                "title_fa": "توسعه‌دهنده ارشد",
+                "summary_en": "Developed scalable backend systems and AI models.",
+                "summary_fa": "توسعه سیستم‌های بک‌اند مقیاس‌پذیر و مدل‌های هوش مصنوعی.",
+                "started_on": date(2020, 1, 1),
+                "ended_on": date(2024, 1, 1),
+                "ordering": 1,
+                "status": "published",
+                "created_by": "seed",
+                "updated_by": "seed",
+            },
+        )
+        self.stdout.write("  Created experiences.")
+
+    def _create_educations(self):
+        Education.objects.get_or_create(
+            institution_en="University of Technology",
+            degree_en="Master of Science",
+            defaults={
+                "institution_fa": "دانشگاه صنعتی",
+                "degree_fa": "کارشناسی ارشد",
+                "field_en": "Computer Engineering",
+                "field_fa": "مهندسی کامپیوتر",
+                "started_on": date(2018, 9, 1),
+                "ended_on": date(2020, 9, 1),
+                "ordering": 1,
+                "status": "published",
+                "created_by": "seed",
+                "updated_by": "seed",
+            },
+        )
+        self.stdout.write("  Created educations.")
+
+    def _create_publications(self):
+        Publication.objects.get_or_create(
+            title_en="An Approach to AI Development",
+            defaults={
+                "title_fa": "رویکردی بر توسعه هوش مصنوعی",
+                "publisher_en": "Journal of AI",
+                "publisher_fa": "مجله هوش مصنوعی",
+                "published_on": date(2022, 5, 15),
+                "ordering": 1,
+                "status": "published",
+                "created_by": "seed",
+                "updated_by": "seed",
+            },
+        )
+        self.stdout.write("  Created publications.")
+
+    def _create_social_links(self):
+        SocialLink.objects.get_or_create(
+            label_en="GitHub",
+            url="https://github.com/tahamohamadi",
+            defaults={
+                "label_fa": "گیت‌هاب",
+                "ordering": 1,
+                "status": "published",
+                "created_by": "seed",
+                "updated_by": "seed",
+            },
+        )
+        SocialLink.objects.get_or_create(
+            label_en="LinkedIn",
+            url="https://linkedin.com/in/tahamohamadi",
+            defaults={
+                "label_fa": "لینکدین",
+                "ordering": 2,
+                "status": "published",
+                "created_by": "seed",
+                "updated_by": "seed",
+            },
+        )
+        self.stdout.write("  Created social links.")
 
     def _create_pages(self):
         """Create sample CMS pages with sections and blocks."""

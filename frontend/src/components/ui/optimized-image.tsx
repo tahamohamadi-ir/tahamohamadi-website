@@ -24,6 +24,7 @@ export function OptimizedImage({
     sizes,
     quality,
     loading,
+    alt,
     ...props
 }: OptimizedImageProps) {
     // Default responsive sizes if not provided and using fill mode
@@ -32,6 +33,7 @@ export function OptimizedImage({
 
     return (
         <Image
+            alt={alt || ""}
             className={cn("transition-opacity duration-300 motion-reduce:transition-none", className)}
             sizes={sizes ?? defaultSizes}
             quality={quality ?? 80}

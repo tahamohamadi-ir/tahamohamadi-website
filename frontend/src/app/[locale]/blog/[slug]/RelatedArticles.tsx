@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/i18n";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 interface MediaAssetDTO {
     id: string;
@@ -49,14 +50,15 @@ export function RelatedArticles({ articles, locale }: RelatedArticlesProps) {
                         >
                             {article.featured_image && (
                                 <div className="aspect-video overflow-hidden">
-                                    <img
+                                    <OptimizedImage
                                         src={article.featured_image.file_url}
                                         alt={
                                             locale === "fa"
                                                 ? article.featured_image.alt_text_fa
                                                 : article.featured_image.alt_text_en
                                         }
-                                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                                        fill
+                                        className="object-cover transition-transform group-hover:scale-105"
                                     />
                                 </div>
                             )}
