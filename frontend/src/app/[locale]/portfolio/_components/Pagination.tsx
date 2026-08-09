@@ -6,6 +6,7 @@ interface PaginationProps {
     totalPages: number;
     locale: Locale;
     technology: string | null;
+    role: string | null;
 }
 
 /**
@@ -17,6 +18,7 @@ export function Pagination({
     totalPages,
     locale,
     technology,
+    role,
 }: PaginationProps) {
     const previousLabel = locale === "fa" ? "قبلی" : "Previous";
     const nextLabel = locale === "fa" ? "بعدی" : "Next";
@@ -25,6 +27,7 @@ export function Pagination({
         const params = new URLSearchParams();
         if (page > 1) params.set("page", String(page));
         if (technology) params.set("technology", technology);
+        if (role) params.set("role", role);
         const query = params.toString();
         return `/${locale}/portfolio${query ? `?${query}` : ""}`;
     }

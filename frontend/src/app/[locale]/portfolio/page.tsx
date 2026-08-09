@@ -5,11 +5,12 @@ import { fetchPortfolioList } from "@/lib/api";
 import type { CaseStudyListItem, PaginatedResponse } from "@/lib/types";
 import { CaseStudyCard } from "./_components/CaseStudyCard";
 import { TechnologyFilter } from "./_components/TechnologyFilter";
+import { RoleFilter } from "./_components/RoleFilter";
 import { Pagination } from "./_components/Pagination";
 
 interface PortfolioPageProps {
     params: Promise<{ locale: string }>;
-    searchParams: Promise<{ page?: string; technology?: string }>;
+    searchParams: Promise<{ page?: string; technology?: string; role?: string }>;
 }
 
 export async function generateMetadata({
@@ -50,7 +51,7 @@ export default async function PortfolioPage({
     searchParams,
 }: PortfolioPageProps) {
     const { locale } = await params;
-    const { page, technology } = await searchParams;
+    const { page, technology, role } = await searchParams;
 
     if (!isValidLocale(locale)) {
         notFound();
@@ -65,6 +66,7 @@ export default async function PortfolioPage({
         data = await fetchPortfolioList({
             page: currentPage,
             technologies: technology || undefined,
+            role: role || undefined,
         });
     } catch {
         // If API is unavailable, render empty state
@@ -88,6 +90,15 @@ export default async function PortfolioPage({
         new Set(caseStudies.flatMap((cs) => cs.technologies))
     ).sort();
 
+    // Extract all unique roles
+    const allRoles = Array.from(
+        new Set(
+            caseStudies
+                .map((cs) => (validLocale === "fa" ? cs.role_fa : cs.role_en))
+                .filter(Boolean)
+        )
+    ).sort();
+
     const pageTitle = validLocale === "fa" ? "نمونه‌کارها" : "Portfolio";
     const pageSubtitle =
         validLocale === "fa"
@@ -108,14 +119,26 @@ export default async function PortfolioPage({
                 <p className="mt-2 text-lg text-muted-foreground">{pageSubtitle}</p>
             </header>
 
-            {/* Technology Filter */}
-            {allTechnologies.length > 0 && (
-                <TechnologyFilter
-                    technologies={allTechnologies}
-                    activeTechnology={technology || null}
-                    locale={validLocale}
-                />
-            )}
+            {/* Filters */}
+            <div className="mb-8 space-y-6">
+                {allRoles.length > 0 && (
+                    <RoleFilter
+                        roles={allRoles}
+                        activeRole={role || null}
+                        activeTechnology={technology || null}
+                        locale={validLocale}
+                    />
+                )}
+                
+                {allTechnologies.length > 0 && (
+                    <TechnologyFilter
+                        technologies={allTechnologies}
+                        activeTechnology={technology || null}
+                        activeRole={role || null}
+                        locale={validLocale}
+                    />
+                )}
+            </div>
 
             {/* Empty State */}
             {caseStudies.length === 0 && (
@@ -159,6 +182,7 @@ export default async function PortfolioPage({
                     totalPages={data.total_pages}
                     locale={validLocale}
                     technology={technology || null}
+                    role={role || null}
                 />
             )}
         </div>

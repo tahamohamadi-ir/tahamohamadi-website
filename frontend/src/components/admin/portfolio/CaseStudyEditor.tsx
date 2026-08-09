@@ -53,6 +53,8 @@ export interface CaseStudyData {
     problem_en: string;
     outcome_fa: string;
     outcome_en: string;
+    limitations_fa: string;
+    limitations_en: string;
     date_start: string;
     date_end: string;
     narrative_blocks: ComposerBlock[];
@@ -571,6 +573,32 @@ export function CaseStudyEditor({ caseStudy, locale, onSave }: CaseStudyEditorPr
                             value={data.outcome_en}
                             onChange={(e) => updateField("outcome_en", e.target.value)}
                             placeholder="Project outcome"
+                            rows={3}
+                        />
+                    </div>
+                </div>
+
+                {/* Limitations */}
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="limitations_fa">Limitations (FA)</Label>
+                        <Textarea
+                            id="limitations_fa"
+                            dir="rtl"
+                            value={data.limitations_fa}
+                            onChange={(e) => updateField("limitations_fa", e.target.value)}
+                            placeholder="محدودیت‌ها و چالش‌های مسیر"
+                            rows={3}
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="limitations_en">Limitations (EN)</Label>
+                        <Textarea
+                            id="limitations_en"
+                            dir="ltr"
+                            value={data.limitations_en}
+                            onChange={(e) => updateField("limitations_en", e.target.value)}
+                            placeholder="Limitations and constraints"
                             rows={3}
                         />
                     </div>

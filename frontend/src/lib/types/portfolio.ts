@@ -25,6 +25,8 @@ export interface CaseStudyListItem {
     problem_en: string;
     outcome_fa: string;
     outcome_en: string;
+    limitations_fa: string;
+    limitations_en: string;
     gallery: import("./media").MediaAssetDTO[];
     featured: boolean;
     status: string;
@@ -48,4 +50,5 @@ export interface PortfolioListParams {
     page_size?: number;
     technologies?: string;
     featured?: string;
+    role?: string;
 }

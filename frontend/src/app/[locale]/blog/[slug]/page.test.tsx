@@ -38,6 +38,8 @@ const article = {
   reading_time: 4,
   blocks: [],
   toc: [],
+  previous: null,
+  next: null,
   related: [
     {
       id: "related-1",

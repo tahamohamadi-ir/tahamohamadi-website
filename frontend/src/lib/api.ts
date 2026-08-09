@@ -81,6 +81,7 @@ export async function fetchPortfolioList(
   if (params.page_size) searchParams.set("page_size", String(params.page_size));
   if (params.technologies) searchParams.set("technologies", params.technologies);
   if (params.featured) searchParams.set("featured", params.featured);
+  if (params.role) searchParams.set("role", params.role);
 
   const query = searchParams.toString();
   const path = `/public/portfolio/${query ? `?${query}` : ""}`;

@@ -36,6 +36,8 @@ export default function CaseStudyEditorPage() {
                 problem_en: "",
                 outcome_fa: "",
                 outcome_en: "",
+                limitations_fa: "",
+                limitations_en: "",
                 date_start: "",
                 date_end: "",
                 narrative_blocks: [],

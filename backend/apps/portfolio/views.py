@@ -234,6 +234,14 @@ class PublicCaseStudyListView(ListAPIView):
             for tech in tech_list:
                 queryset = queryset.filter(technologies__contains=[tech])
 
+        # Filter by role (checks both FA and EN)
+        role = self.request.query_params.get("role")
+        if role:
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(role_fa__iexact=role) | Q(role_en__iexact=role)
+            )
+
         return queryset
 
 

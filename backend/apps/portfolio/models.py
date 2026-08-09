@@ -46,9 +46,11 @@ class CaseStudy(VersionedModel):
     problem_fa = models.TextField(blank=True, default="")
     problem_en = models.TextField(blank=True, default="")
 
-    # --- Outcome ---
+    # --- Outcome & Limitations ---
     outcome_fa = models.TextField(blank=True, default="")
     outcome_en = models.TextField(blank=True, default="")
+    limitations_fa = models.TextField(blank=True, default="")
+    limitations_en = models.TextField(blank=True, default="")
 
     # --- Gallery ---
     gallery = models.ManyToManyField(

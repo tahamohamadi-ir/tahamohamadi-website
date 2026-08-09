@@ -36,8 +36,14 @@ interface CaseStudyDTO {
     date_start: string | null;
     date_end: string | null;
     technologies: string[];
+    statement_fa: string;
+    statement_en: string;
+    problem_fa: string;
+    problem_en: string;
     outcome_fa: string;
     outcome_en: string;
+    limitations_fa: string;
+    limitations_en: string;
     gallery: MediaAssetDTO[];
     featured: boolean;
     status: string;
@@ -128,6 +134,16 @@ export default async function PortfolioCaseStudyPage({ params }: PageProps) {
     const role = validLocale === "fa" ? caseStudy.role_fa : caseStudy.role_en;
     const client = validLocale === "fa" ? caseStudy.client_fa : caseStudy.client_en;
     const outcome = validLocale === "fa" ? caseStudy.outcome_fa : caseStudy.outcome_en;
+    const statement = validLocale === "fa" ? caseStudy.statement_fa : caseStudy.statement_en;
+    const problem = validLocale === "fa" ? caseStudy.problem_fa : caseStudy.problem_en;
+    const limitations = validLocale === "fa" ? caseStudy.limitations_fa : caseStudy.limitations_en;
+
+    const labels = {
+        statement: validLocale === "fa" ? "رویکرد پروژه" : "Project Approach",
+        problem: validLocale === "fa" ? "چالش و مسئله" : "The Challenge",
+        outcome: validLocale === "fa" ? "دست‌آوردها" : "Outcomes",
+        limitations: validLocale === "fa" ? "محدودیت‌ها و چالش‌های مسیر" : "Limitations & Constraints"
+    };
 
     return (
         <>
@@ -160,6 +176,26 @@ export default async function PortfolioCaseStudyPage({ params }: PageProps) {
                     locale={validLocale}
                 />
 
+                {/* Statement Guard */}
+                {statement && (
+                    <section className="mt-10 lg:mt-12" aria-label={labels.statement}>
+                        <h2 className="mb-4 text-2xl font-bold tracking-tight">{labels.statement}</h2>
+                        <div className="prose prose-slate dark:prose-invert max-w-none text-muted-foreground whitespace-pre-wrap">
+                            {statement}
+                        </div>
+                    </section>
+                )}
+
+                {/* Problem Guard */}
+                {problem && (
+                    <section className="mt-10 lg:mt-12" aria-label={labels.problem}>
+                        <h2 className="mb-4 text-2xl font-bold tracking-tight">{labels.problem}</h2>
+                        <div className="prose prose-slate dark:prose-invert max-w-none text-muted-foreground whitespace-pre-wrap">
+                            {problem}
+                        </div>
+                    </section>
+                )}
+
                 {/* Narrative Blocks */}
                 {caseStudy.narrative_blocks.length > 0 && (
                     <section className="mt-10 space-y-6 lg:mt-12" aria-label={validLocale === "fa" ? "شرح پروژه" : "Project Narrative"}>
@@ -171,6 +207,26 @@ export default async function PortfolioCaseStudyPage({ params }: PageProps) {
                                 context="article"
                             />
                         ))}
+                    </section>
+                )}
+
+                {/* Outcome Guard */}
+                {outcome && (
+                    <section className="mt-10 lg:mt-12" aria-label={labels.outcome}>
+                        <h2 className="mb-4 text-2xl font-bold tracking-tight">{labels.outcome}</h2>
+                        <div className="prose prose-slate dark:prose-invert max-w-none text-muted-foreground whitespace-pre-wrap">
+                            {outcome}
+                        </div>
+                    </section>
+                )}
+
+                {/* Limitations Guard */}
+                {limitations && (
+                    <section className="mt-10 lg:mt-12" aria-label={labels.limitations}>
+                        <h2 className="mb-4 text-2xl font-bold tracking-tight text-destructive">{labels.limitations}</h2>
+                        <div className="prose prose-slate dark:prose-invert max-w-none text-muted-foreground whitespace-pre-wrap">
+                            {limitations}
+                        </div>
                     </section>
                 )}
 
