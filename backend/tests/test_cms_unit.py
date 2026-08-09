@@ -383,6 +383,62 @@ class TestValidatePageComposition:
         assert len(errors) >= 1
         assert any("not found" in e.lower() for e in errors)
 
+    def test_rejects_animation_media_url_instead_of_media_asset_uuid(self):
+        """Animation blocks persist a MediaAsset UUID, never an arbitrary URL."""
+        page_data = {
+            "sections": [
+                {
+                    "ordering": 0,
+                    "blocks": [
+                        {
+                            "ordering": 0,
+                            "block_type": "image_reveal",
+                            "settings": {
+                                "media_url": "https://example.com/image.jpg",
+                                "duration": 250,
+                                "delay": 0,
+                                "easing": "ease-out",
+                                "trigger": "scroll",
+                            },
+                        }
+                    ],
+                }
+            ]
+        }
+
+        errors = validate_page_composition(page_data)
+
+        assert errors
+        assert any("media_id" in error for error in errors)
+
+    def test_rejects_archived_animation_media_asset(self):
+        """Animation media IDs must be present in the supplied active-media set."""
+        media_id = "33333333-3333-4333-8333-333333333333"
+        page_data = {
+            "sections": [
+                {
+                    "ordering": 0,
+                    "blocks": [
+                        {
+                            "ordering": 0,
+                            "block_type": "image_reveal",
+                            "settings": {
+                                "media_id": media_id,
+                                "duration": 250,
+                                "delay": 0,
+                                "easing": "ease-out",
+                                "trigger": "scroll",
+                            },
+                        }
+                    ],
+                }
+            ]
+        }
+
+        errors = validate_page_composition(page_data, known_media_ids=set())
+
+        assert any("not found" in error.lower() for error in errors)
+
     def test_no_sections_key_returns_empty(self):
         """A page_data without 'sections' key should return no errors."""
         errors = validate_page_composition({})

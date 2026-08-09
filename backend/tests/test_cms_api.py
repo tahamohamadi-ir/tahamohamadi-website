@@ -171,21 +171,24 @@ class TestAdminCreatePage:
         assert resp["Content-Type"].startswith("application/problem+json")
         assert "not found" in str(resp.json()["errors"]["composition"]).lower()
 
-    def test_create_page_invalid_block_type_400(self, authed_client, valid_page_payload):
-        """Create page with unknown block_type returns 400 or 422 Problem Details."""
+    def test_create_page_unknown_block_type_returns_composition_problem(
+        self, authed_client, valid_page_payload
+    ):
+        """Unknown block types use the composition Problem Details contract."""
         valid_page_payload["sections"][0]["blocks"][0]["block_type"] = "nonexistent"
         resp = authed_client.post(
             "/api/admin/pages/", valid_page_payload, format="json"
         )
-        assert resp.status_code in (400, 422)
+        assert resp.status_code == 400
+        assert resp["Content-Type"].startswith("application/problem+json")
         data = resp.json()
-        assert data["status"] in (400, 422)
-        # Check it's either Problem Details or DRF validation error
-        assert "type" in data or "block_type" in str(data)
-        assert "block_type" in str(data.get("errors", data.get("detail", data)))
+        assert "composition" in data["errors"]
+        assert "unknown block_type" in str(data["errors"]["composition"]).lower()
 
-    def test_create_page_invalid_settings_400(self, authed_client, valid_page_payload):
-        """Create page where block settings fail schema validation returns 400."""
+    def test_create_page_invalid_settings_returns_composition_problem(
+        self, authed_client, valid_page_payload
+    ):
+        """Invalid block settings use the composition Problem Details contract."""
         # hero requires 'title' in settings
         valid_page_payload["sections"][0]["blocks"][0]["settings"] = {
             "unknown_key": "bad"
@@ -193,7 +196,9 @@ class TestAdminCreatePage:
         resp = authed_client.post(
             "/api/admin/pages/", valid_page_payload, format="json"
         )
-        assert resp.status_code in (400, 422)
+        assert resp.status_code == 400
+        assert resp["Content-Type"].startswith("application/problem+json")
+        assert "composition" in resp.json()["errors"]
 
 
 @pytest.mark.django_db
@@ -326,6 +331,38 @@ class TestAdminUpdatePage:
         assert resp.status_code == 400
         assert resp["Content-Type"].startswith("application/problem+json")
         assert "not found" in str(resp.json()["errors"]["composition"]).lower()
+
+    def test_update_unknown_block_type_returns_composition_problem(
+        self, authed_client, valid_page_payload
+    ):
+        """Updating with an unknown block type preserves the Problem Details contract."""
+        page_data = self._create_page(authed_client, valid_page_payload)
+        valid_page_payload["sections"][0]["blocks"][0]["block_type"] = "nonexistent"
+        valid_page_payload["version"] = page_data["version"]
+
+        resp = authed_client.put(
+            f"/api/admin/pages/{page_data['id']}/", valid_page_payload, format="json"
+        )
+
+        assert resp.status_code == 400
+        assert resp["Content-Type"].startswith("application/problem+json")
+        assert "composition" in resp.json()["errors"]
+
+    def test_update_invalid_settings_returns_composition_problem(
+        self, authed_client, valid_page_payload
+    ):
+        """Updating invalid block settings preserves the Problem Details contract."""
+        page_data = self._create_page(authed_client, valid_page_payload)
+        valid_page_payload["sections"][0]["blocks"][0]["settings"] = {"unknown_key": "bad"}
+        valid_page_payload["version"] = page_data["version"]
+
+        resp = authed_client.put(
+            f"/api/admin/pages/{page_data['id']}/", valid_page_payload, format="json"
+        )
+
+        assert resp.status_code == 400
+        assert resp["Content-Type"].startswith("application/problem+json")
+        assert "composition" in resp.json()["errors"]
 
     def test_update_with_wrong_version_409(
         self, authed_client, valid_page_payload

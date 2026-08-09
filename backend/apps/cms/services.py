@@ -373,9 +373,10 @@ def validate_page_composition(
                     errors.append(f"{path}: media asset '{mid}' not found")
 
             # --- (f) URL safety validation ---
-            # Every URL-bearing field registered by canonical, legacy, and
-            # animation block settings follows the same fail-closed policy.
-            for url_field in ("cta_url", "cta_link", "url", "media_url"):
+            # Canonical and legacy CTA fields follow the same fail-closed policy.
+            # Animation media is UUID-backed and resolved to a public URL only
+            # after its active MediaAsset reference has been validated.
+            for url_field in ("cta_url", "cta_link", "url"):
                 url = settings.get(url_field)
                 if isinstance(url, str) and url and not is_safe_url(url):
                     errors.append(f"{path}: unsafe URL in {url_field} '{url}'")

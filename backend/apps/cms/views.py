@@ -61,30 +61,12 @@ class AdminPageViewSet(ModelViewSet):
     # ------------------------------------------------------------------
 
     def create(self, request, *args, **kwargs):
+        composition_problem = _page_composition_problem(request)
+        if composition_problem:
+            return composition_problem
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        # Validate composition before persisting
-        sections_data = request.data.get("sections", [])
-        active_media_ids = {
-            str(media_id)
-            for media_id in MediaAsset.objects.filter(status="active").values_list("id", flat=True)
-        }
-        composition_errors = validate_page_composition(
-            {"sections": sections_data}, known_media_ids=active_media_ids
-        )
-        if composition_errors:
-            problem = build_problem(
-                status.HTTP_400_BAD_REQUEST,
-                "Page composition validation failed.",
-                instance=request.path,
-                errors={"composition": composition_errors},
-            )
-            return Response(
-                problem,
-                status=status.HTTP_400_BAD_REQUEST,
-                content_type=PROBLEM_CONTENT_TYPE,
-            )
 
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
@@ -102,30 +84,12 @@ class AdminPageViewSet(ModelViewSet):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
 
+        composition_problem = _page_composition_problem(request)
+        if composition_problem:
+            return composition_problem
+
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
-
-        # Validate composition before persisting
-        sections_data = request.data.get("sections", [])
-        active_media_ids = {
-            str(media_id)
-            for media_id in MediaAsset.objects.filter(status="active").values_list("id", flat=True)
-        }
-        composition_errors = validate_page_composition(
-            {"sections": sections_data}, known_media_ids=active_media_ids
-        )
-        if composition_errors:
-            problem = build_problem(
-                status.HTTP_400_BAD_REQUEST,
-                "Page composition validation failed.",
-                instance=request.path,
-                errors={"composition": composition_errors},
-            )
-            return Response(
-                problem,
-                status=status.HTTP_400_BAD_REQUEST,
-                content_type=PROBLEM_CONTENT_TYPE,
-            )
 
         # Extract version from validated serializer data for optimistic locking
         incoming_version = serializer.validated_data.get("version")
@@ -177,6 +141,28 @@ def _active_media_ids() -> set[str]:
             "id", flat=True
         )
     }
+
+
+def _page_composition_problem(request) -> Response | None:
+    """Return the stable Problem Details response for invalid compositions."""
+    composition_errors = validate_page_composition(
+        {"sections": request.data.get("sections", [])},
+        known_media_ids=_active_media_ids(),
+    )
+    if not composition_errors:
+        return None
+
+    problem = build_problem(
+        status.HTTP_400_BAD_REQUEST,
+        "Page composition validation failed.",
+        instance=request.path,
+        errors={"composition": composition_errors},
+    )
+    return Response(
+        problem,
+        status=status.HTTP_400_BAD_REQUEST,
+        content_type=PROBLEM_CONTENT_TYPE,
+    )
 
 
 def _manifest_problem(request, errors: list[str]) -> Response:
