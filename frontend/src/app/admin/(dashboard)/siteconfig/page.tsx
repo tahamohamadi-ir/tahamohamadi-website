@@ -51,8 +51,9 @@ export default function SiteConfigPage() {
       if (response.results.length > 0) {
         const loaded = response.results[0];
         setSettings(loaded);
-        setPrimaryColorFa(loaded.design_tokens?.colors?.fa?.primary || "#000000");
-        setPrimaryColorEn(loaded.design_tokens?.colors?.en?.primary || "#000000");
+        const tokens = loaded.design_tokens as any;
+        setPrimaryColorFa(tokens?.colors?.fa?.primary || "#000000");
+        setPrimaryColorEn(tokens?.colors?.en?.primary || "#000000");
       }
     } catch {
       setError("دریافت تنظیمات سایت با خطا مواجه شد.");

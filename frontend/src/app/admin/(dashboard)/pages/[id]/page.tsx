@@ -246,7 +246,7 @@ export default function PageEditorPage() {
     }, [page, pageId, router, sections, saveNow, reset, markClean, applySaveFailure]);
 
     const updatePageField = useCallback(
-        (field: keyof Pick<PageData, "title_fa" | "title_en" | "slug_fa" | "slug_en" | "page_type" | "status">, value: string) => {
+        (field: keyof Pick<PageData, "title_fa" | "title_en" | "slug_fa" | "slug_en" | "page_type" | "status" | "template_variant">, value: string) => {
             setPage((current) => current ? { ...current, [field]: value } : current);
             setValidationIssues([]);
             setManualSaveState("idle");
