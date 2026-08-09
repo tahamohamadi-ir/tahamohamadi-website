@@ -640,27 +640,38 @@
 
 ## فاز 13: Motion, Interaction & Accessibility
 
-  - [ ] 13.2.1 Global `@media (prefers-reduced-motion: reduce)` in globals.css
-  - [ ] 13.2.2 `motion-reduce:transition-none` on interactive components
-  - [ ] 13.2.3 Verify all non-essential animations disabled
+- [x] 13.1 Motion Design ← 9.1, 10.2
+  - [x] 13.1.1 Button hover/focus: 150ms ease-in-out (background, box-shadow)
+  - [x] 13.1.2 Card hover: 200ms ease-out (box-shadow, transform)
+  - [x] 13.1.3 Page transitions: 200ms ease-out (opacity)
+  - [x] 13.1.4 Navigation state: 150ms ease-in-out (color, border)
+  - [x] 13.1.5 Skeleton pulse: 1.5s infinite ease-in-out (opacity)
+  - [x] 13.1.6 Drawer open: 300ms cubic-bezier(0.32,0.72,0,1) (transform)
+  - [x] 13.1.7 Use transform + opacity only (avoid layout thrashing)
 
-- [ ] 13.3 Accessibility Audit ← 9.1-12.7
-  - [ ] 13.3.1 Semantic landmarks: header, nav, main, footer on every page
-  - [ ] 13.3.2 Sequential heading hierarchy (H1→H6, no skipping)
-  - [ ] 13.3.3 ARIA live regions for route changes
-  - [ ] 13.3.4 Visible focus indicators on all interactive elements
-  - [ ] 13.3.5 All form inputs: programmatically associated labels (`htmlFor`, `aria-describedby`)
-  - [ ] 13.3.6 Images: alt text audit (meaningful with fa/en alt vs decorative)
-  - [ ] 13.3.7 Full keyboard navigation verification (Tab, Escape, Enter, Space, Arrows)
-  - [ ] 13.3.8 Touch targets: ≥44×44px verification across mobile components
-  - [ ] 13.3.9 Color contrast: 4.5:1 normal, 3:1 large text
-  - [ ] 13.3.10 Form errors: `aria-describedby` linked with inline messages
+- [x] 13.2 Reduced Motion ← 13.1
+  - [x] 13.2.1 Global `@media (prefers-reduced-motion: reduce)` in globals.css
+  - [x] 13.2.2 `motion-reduce:transition-none` on interactive components
+  - [x] 13.2.3 Verify all non-essential animations disabled
+
+- [x] 13.3 Accessibility Audit ← 9.1-12.7
+  - [x] 13.3.1 Semantic landmarks: header, nav, main, footer on every page
+  - [x] 13.3.2 Sequential heading hierarchy (H1→H6, no skipping)
+  - [x] 13.3.3 ARIA live regions for route changes
+  - [x] 13.3.4 Visible focus indicators on all interactive elements (`:focus-visible` in `globals.css`)
+  - [x] 13.3.5 All form inputs: programmatically associated labels (`htmlFor`, `aria-describedby`)
+  - [x] 13.3.6 Images: alt text audit (meaningful with fa/en alt vs decorative)
+  - [x] 13.3.7 Full keyboard navigation verification (Tab, Escape, Enter, Space, Arrows)
+  - [x] 13.3.8 Touch targets: ≥44×44px verification across mobile components
+  - [x] 13.3.9 Color contrast: 4.5:1 normal, 3:1 large text
+  - [x] 13.3.10 Form errors: `aria-describedby` linked with inline messages
 
 - [*] 13.4 Accessibility Tests
-  - [ ] 13.4.1 axe-core / @axe-core/playwright audit on all page templates
-  - [ ] 13.4.2 Heading hierarchy automated tests
-  - [ ] 13.4.3 Focus indicator visibility tests
-  - [ ] 13.4.4 Focus trap tests: MobileNavDrawer, MediaPickerModal, ConfirmationDialogs
+  - [x] 13.4.1 axe-core / @axe-core/playwright audit on all page templates
+  - [x] 13.4.2 Heading hierarchy automated tests
+  - [x] 13.4.3 Focus indicator visibility tests
+  - [x] 13.4.4 Focus trap tests: MobileNavDrawer, MediaPickerModal, ConfirmationDialogs
+
 
 ---
 
