@@ -20,9 +20,9 @@ export interface ConflictDialogProps {
     onOpenChange: (open: boolean) => void;
     /** Callback to reload the latest version from the server (discard local changes). */
     onReload: () => void;
-    /** Callback to force save local changes, overriding the server version. */
-    onForceSave: () => void;
-    /** Whether a reload or force-save operation is in progress. */
+    /** Callback to close the conflict while preserving local edits. */
+    onKeepLocal: () => void;
+    /** Whether a remote reload is in progress. */
     isLoading?: boolean;
 }
 
@@ -32,13 +32,13 @@ export interface ConflictDialogProps {
  * Explains that the content was modified by another user or session and provides
  * two resolution options:
  * - **Reload**: Discard local changes and fetch the latest version from the server.
- * - **Force Save**: Override the server version with local changes.
+ * - **Keep local edits**: Close the dialog without writing or discarding local state.
  */
 export function ConflictDialog({
     open,
     onOpenChange,
     onReload,
-    onForceSave,
+    onKeepLocal,
     isLoading = false,
 }: ConflictDialogProps) {
     return (
@@ -63,8 +63,8 @@ export function ConflictDialog({
                             latest version from the server.
                         </li>
                         <li>
-                            <span className="font-medium">Force Save</span> — Override the server version with
-                            your current changes.
+                            <span className="font-medium">Keep local edits</span> — Close this dialog and
+                            continue editing without overwriting the server.
                         </li>
                     </ul>
                 </div>
@@ -73,8 +73,8 @@ export function ConflictDialog({
                     <Button variant="outline" onClick={onReload} disabled={isLoading}>
                         Reload
                     </Button>
-                    <Button variant="destructive" onClick={onForceSave} disabled={isLoading}>
-                        Force Save
+                    <Button onClick={onKeepLocal} disabled={isLoading}>
+                        Keep local edits
                     </Button>
                 </DialogFooter>
             </DialogContent>

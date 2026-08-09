@@ -23,7 +23,8 @@ from apps.cms.block_registry import (
     validate_block_settings,
 )
 from apps.cms.collections import resolve_identity_collection
-from apps.cms.models import Block, Page, Section
+from apps.cms.models import Block, ComposerTemplate, Page, Section
+from apps.cms.services import is_safe_public_block
 from apps.media.models import MediaAsset
 
 
@@ -206,6 +207,29 @@ class PageListSerializer(serializers.ModelSerializer):
         ]
 
 
+class ComposerTemplateSerializer(serializers.ModelSerializer):
+    """Admin projection for portable Draft templates without raw object IDs."""
+
+    version = serializers.IntegerField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = ComposerTemplate
+        fields = ["name", "manifest", "status", "version", "created_at", "updated_at"]
+
+
+class ComposerTemplateImportSerializer(serializers.Serializer):
+    manifest = serializers.JSONField()
+    dry_run = serializers.BooleanField()
+    slug_fa = serializers.SlugField(max_length=50, allow_unicode=True)
+    slug_en = serializers.SlugField(max_length=50)
+    title_fa = serializers.CharField(max_length=255)
+    title_en = serializers.CharField(max_length=255)
+    page_type = serializers.CharField(max_length=50)
+
+
 # ---------------------------------------------------------------------------
 # Public Serializers (read-only, filtered projection for anonymous access)
 # ---------------------------------------------------------------------------
@@ -314,8 +338,7 @@ class PublicSectionSerializer(serializers.ModelSerializer):
         valid_blocks = [
             block
             for block in section.blocks.all().order_by("ordering")
-            if is_known_block_type(block.block_type)
-            and not validate_block_settings(block.block_type, block.settings)
+            if is_safe_public_block(block.block_type, block.settings)
         ]
         return PublicBlockSerializer(valid_blocks, many=True, context=self.context).data
 

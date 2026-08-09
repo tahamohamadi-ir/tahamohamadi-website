@@ -1,5 +1,12 @@
 # موارد معوق، ریسک‌ها و اعتبارسنجی‌های باقی‌مانده
 
+## PHASE2-COMPOSER-04 — Draft recovery and Canvas accessibility
+
+- [ ] Run authenticated touch-device E2E for Composer drag/reorder and destructive confirmations. **Owner:** frontend/QA. **Trigger:** before operational Admin release. **Mitigation:** pointer and keyboard controls have focused component tests; destructive Canvas mutations require in-app confirmation.
+- [ ] Complete the screen-reader matrix (NVDA/Firefox, VoiceOver/Safari) for Canvas focus restoration and polite mutation announcements. **Owner:** accessibility QA. **Trigger:** before accessibility sign-off. **Mitigation:** each Canvas mutation restores focus to a named control and exposes a polite live announcement.
+- [ ] Exercise offline and stale optimistic-lock race E2E for Draft autosave. **Owner:** frontend/backend QA. **Trigger:** before relying on Draft recovery in production. **Mitigation:** autosave is Draft-only, debounced, uses the current version, preserves local state on errors, and performs no automatic retry.
+- [ ] Capture visual QA for confirmation dialogs, Undo/Redo controls, and Draft autosave status across target RTL/LTR viewports. **Owner:** frontend/product. **Trigger:** before release. **Mitigation:** focused component/page tests cover the interaction contracts only.
+
 این فایل برای ثبت شفاف کارهایی است که در توسعهٔ سریع عمداً در همان برش انجام
 نشده‌اند. هر مورد باید پیش از اعلام آماده‌بودن release متناظر بسته یا با تصمیم
 صریح پذیرفته شود.
@@ -7,6 +14,8 @@
 سیاست ثبت، مالکیت و trigger بازگشت در [fast-track delivery](../governance/fast-track-delivery.md) تعریف شده است. defer هرگز authorization، session/CSRF، integrity داده، migration سازگار یا مرز انتشار public را دور نمی‌زند.
 
 ## PHASE1-R1 — جمع‌بندی گیت عملیاتی
+
+- [ ] `CMS-DEMO-SEED-010` — QA مرورگر SSR برای Composer demo در هر دو locale و بازبینی انسانیِ متن، ترجمه و neutral بودن assetهای توسعه‌ای. **Owner:** frontend/product-content. **Trigger:** پیش از هر استفادهٔ نمایشی یا انتشار از محتوای CMS. **Mitigation:** fixture فقط با `DEBUG=true` و database خالی ساخته می‌شود، همهٔ رکوردها Draft هستند و public page پاسخ 404 می‌دهد.
 
 - [x] R1-01 تا R1-10 از منظر inventory کد/قرارداد بررسی شده‌اند: identity، site configuration، aggregate، Admin CRUD، seed review و collectionهای CMS در Django/DRF و Next.js/React وجود دارند.
 - [ ] `PHASE1-R1-QA-001` — QA public با داده و asset تأییدشده در هر دو locale، برای identity، پژوهش، publication و resume. **Owner:** product/content. **Trigger:** پیش از اولین publish عمومی این منابع. **Mitigation:** public sectionهای خالی/locale ناقص suppress می‌شوند.
@@ -49,7 +58,9 @@
 - [x] خطای ۴۲۲ ذخیره دیگر کل Composer را حذف یا JSON خام نمایش نمی‌دهد؛ پیام کوتاه با شمارهٔ بخش و block در همان صفحه باقی می‌ماند.
 - [x] مسیر ایجاد صفحهٔ جدید اکنون title/slug مستقل fa/en، نوع و وضعیت دارد و پس از POST به editor رکورد واقعی می‌رود؛ route عمومی `/{locale}/{slug}` نیز canonical/hreflang دوزبانه دارد.
 - [ ] QA زندهٔ Admin با session/CSRF واقعی باقی است: ایجاد یک صفحه، افزودن/ویرایش/duplicate/reorder/delete blockها، انتخاب رسانه، preview fa/en، ذخیره، reload و انتشار در 375/768/1024/1440 باید بعد از rebuild Docker انجام شود.
-- [ ] ورودی پیشرفتهٔ Media ID/CSV و Filter JSON هنوز برای سازگاری و سرعت باقی مانده است. پیش از گیت نهایی R6 باید با selected-asset list و filter builder بدون UUID/JSON خام جایگزین شود.
+- [ ] Preview-token release validation remains: capture 375/768/1024/1440 viewport screenshots, scrutinize live referrer and access logs to ensure tokens are not leaked, and exercise the authenticated browser token-generation and unauthenticated token-preview flow with real session/CSRF.
+- [x] ورودی خام Media ID/CSV از Inspector حذف شد؛ Hero از picker/clear و Gallery از فهرست انتخاب‌شده با حذف تکی استفاده می‌کند و UUID را نمایش نمی‌دهد.
+- [ ] Filter JSON هنوز برای سازگاری باقی مانده است و پیش از گیت نهایی R6 باید با filter builder بدون JSON خام جایگزین شود.
 - [ ] dirty guard، autosave draft، focus restoration، announcement کامل screen reader و keyboard-only drag/reorder هنوز در R6-03/R5-07 باز هستند.
 - [ ] full browser security regression برای URL، XSS، media archive، permission و conflict هم‌زمان اجرا نشده است؛ فعلاً unit/contract/integration هدفمند و production build اجرا شده‌اند.
 - [ ] rebuild کامل Docker در این برش دوباره اجرا نشد؛ آخرین تلاش به timeout TLS در Docker Hub خورده بود و باید پس از پایداری registry تکرار شود.
@@ -290,6 +301,20 @@
   پایدار `-updated_at, id`؛ اجرای کامل مجدد backend آن را تأیید کرد.
 - [ ] lint backend برای فایل‌های تغییرکرده: image تست Compose فعلاً `ruff` را
   نصب ندارد؛ تا افزودن ابزار به محیط توسعه، فقط compile/test اجرا شده است.
+
+## T2.5 — portable Draft templates
+
+- [x] بازبینی whole-branch در 2026-08-08 با 114 آزمون متمرکز backend و 34 آزمون `BlockRenderer` بسته شد: restore/public/preview مرز raw HTML را fail closed می‌کنند، guard فرمان seed ریشه‌های `ComposerTemplate` و `ResumeVariant` را پوشش می‌دهد و template POST شکل اجباری `layout`/`enabled` را پیش از ذخیره رد می‌کند. این شاهد جای full suite، build production یا QA مرورگر را نمی‌گیرد.
+- [ ] QA دستی import با فایل JSON واقعی و paste در هر دو جهت RTL/LTR، شامل تغییر slugهای مقصد و تأیید اینکه فقط Draft جدید باز می‌شود. **Owner:** CMS/frontend. **Trigger:** پیش از انتشار Composer templates. **Mitigation:** dry-run سمت Django اجباری است و confirmation تا پاسخ موفق نمایش داده نمی‌شود.
+- [ ] QA مرورگر session/CSRF، keyboard/focus و screen reader برای TemplatePanel و حالت‌های validation/import failure. **Owner:** frontend/QA. **Trigger:** پیش از انتشار Admin Composer. **Mitigation:** تمام درخواست‌ها از `adminFetch` و پیام‌های status/alert ساختاریافته استفاده می‌کنند.
+- [ ] اجرای migration و import روی staging با media واقعی active/archived و بررسی audit/rollback در PostgreSQL production-like. **Owner:** backend/operations. **Trigger:** پیش از rollout production. **Mitigation:** import در transaction است، media فقط از مجموعهٔ active پذیرفته می‌شود و هیچ Page موجودی update نمی‌شود.
+- [ ] full frontend/backend suite، build production و visual QA در viewportهای هدف در این برش متمرکز اجرا نشد. **Owner:** release. **Trigger:** Task 6 evidence gate. **Mitigation:** تست‌های متمرکز backend و TemplatePanel قرارداد امنیتی و Draft-only را پوشش می‌دهند.
+
+## T2.1/T2.3/T2.4 — Composer editor completion
+
+- [ ] QA مرورگر واقعی با session/CSRF برای خروج از Back و تمام لینک‌های desktop/mobile داشبورد، conflict هم‌زمان autosave/manual، انتخاب «نگه‌داشتن ویرایش محلی» و reload عمدی نسخهٔ server. **Owner:** CMS/frontend QA. **Trigger:** پیش از انتشار Admin Composer. **Mitigation:** تست‌های component/page مسیر مشترک navigation guard و هر دو انتخاب conflict را پوشش می‌دهند.
+- [ ] QA بصری و تعاملی Inspector/Validation Summary و recovery notice در RTL/LTR و viewportهای هدف، همراه با keyboard-only و screen-reader واقعی. **Owner:** accessibility/product QA. **Trigger:** پیش از release. **Mitigation:** field association، alert/status live region و متن بدون UUID/error خام در تست‌های متمرکز بررسی شده‌اند.
+- [ ] full frontend/backend suite و production build در Task 6 اجرا نشدند. **Owner:** release. **Trigger:** گیت یکپارچه‌سازی Phase 2. **Mitigation:** changed frontend focused tests و `git diff --check` برای این برش اجرا می‌شوند.
 
 ## ریسک محیط مشترک
 

@@ -4,11 +4,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 const MAX_HISTORY_DEPTH = 50;
 
-export interface UseCommandStackOptions {
+export interface UseCommandStackOptions<T = unknown> {
     /** Maximum number of undo entries. Defaults to 50. */
     maxDepth?: number;
     /** Whether to register global keyboard shortcuts (Ctrl+Z, Ctrl+Shift+Z). Defaults to true. */
     enableKeyboardShortcuts?: boolean;
+    /** Receives the restored state after an undo, including keyboard shortcuts. */
+    onUndo?: (state: T) => void;
+    /** Receives the restored state after a redo, including keyboard shortcuts. */
+    onRedo?: (state: T) => void;
 }
 
 export interface UseCommandStackReturn<T> {
@@ -40,13 +44,17 @@ export interface UseCommandStackReturn<T> {
  */
 export function useCommandStack<T>(
     initialState?: T,
-    options: UseCommandStackOptions = {}
+    options: UseCommandStackOptions<T> = {}
 ): UseCommandStackReturn<T> {
     const { maxDepth = MAX_HISTORY_DEPTH, enableKeyboardShortcuts = true } = options;
 
     const undoStackRef = useRef<T[]>([]);
     const redoStackRef = useRef<T[]>([]);
     const currentRef = useRef<T | undefined>(initialState);
+    const onUndoRef = useRef(options.onUndo);
+    const onRedoRef = useRef(options.onRedo);
+    onUndoRef.current = options.onUndo;
+    onRedoRef.current = options.onRedo;
 
     // Use state to trigger re-renders when stack lengths change
     const [, forceUpdate] = useState(0);
@@ -85,6 +93,7 @@ export function useCommandStack<T>(
         const previousState = undoStackRef.current[undoStackRef.current.length - 1];
         undoStackRef.current = undoStackRef.current.slice(0, -1);
         currentRef.current = previousState;
+        onUndoRef.current?.(previousState);
         rerender();
         return previousState;
     }, [rerender]);
@@ -101,6 +110,7 @@ export function useCommandStack<T>(
         const nextState = redoStackRef.current[redoStackRef.current.length - 1];
         redoStackRef.current = redoStackRef.current.slice(0, -1);
         currentRef.current = nextState;
+        onRedoRef.current?.(nextState);
         rerender();
         return nextState;
     }, [rerender]);
@@ -117,6 +127,13 @@ export function useCommandStack<T>(
         if (!enableKeyboardShortcuts) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
+            const target = e.target;
+            if (
+                target instanceof HTMLElement
+                && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
+            ) {
+                return;
+            }
             const isCtrlOrCmd = e.ctrlKey || e.metaKey;
             if (!isCtrlOrCmd) return;
 

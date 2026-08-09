@@ -6,7 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, type SelectOption } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import {
+    cloneElement,
+    createContext,
+    isValidElement,
+    useContext,
+    useState,
+    type ReactElement,
+} from "react";
 import { MediaPicker } from "@/components/admin/media/MediaPicker";
 import type { ComposerBlock, BlockType } from "./types";
 
@@ -17,6 +24,7 @@ export interface BlockInspectorProps {
     onChange: (blockId: string, settings: Record<string, unknown>) => void;
     onDelete: (blockId: string) => void;
     onClose: () => void;
+    fieldErrors?: Record<string, string[]>;
 }
 
 // ─── Settings Editor Components ────────────────────────────────────────────────
@@ -27,11 +35,77 @@ interface FieldProps {
     children: React.ReactNode;
 }
 
+const FIELD_NAMES_BY_CONTROL: Record<string, string[]> = {
+    "hero-title-fa": ["heading_fa"], "hero-title-en": ["heading_en"],
+    "hero-subtitle-fa": ["subheading_fa"], "hero-subtitle-en": ["subheading_en"],
+    "hero-cta-fa": ["cta_text_fa"], "hero-cta-en": ["cta_text_en"],
+    "hero-cta-url": ["cta_url", "cta_link"], "hero-media-id": ["media_id"],
+    "hero-title": ["title"], "hero-subtitle": ["subtitle"], "hero-cta-label": ["cta_label"],
+    "text-content": ["content"], "text-content-fa": ["body_fa"], "text-content-en": ["body_en"],
+    "text-alignment": ["alignment"], "gallery-media-ids": ["media_ids"], "gallery-layout": ["layout"],
+    "cta-label": ["label"], "cta-url": ["url"], "cta-variant": ["variant"],
+    "collection-source": ["source"], "collection-filter": ["filter"],
+    "collection-limit": ["limit"], "collection-order": ["order"],
+    "quote-text": ["text"], "quote-attribution": ["attribution"], "divider-style": ["style"],
+    "research-title": ["title"], "research-description": ["description"], "research-icon": ["icon"],
+    "anim-duration": ["duration"], "anim-delay": ["delay"], "anim-easing": ["easing"],
+    "anim-trigger": ["trigger"], "sr-title": ["title"], "sr-desc": ["description"],
+    "sr-dir": ["direction"], "px-title": ["title"], "px-sub": ["subtitle"],
+    "px-media": ["media_url"], "px-speed": ["speed"], "ts-content": ["content"],
+    "ts-stagger": ["stagger_delay"], "fi-items": ["items"], "hc-title": ["title"],
+    "hc-desc": ["description"], "hc-icon": ["icon"], "hc-effect": ["hover_effect"],
+    "ca-label": ["label"], "ca-target": ["target_number"], "ca-suffix": ["suffix"],
+    "ir-media": ["media_url"], "ir-alt": ["alt"], "ir-dir": ["reveal_direction"],
+    "st-type": ["transition_type"],
+};
+
+const FieldErrorsContext = createContext<Record<string, string[]>>({});
+
 function Field({ label, htmlFor, children }: FieldProps) {
+    const fieldErrors = useContext(FieldErrorsContext);
+    const fieldName = htmlFor
+        ? FIELD_NAMES_BY_CONTROL[htmlFor]?.find((candidate) => fieldErrors[candidate]?.length)
+        : undefined;
+    const errors = fieldName ? fieldErrors[fieldName] : [];
+    const errorId = htmlFor && errors.length > 0 ? `${htmlFor}-error` : undefined;
+    const control = isValidElement(children) && errors.length > 0
+        ? cloneElement(children as ReactElement<Record<string, unknown>>, {
+            "aria-invalid": true,
+            "aria-describedby": errorId,
+        })
+        : children;
+
     return (
         <div className="space-y-1.5">
             <Label htmlFor={htmlFor}>{label}</Label>
-            {children}
+            {control}
+            {errors.length > 0 && (
+                <p id={errorId} className="text-xs text-red-700">{errors.join(" ")}</p>
+            )}
+        </div>
+    );
+}
+
+function MediaReferencePicker({
+    selected,
+    onSelect,
+    onClear,
+}: {
+    selected: boolean;
+    onSelect: (mediaId: string) => void;
+    onClear: () => void;
+}) {
+    return (
+        <div className="space-y-2" aria-label="Media selection">
+            {selected && (
+                <div className="flex items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+                    <span className="text-sm text-gray-700">Media selected</span>
+                    <Button type="button" variant="ghost" size="sm" onClick={onClear} aria-label="Clear media selection">
+                        Clear
+                    </Button>
+                </div>
+            )}
+            <MediaPicker allowedTypes={["image"]} onSelect={(asset) => onSelect(asset.id)} />
         </div>
     );
 }
@@ -70,10 +144,11 @@ function HeroEditor({ settings, onChange }: HeroEditorProps) {
                 <Field label="CTA URL" htmlFor="hero-cta-url">
                     <Input id="hero-cta-url" value={(settings.cta_link as string) ?? ""} onChange={(e) => onChange({ ...settings, cta_link: e.target.value })} placeholder="/about or https://…" />
                 </Field>
-                <Field label="Media ID" htmlFor="hero-media-id">
-                    <Input id="hero-media-id" value={(settings.media_id as string) ?? ""} onChange={(e) => onChange({ ...settings, media_id: e.target.value || null })} placeholder="Media UUID" />
-                </Field>
-                <MediaPicker allowedTypes={["image"]} onSelect={(asset) => onChange({ ...settings, media_id: asset.id })} />
+                <MediaReferencePicker
+                    selected={typeof settings.media_id === "string" && settings.media_id.length > 0}
+                    onSelect={(mediaId) => onChange({ ...settings, media_id: mediaId })}
+                    onClear={() => onChange({ ...settings, media_id: null })}
+                />
             </div>
         );
     }
@@ -96,15 +171,11 @@ function HeroEditor({ settings, onChange }: HeroEditorProps) {
                     placeholder="Hero subtitle"
                 />
             </Field>
-            <Field label="Media ID" htmlFor="hero-media-id">
-                <Input
-                    id="hero-media-id"
-                    value={(settings.media_id as string) ?? ""}
-                    onChange={(e) => onChange({ ...settings, media_id: e.target.value || null })}
-                    placeholder="Select media asset"
-                />
-            </Field>
-            <MediaPicker allowedTypes={["image"]} onSelect={(asset) => onChange({ ...settings, media_id: asset.id })} />
+            <MediaReferencePicker
+                selected={typeof settings.media_id === "string" && settings.media_id.length > 0}
+                onSelect={(mediaId) => onChange({ ...settings, media_id: mediaId })}
+                onClear={() => onChange({ ...settings, media_id: null })}
+            />
             <Field label="CTA Label" htmlFor="hero-cta-label">
                 <Input
                     id="hero-cta-label"
@@ -232,25 +303,34 @@ const GALLERY_LAYOUT_OPTIONS: SelectOption[] = [
 function GalleryEditor({ settings, onChange }: GalleryEditorProps) {
     const mediaIds = (settings.media_ids as string[]) ?? [];
 
-    function handleMediaIdsChange(value: string) {
-        const ids = value
-            .split(",")
-            .map((id) => id.trim())
-            .filter(Boolean);
-        onChange({ ...settings, media_ids: ids });
-    }
-
     return (
         <div className="space-y-4">
-            <Field label="Media IDs (comma-separated)" htmlFor="gallery-media-ids">
-                <Textarea
-                    id="gallery-media-ids"
-                    value={mediaIds.join(", ")}
-                    onChange={(e) => handleMediaIdsChange(e.target.value)}
-                    placeholder="media-id-1, media-id-2, ..."
-                    rows={3}
-                />
-            </Field>
+            <div className="space-y-2" aria-label="Selected gallery media">
+                <p className="text-sm text-gray-700">
+                    {mediaIds.length} media {mediaIds.length === 1 ? "item" : "items"} selected
+                </p>
+                {mediaIds.length > 0 && (
+                    <ul className="space-y-1">
+                        {mediaIds.map((mediaId, index) => (
+                            <li key={mediaId} className="flex items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+                                <span className="text-sm text-gray-700">Media item {index + 1}</span>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    aria-label={`Remove selected media ${index + 1}`}
+                                    onClick={() => onChange({
+                                        ...settings,
+                                        media_ids: mediaIds.filter((_, itemIndex) => itemIndex !== index),
+                                    })}
+                                >
+                                    Remove
+                                </Button>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
             <Field label="Layout" htmlFor="gallery-layout">
                 <Select
                     id="gallery-layout"
@@ -736,8 +816,9 @@ Object.assign(BLOCK_EDITORS, {
 
 // ─── Block Inspector Component ─────────────────────────────────────────────────
 
-export function BlockInspector({ block, onChange, onDelete, onClose }: BlockInspectorProps) {
+export function BlockInspector({ block, onChange, onDelete, onClose, fieldErrors = {} }: BlockInspectorProps) {
     const Editor = BLOCK_EDITORS[block.block_type];
+    const validationEntries = Object.entries(fieldErrors);
 
     function handleSettingsChange(newSettings: Record<string, unknown>) {
         onChange(block.id, newSettings);
@@ -766,11 +847,24 @@ export function BlockInspector({ block, onChange, onDelete, onClose }: BlockInsp
 
             {/* Settings Editor */}
             <div className="flex-1 overflow-y-auto px-4 py-4">
-                {Editor ? (
-                    <Editor settings={block.settings} onChange={handleSettingsChange} />
-                ) : (
-                    <p className="text-sm text-gray-500">No editor available for this block type.</p>
+                {validationEntries.length > 0 && (
+                    <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-900" role="alert" aria-label="Validation Summary">
+                        <h3 className="font-semibold">Validation Summary</h3>
+                        <p>Review {validationEntries.length} {validationEntries.length === 1 ? "field" : "fields"} in this block.</p>
+                        <ul className="mt-2 list-disc pl-5">
+                            {validationEntries.map(([field, errors]) => (
+                                <li key={field}>{field === "_block" ? "Block" : field.replaceAll("_", " ")}: {errors.join(" ")}</li>
+                            ))}
+                        </ul>
+                    </div>
                 )}
+                <FieldErrorsContext.Provider value={fieldErrors}>
+                    {Editor ? (
+                        <Editor settings={block.settings} onChange={handleSettingsChange} />
+                    ) : (
+                        <p className="text-sm text-gray-500">No editor available for this block type.</p>
+                    )}
+                </FieldErrorsContext.Provider>
             </div>
 
             {/* Footer with delete */}

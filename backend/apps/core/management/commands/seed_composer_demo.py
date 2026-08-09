@@ -1,0 +1,240 @@
+"""Create an opt-in, draft-only Composer demonstration fixture."""
+
+from __future__ import annotations
+
+import hashlib
+from pathlib import Path
+
+from django.conf import settings
+from django.core.files import File
+from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
+
+from apps.cms.models import Block, ComposerTemplate, Page, Section
+from apps.identity.models import (
+    Affiliation, Certification, Education, Experience, LanguageProficiency,
+    Publication, ResearchInterest, ResearchProject, ResumeVariant, SiteProfile,
+    Skill, SocialLink,
+)
+from apps.media.models import MediaAsset, MediaUsageReference
+from apps.media.services import reconcile_media_usage_references
+from apps.portfolio.models import CaseStudy, CaseStudyBlock
+from apps.siteconfig.models import NavigationItem, RedirectRule, SiteSettings
+
+
+SEED_MARKER = "seed_composer_demo"
+ASSET_DIRECTORY = Path(__file__).resolve().parents[2] / "seed_assets"
+ASSETS = (
+    ("composer-demo-gallery.svg", "تصویر گالری نمونهٔ کامپوزر", "Composer demo gallery artwork"),
+    ("composer-demo-hero.svg", "تصویر سربرگ نمونهٔ کامپوزر", "Composer demo hero artwork"),
+)
+
+
+class Command(BaseCommand):
+    help = "Create a draft-only Composer demo on an empty development database"
+
+    def handle(self, *args, **options):
+        if not settings.DEBUG:
+            raise CommandError("seed_composer_demo can run only when DEBUG is true.")
+
+        if self._is_complete_demo():
+            self.stdout.write(self.style.SUCCESS("Composer demo already exists; no changes made."))
+            return
+
+        if self._has_existing_content():
+            raise CommandError(
+                "seed_composer_demo requires an empty CMS, identity, siteconfig, and portfolio dataset."
+            )
+
+        with transaction.atomic():
+            media = self._create_media()
+            self._create_page(media)
+            self._create_site_records()
+            self._create_case_study(media)
+            reconcile_media_usage_references()
+
+        self.stdout.write(self.style.SUCCESS("Draft-only Composer demo created."))
+
+    def _is_complete_demo(self) -> bool:
+        expected_counts = {
+            Page: 1, Section: 1, Block: 3, SiteProfile: 1, SiteSettings: 1,
+            NavigationItem: 1, CaseStudy: 1, MediaAsset: 2, MediaUsageReference: 5,
+        }
+        if not all(model.objects.count() == count for model, count in expected_counts.items()):
+            return False
+        if any(
+            model.objects.exists()
+            for model in (
+                Affiliation, Certification, Education, Experience, LanguageProficiency,
+                Publication, ResearchInterest, ResearchProject, ResumeVariant, Skill,
+                SocialLink, RedirectRule, CaseStudyBlock, ComposerTemplate,
+            )
+        ):
+            return False
+
+        page = Page.objects.filter(slug_en="composer-demo").first()
+        profile = SiteProfile.objects.first()
+        site_settings = SiteSettings.objects.first()
+        navigation = NavigationItem.objects.first()
+        case_study = CaseStudy.objects.filter(slug_en="composer-demo-case-study").first()
+        media_by_filename = {asset.original_filename: asset for asset in MediaAsset.objects.all()}
+        if not all((page, profile, site_settings, navigation, case_study)) or set(media_by_filename) != {
+            filename for filename, *_ in ASSETS
+        }:
+            return False
+        if not self._matches(page, {
+            "slug_fa": "نمونه-کامپوزر", "slug_en": "composer-demo",
+            "title_fa": "نمونهٔ پیش‌نویس کامپوزر", "title_en": "Draft Composer Demo",
+            "page_type": "custom", "status": "draft", "published_at": None,
+            "created_by": SEED_MARKER, "updated_by": SEED_MARKER,
+        }) or not self._matches(profile, {
+            "name_fa": "پروفایل نمونهٔ پیش‌نویس", "name_en": "Draft Demo Profile",
+            "headline_fa": "صرفاً برای بازبینی توسعه", "headline_en": "For development review only",
+            "bio_fa": "", "bio_en": "", "public_email": "", "portrait_id": None,
+            "status": "draft", "created_by": SEED_MARKER, "updated_by": SEED_MARKER,
+        }) or not self._matches(site_settings, {
+            "site_title_fa": "تنظیمات نمونهٔ پیش‌نویس", "site_title_en": "Draft Demo Settings",
+            "primary_cta_label_fa": "بازبینی", "primary_cta_label_en": "Review",
+            "primary_cta_url": "/en/composer-demo", "public_email": "", "default_og_image_id": None,
+            "status": "draft", "created_by": SEED_MARKER, "updated_by": SEED_MARKER,
+        }) or not self._matches(navigation, {
+            "label_fa": "نمونهٔ کامپوزر", "label_en": "Composer Demo", "href": "/en/composer-demo",
+            "location": "header", "ordering": 0, "status": "draft",
+            "created_by": SEED_MARKER, "updated_by": SEED_MARKER,
+        }) or not self._matches(case_study, {
+            "slug_fa": "نمونه-پروژه-کامپوزر", "slug_en": "composer-demo-case-study",
+            "title_fa": "نمونهٔ پروژهٔ پیش‌نویس", "title_en": "Draft Composer Case Study",
+            "technologies": [], "featured": False, "status": "draft", "published_at": None,
+            "created_by": SEED_MARKER, "updated_by": SEED_MARKER,
+        }):
+            return False
+        if any(not self._matches(media_by_filename[filename], {
+            "mime_type": "image/svg+xml", "status": "active", "alt_text_fa": alt_fa,
+            "alt_text_en": alt_en, "caption_fa": "", "caption_en": "",
+            "created_by": SEED_MARKER, "updated_by": SEED_MARKER,
+        }) or not media_by_filename[filename].file.name
+               for filename, alt_fa, alt_en in ASSETS):
+            return False
+
+        section = page.sections.filter(ordering=0, enabled=True, layout="default").first()
+        if section is None or page.sections.count() != 1:
+            return False
+        blocks = list(section.blocks.order_by("ordering"))
+        if len(blocks) != 3:
+            return False
+        hero, text, gallery = blocks
+        media_ids = [str(media_by_filename[filename].id) for filename, *_ in ASSETS]
+        if not (
+            self._matches(hero, {"block_type": "hero", "ordering": 0, "settings": {
+                "title": "Draft Composer Demo", "subtitle": "Development-only sample",
+                "media_id": str(media_by_filename["composer-demo-hero.svg"].id),
+                "cta_url": None, "cta_label": None,
+            }}) and self._matches(text, {"block_type": "text", "ordering": 1, "settings": {
+                "content": "This neutral draft demonstrates Composer blocks before editorial review.",
+                "alignment": "start",
+            }}) and self._matches(gallery, {"block_type": "gallery", "ordering": 2, "settings": {
+                "media_ids": media_ids, "layout": "grid",
+            }}) and set(case_study.gallery.values_list("id", flat=True)) == set(media_by_filename[filename].id for filename, *_ in ASSETS)
+        ):
+            return False
+
+        expected_references = {
+            ("cms_block", hero.id, "settings.media_id", media_by_filename["composer-demo-hero.svg"].id),
+            ("cms_block", gallery.id, "settings.media_ids", media_by_filename["composer-demo-gallery.svg"].id),
+            ("cms_block", gallery.id, "settings.media_ids", media_by_filename["composer-demo-hero.svg"].id),
+            ("case_study", case_study.id, "gallery", media_by_filename["composer-demo-gallery.svg"].id),
+            ("case_study", case_study.id, "gallery", media_by_filename["composer-demo-hero.svg"].id),
+        }
+        return set(MediaUsageReference.objects.values_list(
+            "source_type", "source_id", "reference_field", "media_id"
+        )) == expected_references
+
+    @staticmethod
+    def _matches(instance, expected: dict) -> bool:
+        return all(getattr(instance, field) == value for field, value in expected.items())
+
+    def _has_existing_content(self) -> bool:
+        return any(
+            model.objects.exists()
+            for model in (
+                Page, SiteProfile, SiteSettings, NavigationItem, CaseStudy,
+                MediaAsset, ComposerTemplate, Affiliation, Certification, Education,
+                Experience, LanguageProficiency, Publication, ResearchInterest,
+                ResearchProject, ResumeVariant, Skill, SocialLink, RedirectRule,
+            )
+        )
+
+    def _create_media(self) -> list[MediaAsset]:
+        media = []
+        for filename, alt_text_fa, alt_text_en in ASSETS:
+            source = ASSET_DIRECTORY / filename
+            content = source.read_bytes()
+            asset = MediaAsset(
+                original_filename=filename,
+                mime_type="image/svg+xml",
+                file_size=len(content),
+                checksum=hashlib.sha256(content).hexdigest(),
+                alt_text_fa=alt_text_fa,
+                alt_text_en=alt_text_en,
+                status="active",
+                created_by=SEED_MARKER,
+                updated_by=SEED_MARKER,
+            )
+            with source.open("rb") as handle:
+                asset.file.save(filename, File(handle), save=False)
+            asset.save()
+            media.append(asset)
+        return media
+
+    def _create_page(self, media: list[MediaAsset]) -> None:
+        page = Page.objects.create(
+            slug_fa="نمونه-کامپوزر",
+            slug_en="composer-demo",
+            title_fa="نمونهٔ پیش‌نویس کامپوزر",
+            title_en="Draft Composer Demo",
+            page_type="custom",
+            status="draft",
+            created_by=SEED_MARKER,
+            updated_by=SEED_MARKER,
+        )
+        section = Section.objects.create(page=page, ordering=0, enabled=True, layout="default")
+        Block.objects.bulk_create([
+            Block(section=section, block_type="hero", ordering=0, settings={
+                "title": "Draft Composer Demo", "subtitle": "Development-only sample",
+                "media_id": str(media[1].id), "cta_url": None, "cta_label": None,
+            }),
+            Block(section=section, block_type="text", ordering=1, settings={
+                "content": "This neutral draft demonstrates Composer blocks before editorial review.",
+                "alignment": "start",
+            }),
+            Block(section=section, block_type="gallery", ordering=2, settings={
+                "media_ids": [str(asset.id) for asset in media], "layout": "grid",
+            }),
+        ])
+
+    def _create_site_records(self) -> None:
+        SiteProfile.objects.create(
+            name_fa="پروفایل نمونهٔ پیش‌نویس", name_en="Draft Demo Profile",
+            headline_fa="صرفاً برای بازبینی توسعه", headline_en="For development review only",
+            status="draft", created_by=SEED_MARKER, updated_by=SEED_MARKER,
+        )
+        SiteSettings.objects.create(
+            site_title_fa="تنظیمات نمونهٔ پیش‌نویس", site_title_en="Draft Demo Settings",
+            primary_cta_label_fa="بازبینی", primary_cta_label_en="Review",
+            primary_cta_url="/en/composer-demo", status="draft",
+            created_by=SEED_MARKER, updated_by=SEED_MARKER,
+        )
+        NavigationItem.objects.create(
+            label_fa="نمونهٔ کامپوزر", label_en="Composer Demo", href="/en/composer-demo",
+            location="header", ordering=0, status="draft",
+            created_by=SEED_MARKER, updated_by=SEED_MARKER,
+        )
+
+    def _create_case_study(self, media: list[MediaAsset]) -> None:
+        case_study = CaseStudy.objects.create(
+            slug_fa="نمونه-پروژه-کامپوزر", slug_en="composer-demo-case-study",
+            title_fa="نمونهٔ پروژهٔ پیش‌نویس", title_en="Draft Composer Case Study",
+            technologies=[], featured=False, status="draft",
+            created_by=SEED_MARKER, updated_by=SEED_MARKER,
+        )
+        case_study.gallery.add(*media)

@@ -877,7 +877,12 @@ class PreviewContentView(APIView):
         ct = CT.objects.get_for_model(entity)
         model_label = f"{ct.app_label}.{ct.model}"
 
-        content_data = _serialize_preview_content(entity, model_label, locale)
+        content_data = _serialize_preview_content(
+            entity,
+            model_label,
+            locale,
+            request=request,
+        )
 
         response = Response(
             {
@@ -895,11 +900,19 @@ class PreviewContentView(APIView):
         return response
 
 
-def _serialize_preview_content(entity, model_label: str, locale: str) -> dict:
+def _serialize_preview_content(entity, model_label: str, locale: str, request=None) -> dict:
     """Serialize an entity for preview using its registered DRF serializer.
 
     Falls back to a basic dict representation if no serializer is registered.
     """
+    if model_label == "cms.page":
+        from apps.cms.serializers import PublicPageSerializer
+
+        return PublicPageSerializer(
+            entity,
+            context={"locale": locale, "request": request},
+        ).data
+
     from apps.workflow.services import _get_serializer_map
 
     serializer_map = _get_serializer_map()

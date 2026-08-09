@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" role="img" aria-label="Neutral composer demo hero artwork">
+  <rect width="1200" height="640" fill="#e8edf2"/>
+  <rect x="110" y="104" width="980" height="432" rx="24" fill="#d1dbe5"/>
+  <circle cx="350" cy="320" r="118" fill="#97aabd"/>
+  <path d="M560 242h360M560 320h280M560 398h320" stroke="#5d7388" stroke-width="28" stroke-linecap="round"/>
+</svg>

@@ -14,8 +14,13 @@ from unittest.mock import patch
 
 import pytest
 from django.core import signing
+from django.core.files.uploadedfile import SimpleUploadedFile
+from rest_framework.test import APIClient
 
 from apps.blog.models import Article
+from apps.cms.models import Block, Page, Section
+from apps.cms.serializers import PublicPageSerializer
+from apps.media.models import MediaAsset
 from apps.workflow.services import (
     _PREVIEW_TOKEN_MAX_AGE,
     _PREVIEW_TOKEN_SALT,
@@ -204,3 +209,139 @@ class TestLocaleBinding:
         token = generate_preview_token(draft_article, "en")
         assert validate_preview_token(token, draft_article, "en") is True
         assert validate_preview_token(token, draft_article, "fa") is False
+
+
+class TestPreviewContentProjection:
+    def test_cms_preview_matches_public_projection_for_token_locale(self, db):
+        """A CMS token preview must expose only the public CMS projection."""
+        page = Page.objects.create(
+            slug_fa="پیش‌نمایش-cms",
+            slug_en="cms-preview",
+            title_fa="پیش‌نمایش فارسی",
+            title_en="English preview",
+            page_type="custom",
+            status="draft",
+        )
+        enabled = Section.objects.create(page=page, ordering=0, enabled=True)
+        disabled = Section.objects.create(page=page, ordering=1, enabled=False)
+        Block.objects.create(
+            section=enabled,
+            block_type="text",
+            settings={"content": "English-only preview text", "alignment": "start"},
+            ordering=0,
+        )
+        Block.objects.create(
+            section=enabled,
+            block_type="unknown_preview_type",
+            settings={},
+            ordering=1,
+        )
+        Block.objects.create(
+            section=enabled,
+            block_type="text",
+            settings={"content": 42, "alignment": "start"},
+            ordering=2,
+        )
+        Block.objects.create(
+            section=enabled,
+            block_type="text",
+            settings={
+                "content": '<img src=x onerror="alert(1)">',
+                "alignment": "start",
+            },
+            ordering=3,
+        )
+        Block.objects.create(
+            section=disabled,
+            block_type="text",
+            settings={"content": "Disabled section", "alignment": "start"},
+            ordering=0,
+        )
+
+        token = generate_preview_token(page, "en")
+        response = APIClient().get(f"/api/public/workflow/preview/?token={token}")
+
+        assert response.status_code == 200
+        assert response.data["locale"] == "en"
+        assert response.data["data"] == PublicPageSerializer(
+            page,
+            context={"locale": "en", "request": response.wsgi_request},
+        ).data
+        assert response.data["data"]["sections"] == [
+            {
+                "id": str(enabled.id),
+                "ordering": 0,
+                "layout": "default",
+                "blocks": [
+                    {
+                        "id": str(enabled.blocks.get(block_type="text", ordering=0).id),
+                        "block_type": "text",
+                        "settings": {
+                            "content": "English-only preview text",
+                            "alignment": "start",
+                        },
+                        "ordering": 0,
+                    }
+                ],
+            }
+        ]
+
+    def test_cms_preview_matches_public_endpoint_media_projection(self, db):
+        """Token preview must retain request-aware absolute media URLs."""
+        page = Page.objects.create(
+            slug_fa="رسانه-پیش‌نمایش",
+            slug_en="preview-media-parity",
+            title_fa="رسانه",
+            title_en="Media parity",
+            page_type="custom",
+            status="published",
+        )
+        asset = MediaAsset.objects.create(
+            file=SimpleUploadedFile("preview.jpg", b"preview-image", content_type="image/jpeg"),
+            original_filename="preview.jpg",
+            mime_type="image/jpeg",
+            file_size=13,
+            checksum="a" * 64,
+            alt_text_en="Preview media",
+        )
+        section = Section.objects.create(page=page, ordering=0, enabled=True)
+        Block.objects.create(
+            section=section,
+            block_type="hero",
+            settings={"title": "Preview media", "media_id": str(asset.id)},
+            ordering=0,
+        )
+
+        client = APIClient()
+        preview = client.get(
+            f"/api/public/workflow/preview/?token={generate_preview_token(page, 'en')}",
+        )
+        public = client.get(
+            "/api/public/pages/preview-media-parity/?locale=en",
+        )
+
+        assert preview.status_code == 200
+        assert public.status_code == 200
+        assert preview.data["data"] == public.data
+        assert preview.data["data"]["sections"][0]["blocks"][0]["settings"]["media_url"] == (
+            f"http://testserver{asset.file.url}"
+        )
+
+    def test_tampered_token_is_rejected_with_private_preview_headers(self, db):
+        """A rejected preview token must still disable indexing and caching."""
+        page = Page.objects.create(
+            slug_fa="توکن-نامعتبر",
+            slug_en="invalid-token-preview",
+            title_fa="توکن نامعتبر",
+            title_en="Invalid token",
+            page_type="custom",
+            status="draft",
+        )
+        token = generate_preview_token(page, "en")
+        tampered = token[:-1] + ("x" if token[-1] != "x" else "y")
+
+        response = APIClient().get(f"/api/public/workflow/preview/?token={tampered}")
+
+        assert response.status_code == 401
+        assert response["X-Robots-Tag"] == "noindex"
+        assert response["Cache-Control"] == "no-store"

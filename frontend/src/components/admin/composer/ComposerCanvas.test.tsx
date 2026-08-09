@@ -12,8 +12,8 @@ function makeSections(): ComposerSection[] {
             enabled: true,
             ordering: 0,
             blocks: [
-                { id: "block-1", block_type: "hero", settings: {}, ordering: 0 },
-                { id: "block-2", block_type: "text", settings: {}, ordering: 1 },
+                { id: "block-1", block_type: "hero", settings: { title: "Welcome" }, ordering: 0 },
+                { id: "block-2", block_type: "text", settings: { content: "Body", alignment: "start" }, ordering: 1 },
             ],
         },
         {
@@ -47,7 +47,7 @@ describe("ComposerCanvas", () => {
         expect(screen.getAllByText(/cta/i).length).toBeGreaterThanOrEqual(1);
     });
 
-    it("adds a section via the section library", async () => {
+    it("adds a section, focuses its control, and announces the mutation", async () => {
         const user = userEvent.setup();
         const onChange = vi.fn();
         render(<ComposerCanvas onChange={onChange} />);
@@ -61,6 +61,8 @@ describe("ComposerCanvas", () => {
                 expect.objectContaining({ layout: "full-width" }),
             ])
         );
+        expect(screen.getByRole("button", { name: "Select full-width section" })).toHaveFocus();
+        expect(screen.getByText("Section added").parentElement).toHaveAttribute("aria-live", "polite");
     });
 
     it("disables block library when no section selected", () => {
@@ -92,7 +94,48 @@ describe("ComposerCanvas", () => {
         });
     });
 
-    it("deletes a section", async () => {
+    it("opens the selected block inspector and sends settings changes through onChange", async () => {
+        const user = userEvent.setup();
+        const onChange = vi.fn();
+        render(<ComposerCanvas initialSections={makeSections()} onChange={onChange} />);
+
+        await user.click(screen.getByRole("button", { name: "Select hero block" }));
+        const inspector = screen.getByRole("complementary", { name: "Block Inspector" });
+        expect(within(inspector).getByRole("heading", { name: "hero Settings" })).toBeInTheDocument();
+
+        await user.clear(within(inspector).getByLabelText("Title"));
+        await user.type(within(inspector).getByLabelText("Title"), "Updated");
+
+        const latest = onChange.mock.calls.at(-1)?.[0] as ComposerSection[];
+        expect(latest[0].blocks[0].settings.title).toBe("Updated");
+    });
+
+    it("shows sanitized field errors and a summary only for the selected block", async () => {
+        const user = userEvent.setup();
+        render(
+            <ComposerCanvas
+                initialSections={makeSections()}
+                validationIssues={[
+                    {
+                        sectionIndex: 0,
+                        blockIndex: 0,
+                        fields: { title: ["This field is required."] },
+                    },
+                ]}
+            />,
+        );
+
+        await user.click(screen.getByRole("button", { name: "Select hero block" }));
+
+        expect(screen.getByRole("alert", { name: "Validation Summary" })).toHaveTextContent(
+            "Review 1 field in this block",
+        );
+        expect(screen.getByLabelText("Title")).toHaveAttribute("aria-invalid", "true");
+        expect(screen.getByText("This field is required.")).toBeInTheDocument();
+        expect(screen.queryByText("block-1")).not.toBeInTheDocument();
+    });
+
+    it("requires confirmation before deleting a section", async () => {
         const user = userEvent.setup();
         const onChange = vi.fn();
         render(<ComposerCanvas initialSections={makeSections()} onChange={onChange} />);
@@ -100,9 +143,53 @@ describe("ComposerCanvas", () => {
         const deleteButtons = screen.getAllByRole("button", { name: /delete section/i });
         await user.click(deleteButtons[0]);
 
+        expect(screen.getByRole("dialog", { name: "Delete section" })).toBeInTheDocument();
+        expect(onChange).not.toHaveBeenCalled();
+
+        await user.click(screen.getByRole("button", { name: "Confirm delete" }));
+
         const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
         expect(lastCall).toHaveLength(1);
         expect(lastCall[0].id).toBe("section-2");
+        expect(screen.getByText("Section deleted").parentElement).toHaveAttribute("aria-live", "polite");
+    });
+
+    it("replaces repeated live announcements", async () => {
+        const user = userEvent.setup();
+        render(<ComposerCanvas initialSections={makeSections()} />);
+
+        await user.click(screen.getAllByRole("button", { name: /duplicate section/i })[0]);
+        const firstAnnouncement = screen.getByText("Section duplicated");
+        await user.click(screen.getAllByRole("button", { name: /duplicate section/i })[0]);
+
+        expect(screen.getByText("Section duplicated")).not.toBe(firstAnnouncement);
+    });
+
+    it("traps confirmation focus and returns it on cancel", async () => {
+        const user = userEvent.setup();
+        render(<ComposerCanvas initialSections={makeSections()} />);
+
+        const deleteButton = screen.getAllByRole("button", { name: /delete section/i })[0];
+        await user.click(deleteButton);
+        const cancel = screen.getByRole("button", { name: "Cancel" });
+        expect(cancel).toHaveFocus();
+        await user.keyboard("{Shift>}{Tab}{/Shift}");
+        expect(screen.getByRole("button", { name: "Confirm delete" })).toHaveFocus();
+        await user.keyboard("{Tab}");
+        expect(cancel).toHaveFocus();
+
+        await user.click(cancel);
+        expect(deleteButton).toHaveFocus();
+    });
+
+    it("focuses the stable add-section control after deleting the only section", async () => {
+        const user = userEvent.setup();
+        render(<ComposerCanvas initialSections={[makeSections()[0]]} />);
+
+        await user.click(screen.getByRole("button", { name: /delete section/i }));
+        await user.click(screen.getByRole("button", { name: "Confirm delete" }));
+
+        expect(screen.getByRole("button", { name: "Add Full Width section" })).toHaveFocus();
     });
 
     it("duplicates a section", async () => {
@@ -118,6 +205,8 @@ describe("ComposerCanvas", () => {
         expect(lastCall[0].layout).toBe("full-width");
         expect(lastCall[1].layout).toBe("full-width");
         expect(lastCall[1].id).not.toBe(lastCall[0].id);
+        expect(screen.getAllByRole("button", { name: "Select full-width section" })[1]).toHaveFocus();
+        expect(screen.getByText("Section duplicated").parentElement).toHaveAttribute("aria-live", "polite");
     });
 
     it("moves a section up via keyboard button", async () => {
@@ -146,9 +235,11 @@ describe("ComposerCanvas", () => {
         const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
         expect(lastCall[0].id).toBe("section-2");
         expect(lastCall[1].id).toBe("section-1");
+        expect(screen.getByRole("button", { name: "Select full-width section" })).toHaveFocus();
+        expect(screen.getByText("Section moved down").parentElement).toHaveAttribute("aria-live", "polite");
     });
 
-    it("deletes a block from a section", async () => {
+    it("requires confirmation before deleting a block", async () => {
         const user = userEvent.setup();
         const onChange = vi.fn();
         render(<ComposerCanvas initialSections={makeSections()} onChange={onChange} />);
@@ -156,10 +247,16 @@ describe("ComposerCanvas", () => {
         const deleteBlockBtns = screen.getAllByRole("button", { name: /delete block/i });
         await user.click(deleteBlockBtns[0]);
 
+        expect(screen.getByRole("dialog", { name: "Delete block" })).toBeInTheDocument();
+        expect(onChange).not.toHaveBeenCalled();
+        await user.click(screen.getByRole("button", { name: "Confirm delete" }));
+
         const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
         const firstSection = lastCall.find((s: ComposerSection) => s.id === "section-1");
         expect(firstSection.blocks).toHaveLength(1);
         expect(firstSection.blocks[0].id).toBe("block-2");
+        expect(screen.getByRole("button", { name: "Select text block" })).toHaveFocus();
+        expect(screen.getByText("Block deleted").parentElement).toHaveAttribute("aria-live", "polite");
     });
 
     it("duplicates a block", async () => {

@@ -280,9 +280,9 @@
 **نوع:** BUILD، فقط توسعه
 
 - [ ] وضعیت واقعی `main` در 2026-08-08: `seed_data` فقط بخشی از identity/siteconfig را به‌صورت draft می‌سازد، اما profile-guard نیست، نمونهٔ رسانه‌دار ندارد و pageهای منتشرشدهٔ قدیمی ایجاد می‌کند؛ این رفتار نباید به‌عنوان محتوای قابل‌انتشار تلقی شود.
-- [ ] یک فرمان seed صریح و idempotent، فقط برای profile توسعه و فقط برای CMS خالی/با تأیید صریح، باید Home دوزبانهٔ **Draft**، دو block تصویر‌دار، هویت سایت و یک نمونه‌کار galleryدار ایجاد کند.
-- [ ] دو asset توسعه‌ایِ دارای alt فارسی/انگلیسی باید از `Media Library` ثبت شوند؛ public page نباید به متن، URL یا asset نمونهٔ ثابت وابسته باشد.
-- [ ] راهنمای اجرای توسعه و منع production در `scripts/seed/README.md` افزوده شود؛ سپس seed روی PostgreSQL توسعه و QA SSR صفحه‌های `/fa`، `/en` و نمونه‌کار انجام شود. مرجع: `CMS-DEMO-SEED-010` در ledger.
+- [x] `seed_composer_demo` صریح، idempotent و محدود به `DEBUG=true` برای dataset کاملاً خالی است؛ guard علاوه بر ریشه‌های CMS/identity/siteconfig/portfolio، وجود `ComposerTemplate` یا `ResumeVariant` را نیز رد می‌کند. این فرمان یک صفحهٔ دوزبانهٔ Draft با Hero/Text/Gallery، هویت و تنظیمات سایت Draft، navigation header Draft و یک CaseStudy گالری‌دار Draft ایجاد می‌کند. آزمون متمرکز Compose در 2026-08-08 guard همهٔ ریشه‌ها، refusal، روابط، private بودن public endpoint و idempotence را تأیید کرد.
+- [x] دو SVG خنثیِ توسعه‌ای با alt فارسی/انگلیسی به‌صورت MediaAsset فعال ثبت می‌شوند و blockها فقط UUID آن‌ها را نگه می‌دارند، نه URL یا کد frontend.
+- [x] راهنمای فرمان، شرط database خالی و منع مطلق production در `scripts/seed/README.md` ثبت شد. QA SSR مرورگر و بازبینی انسانی محتوا/asset هنوز deferred هستند. مرجع: `CMS-DEMO-SEED-010` در ledger.
 
 ---
 
@@ -299,11 +299,11 @@
 - `backend/apps/cms/{block_registry,serializers,views}.py`
 - DTOهای block/section در همان package
 
-- [ ] catalog blockهای frontend با allowlist backend تطبیق داده شود.
-- [ ] برای هر block، default settings، validation schema، media policy و fields محلی مستند شود.
-- [ ] settings ناشناخته، block type ناشناخته، ترتیب نامعتبر و media inactive با Problem Details رد شوند.
-- [ ] public renderer block ناشناخته را fail closed کند و Admin diagnostic نشان دهد.
-- [ ] renderer هیچ block را با raw HTML render نکند.
+- [x] catalog blockهای frontend با allowlist backend تطبیق داده شود.
+- [x] برای هر block، default settings، validation schema، media policy و fields محلی مستند شود.
+- [x] settings ناشناخته، block type ناشناخته، ترتیب نامعتبر و media inactive با Problem Details رد شوند.
+- [x] public renderer block ناشناخته را fail closed کند و Admin diagnostic نشان دهد.
+- [x] composition عادی، template import و restore نسخهٔ Page همگی raw HTML را پیش از ذخیره رد می‌کنند؛ projection عمومی و token preview نیز block تاریخی نامعتبر را fail closed حذف می‌کنند و Text renderer محتوا را فقط به‌شکل متن inert نمایش می‌دهد، نه HTML sink.
 
 **پذیرش:** یک block تنها در صورتی قابل ذخیره است که frontend، server، preview و public renderer آن را بفهمند.
 
@@ -323,12 +323,12 @@
 
 **نوع:** VERIFY + BUILD مشروط
 
-- [ ] add/remove/duplicate/reorder section و block با mouse و keyboard قابل انجام باشد.
-- [ ] بعد از move/duplicate/delete، focus به target منطقی منتقل و با `aria-live` اعلام شود.
-- [ ] drag handle فعلی فقط زمانی فعال شود که drag-and-drop واقعی، touch-safe و قابل دسترس باشد؛ در غیر این صورت دکمه‌های keyboard مرجع هستند.
-- [ ] delete confirmation برای block/section destructive داشته باشد.
-- [ ] Inspector drawer errorهای فیلد را کنار همان field و در Validation Summary نمایش دهد.
-- [ ] navigation خارج از صفحه با unsaved guard پوشش داده شود.
+- [x] add/remove/duplicate/reorder section و block با mouse و keyboard قابل انجام باشد.
+- [x] بعد از move/duplicate/delete، focus به target منطقی منتقل و با `aria-live` اعلام شود.
+- [x] drag handle فعلی فقط زمانی فعال شود که drag-and-drop واقعی، touch-safe و قابل دسترس باشد؛ در غیر این صورت دکمه‌های keyboard مرجع هستند.
+- [x] delete confirmation برای block/section destructive داشته باشد.
+- [x] Inspector drawer errorهای فیلد را کنار همان field و در Validation Summary نمایش دهد.
+- [x] navigation خارج از صفحه با unsaved guard پوشش داده شود.
 
 **تست‌ها:** keyboard-only reorder، focus restoration، duplicate locality، delete confirmation و route leave.
 
@@ -336,11 +336,11 @@
 
 **نوع:** VERIFY
 
-- [ ] command history فقط mutationهای محلی را ذخیره کند و پس از save موفق reset شود.
-- [ ] autosave فقط `DRAFT` باشد و debounce مشخص داشته باشد.
-- [ ] validation failure، offline و 409 conflict نباید دادهٔ remote را overwrite یا publish کنند.
-- [ ] statusهای pending/saving/saved/error/conflict برای screen reader اعلام شوند.
-- [ ] بعد از reload رفتار recovery marker و unsaved draft به‌صورت صریح تعیین شود.
+- [x] command history فقط mutationهای محلی را ذخیره کند و پس از save موفق reset شود.
+- [x] autosave فقط `DRAFT` باشد و debounce مشخص داشته باشد.
+- [x] validation failure، offline و 409 conflict نباید دادهٔ remote را overwrite یا publish کنند.
+- [x] statusهای pending/saving/saved/error/conflict برای screen reader اعلام شوند.
+- [x] بعد از reload رفتار recovery marker و unsaved draft به‌صورت صریح تعیین شود.
 
 **تست‌ها:** rapid edits، stale version، offline، invalid action path، autosave cleanup در unmount و Draft/PUBLISHED تفاوت رفتار.
 
@@ -348,11 +348,11 @@
 
 **نوع:** BUILD، بعد از تثبیت T2.1 تا T2.4
 
-- [ ] aggregate برای reusable section/page template طراحی شود؛ به page زنده وابستگی مخرب نداشته باشد.
-- [ ] manifest شامل schema version، block typeها، settings مجاز، media references و translation completeness باشد.
-- [ ] import ابتدا dry-run validation و سپس confirmation داشته باشد.
-- [ ] schema ناشناخته، HTML/raw code و media reference نامعتبر رد شود.
-- [ ] import/restore audit و rollback note داشته باشند.
+- [x] aggregate مستقل `ComposerTemplate` برای snapshot قابل‌حمل ساخته شد؛ import همیشه Page جدید می‌سازد و هیچ Page زنده‌ای را تغییر نمی‌دهد.
+- [x] manifest نسخهٔ ۱ شامل sections و مشتقات server-owned برای block typeها، media references و translation completeness است؛ settings از registry موجود اعتبارسنجی می‌شوند و `enabled` اجباری/boolean و `layout` اجباری/non-empty string پیش از ذخیرهٔ template کنترل می‌شوند تا snapshot ذخیره‌شده importable بماند.
+- [x] import ابتدا dry-run کاملاً بدون write، حتی بدون AuditEvent، انجام می‌دهد؛ رابط Composer پاسخ دیررس را پس از تغییر manifest/identity دور می‌اندازد و فقط برای fingerprint تأییدشده confirmation را نمایش می‌دهد.
+- [x] schema ناشناخته، block/settings نامعتبر، HTML خام، همهٔ URL fieldهای ثبت‌شده (canonical، legacy و animation) و media مفقود/آرشیوشده با Problem Details رد می‌شوند.
+- [x] template و Draft واردشده actorهای audit دارند؛ event به content type و UUID واقعی target با action دقیق create/import متصل است، import واقعی در transaction انجام می‌شود و rollback آن atomic است.
 
 **پذیرش:** template سرعت authoring را بالا می‌برد بدون اینکه ساختار page زنده یا ترجمه‌های مستقل را خراب کند.
 

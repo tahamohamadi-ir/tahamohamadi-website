@@ -290,6 +290,17 @@ class TestInvalidSettings:
         errors = validate_page_composition(page)
         assert len(errors) > 0
 
+    @pytest.mark.parametrize("content", ["<script>alert(1)</script>", "<p>Raw HTML</p>"])
+    def test_raw_html_is_rejected_for_saved_compositions(self, content):
+        page = _valid_page()
+        page["sections"][0]["blocks"][0]["settings"]["content"] = content
+
+        errors = validate_page_composition(page)
+
+        assert errors == [
+            "sections[0].blocks[0]: settings must not contain raw HTML"
+        ]
+
 
 # ---------------------------------------------------------------------------
 # Tests: unsafe URLs rejected

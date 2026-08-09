@@ -266,6 +266,22 @@ describe('useCommandStack', () => {
             // Should still be B since shortcuts are disabled
             expect(result.current.current).toBe('B');
         });
+
+        it('does not undo from editable controls', () => {
+            const { result } = renderHook(() => useCommandStack<string>('A'));
+            act(() => result.current.push('B'));
+            const input = document.createElement('input');
+            document.body.appendChild(input);
+
+            act(() => {
+                input.dispatchEvent(new KeyboardEvent('keydown', {
+                    key: 'z', ctrlKey: true, bubbles: true,
+                }));
+            });
+
+            expect(result.current.current).toBe('B');
+            input.remove();
+        });
     });
 
     describe('complex scenarios', () => {

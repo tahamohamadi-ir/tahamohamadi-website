@@ -10,6 +10,8 @@ are applied globally; PublicPageView explicitly sets AllowAny + no auth classes.
 
 from __future__ import annotations
 
+from django.db import transaction
+
 from rest_framework import status
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import AllowAny
@@ -19,15 +21,18 @@ from rest_framework.viewsets import ModelViewSet
 
 from django_filters.rest_framework import DjangoFilterBackend
 
-from apps.cms.models import Page
+from apps.cms.models import ComposerTemplate, Page
 from apps.cms.serializers import (
+    ComposerTemplateImportSerializer,
+    ComposerTemplateSerializer,
     PageListSerializer,
     PageSerializer,
     PublicPageSerializer,
 )
-from apps.cms.services import validate_page_composition
+from apps.cms.services import normalize_template_manifest, validate_page_composition
 from apps.core.exceptions import build_problem, PROBLEM_CONTENT_TYPE
 from apps.core.services import ConflictError, save_with_optimistic_lock
+from apps.media.models import MediaAsset
 
 
 class AdminPageViewSet(ModelViewSet):
@@ -61,7 +66,13 @@ class AdminPageViewSet(ModelViewSet):
 
         # Validate composition before persisting
         sections_data = request.data.get("sections", [])
-        composition_errors = validate_page_composition({"sections": sections_data})
+        active_media_ids = {
+            str(media_id)
+            for media_id in MediaAsset.objects.filter(status="active").values_list("id", flat=True)
+        }
+        composition_errors = validate_page_composition(
+            {"sections": sections_data}, known_media_ids=active_media_ids
+        )
         if composition_errors:
             problem = build_problem(
                 status.HTTP_400_BAD_REQUEST,
@@ -96,7 +107,13 @@ class AdminPageViewSet(ModelViewSet):
 
         # Validate composition before persisting
         sections_data = request.data.get("sections", [])
-        composition_errors = validate_page_composition({"sections": sections_data})
+        active_media_ids = {
+            str(media_id)
+            for media_id in MediaAsset.objects.filter(status="active").values_list("id", flat=True)
+        }
+        composition_errors = validate_page_composition(
+            {"sections": sections_data}, known_media_ids=active_media_ids
+        )
         if composition_errors:
             problem = build_problem(
                 status.HTTP_400_BAD_REQUEST,
@@ -151,6 +168,129 @@ class AdminPageViewSet(ModelViewSet):
             instance._prefetched_objects_cache = {}
 
         return Response(serializer.data)
+
+
+def _active_media_ids() -> set[str]:
+    return {
+        str(media_id)
+        for media_id in MediaAsset.objects.filter(status="active").values_list(
+            "id", flat=True
+        )
+    }
+
+
+def _manifest_problem(request, errors: list[str]) -> Response:
+    problem = build_problem(
+        status.HTTP_400_BAD_REQUEST,
+        "Template manifest validation failed.",
+        instance=request.path,
+        errors={"manifest": errors},
+    )
+    return Response(
+        problem,
+        status=status.HTTP_400_BAD_REQUEST,
+        content_type=PROBLEM_CONTENT_TYPE,
+    )
+
+
+def _set_request_audit(
+    request,
+    *,
+    target=None,
+    action: str | None = None,
+    reason: str | None = None,
+    skip: bool = False,
+) -> None:
+    raw_request = getattr(request, "_request", request)
+    if skip:
+        raw_request._skip_audit_logging = True
+        return
+    raw_request._audit_target = target
+    raw_request._audit_action = action
+    raw_request._audit_reason = reason
+
+
+class AdminComposerTemplateListCreateView(APIView):
+    """List or store validated portable templates as Draft-only snapshots."""
+
+    def get(self, request):
+        templates = ComposerTemplate.objects.all()
+        return Response(ComposerTemplateSerializer(templates, many=True).data)
+
+    def post(self, request):
+        normalized, errors = normalize_template_manifest(
+            request.data.get("manifest"),
+            known_media_ids=_active_media_ids(),
+        )
+        if errors:
+            return _manifest_problem(request, errors)
+
+        serializer = ComposerTemplateSerializer(
+            data={"name": request.data.get("name"), "manifest": normalized}
+        )
+        serializer.is_valid(raise_exception=True)
+        actor = request.user.get_username()
+        template = serializer.save(created_by=actor, updated_by=actor)
+        _set_request_audit(
+            request,
+            target=template,
+            action="create",
+            reason="Portable Composer template created.",
+        )
+        return Response(
+            ComposerTemplateSerializer(template).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class AdminComposerTemplateImportView(APIView):
+    """Validate a portable manifest, then optionally create one new Draft Page."""
+
+    def post(self, request):
+        import_serializer = ComposerTemplateImportSerializer(data=request.data)
+        import_serializer.is_valid(raise_exception=True)
+        data = import_serializer.validated_data
+
+        normalized, errors = normalize_template_manifest(
+            data["manifest"],
+            known_media_ids=_active_media_ids(),
+        )
+        if errors:
+            return _manifest_problem(request, errors)
+
+        page_payload = {
+            "slug_fa": data["slug_fa"],
+            "slug_en": data["slug_en"],
+            "title_fa": data["title_fa"],
+            "title_en": data["title_en"],
+            "page_type": data["page_type"],
+            "status": "draft",
+            "sections": normalized["sections"],
+        }
+        page_serializer = PageSerializer(data=page_payload)
+        page_serializer.is_valid(raise_exception=True)
+
+        if data["dry_run"]:
+            _set_request_audit(request, skip=True)
+            return Response({"valid": True, "manifest": normalized})
+
+        actor = request.user.get_username()
+        with transaction.atomic():
+            page = page_serializer.save(created_by=actor, updated_by=actor)
+        _set_request_audit(
+            request,
+            target=page,
+            action="import",
+            reason="Portable Composer template imported as a new Draft page.",
+        )
+        return Response(
+            {
+                "valid": True,
+                "manifest": normalized,
+                "page": PageSerializer(page).data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 # ---------------------------------------------------------------------------

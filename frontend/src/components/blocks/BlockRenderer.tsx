@@ -84,12 +84,16 @@ const ANIMATION_BLOCK_REGISTRY: Record<string, BlockComponent> = {
 };
 
 /**
- * Combined registry merging CMS, article, and animation blocks.
+ * CMS rendering registry merging CMS and animation blocks.
  */
-const COMBINED_REGISTRY: Record<string, BlockComponent> = {
-    ...ARTICLE_BLOCK_REGISTRY,
+const CMS_RENDERER_REGISTRY: Record<string, BlockComponent> = {
     ...CMS_BLOCK_REGISTRY,
     ...ANIMATION_BLOCK_REGISTRY,
+};
+
+const COMBINED_REGISTRY: Record<string, BlockComponent> = {
+    ...ARTICLE_BLOCK_REGISTRY,
+    ...CMS_RENDERER_REGISTRY,
 };
 
 // ─── BlockRenderer ─────────────────────────────────────────────────────────────
@@ -116,7 +120,7 @@ export interface BlockRendererComponentProps extends BlockRendererProps {
  * <BlockRenderer block={block} locale="en" context="article" />
  */
 export function BlockRenderer({ block, locale, context = "cms" }: BlockRendererComponentProps) {
-    const registry = context === "article" ? ARTICLE_BLOCK_REGISTRY : COMBINED_REGISTRY;
+    const registry = context === "article" ? ARTICLE_BLOCK_REGISTRY : CMS_RENDERER_REGISTRY;
     const Component = registry[block.block_type];
 
     // Fail-closed: unknown block types are excluded from rendering
@@ -158,6 +162,6 @@ export function isKnownBlockType(blockType: string): boolean {
  * Implements the fail-closed requirement (Req 4.9).
  */
 export function filterKnownBlocks(blocks: BlockDTO[], context: "cms" | "article" = "cms"): BlockDTO[] {
-    const registry = context === "article" ? ARTICLE_BLOCK_REGISTRY : COMBINED_REGISTRY;
+    const registry = context === "article" ? ARTICLE_BLOCK_REGISTRY : CMS_RENDERER_REGISTRY;
     return blocks.filter((block) => block.block_type in registry);
 }

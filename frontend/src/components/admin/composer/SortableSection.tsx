@@ -26,11 +26,11 @@ interface SortableSectionProps {
     selectedBlockId: string | null;
     onSelectSection: () => void;
     onSelectBlock: (blockId: string) => void;
-    onDeleteSection: () => void;
+    onDeleteSection: (trigger: HTMLButtonElement) => void;
     onDuplicateSection: () => void;
     onMoveUp: () => void;
     onMoveDown: () => void;
-    onDeleteBlock: (blockId: string) => void;
+    onDeleteBlock: (blockId: string, trigger: HTMLButtonElement) => void;
     onDuplicateBlock: (blockId: string) => void;
     onMoveBlockUp: (blockId: string) => void;
     onMoveBlockDown: (blockId: string) => void;
@@ -119,6 +119,8 @@ export function SortableSection({
                 <button
                     type="button"
                     onClick={onSelectSection}
+                    aria-label={`Select ${section.layout} section`}
+                    data-composer-focus-target={`section:${section.id}`}
                     className="flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded px-1"
                 >
                     <span className="text-sm font-semibold text-gray-800 capitalize">
@@ -165,7 +167,7 @@ export function SortableSection({
                     </button>
                     <button
                         type="button"
-                        onClick={onDeleteSection}
+                        onClick={(event) => onDeleteSection(event.currentTarget)}
                         aria-label="Delete section"
                         className="rounded p-1.5 text-gray-400 hover:bg-red-100 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                     >
@@ -195,7 +197,7 @@ export function SortableSection({
                                     block={block}
                                     isSelected={selectedBlockId === block.id}
                                     onSelect={() => onSelectBlock(block.id)}
-                                    onDelete={() => onDeleteBlock(block.id)}
+                                    onDelete={(trigger) => onDeleteBlock(block.id, trigger)}
                                     onDuplicate={() => onDuplicateBlock(block.id)}
                                     onMoveUp={() => onMoveBlockUp(block.id)}
                                     onMoveDown={() => onMoveBlockDown(block.id)}

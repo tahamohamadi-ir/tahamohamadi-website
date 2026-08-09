@@ -115,11 +115,28 @@ describe("PreviewPanel", () => {
 
         expect(screen.getByRole("heading", { name: "عنوان فارسی" })).toBeInTheDocument();
         expect(screen.getByRole("link", { name: "بیشتر" })).toHaveAttribute("href", "/fa/about");
+        expect(screen.queryByRole("heading", { name: "English title" })).not.toBeInTheDocument();
 
         await userEvent.click(screen.getByRole("radio", { name: /english/i }));
 
         expect(screen.getByRole("heading", { name: "English title" })).toBeInTheDocument();
         expect(screen.getByRole("link", { name: "More" })).toHaveAttribute("href", "/en/about");
+        expect(screen.queryByRole("heading", { name: "عنوان فارسی" })).not.toBeInTheDocument();
+    });
+
+    it("does not render an article-only paragraph injected into the CMS preview", () => {
+        const sections = makeSections([{
+            blocks: [{
+                id: "article-only",
+                block_type: "paragraph" as never,
+                settings: { text: "Must not appear in CMS preview" },
+                ordering: 0,
+            }],
+        }]);
+
+        render(<PreviewPanel sections={sections} />);
+
+        expect(screen.queryByText("Must not appear in CMS preview")).not.toBeInTheDocument();
     });
 
     it("shows empty state when no sections", () => {

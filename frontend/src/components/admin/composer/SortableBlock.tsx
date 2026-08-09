@@ -8,7 +8,7 @@ interface SortableBlockProps {
     block: ComposerBlock;
     isSelected: boolean;
     onSelect: () => void;
-    onDelete: () => void;
+    onDelete: (trigger: HTMLButtonElement) => void;
     onDuplicate: () => void;
     onMoveUp: () => void;
     onMoveDown: () => void;
@@ -69,6 +69,8 @@ export function SortableBlock({
                 <button
                     type="button"
                     onClick={onSelect}
+                    aria-label={`Select ${block.block_type} block`}
+                    data-composer-focus-target={`block:${block.id}`}
                     className="flex-1 text-left text-sm font-medium text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded px-1"
                 >
                     <span className="inline-flex items-center gap-1.5">
@@ -115,7 +117,7 @@ export function SortableBlock({
                     </button>
                     <button
                         type="button"
-                        onClick={onDelete}
+                        onClick={(event) => onDelete(event.currentTarget)}
                         aria-label="Delete block"
                         className="rounded p-1 text-gray-400 hover:bg-red-100 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                     >

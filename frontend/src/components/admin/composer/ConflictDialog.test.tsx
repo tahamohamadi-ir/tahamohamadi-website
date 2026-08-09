@@ -8,7 +8,7 @@ describe('ConflictDialog', () => {
         open: true,
         onOpenChange: vi.fn(),
         onReload: vi.fn(),
-        onForceSave: vi.fn(),
+        onKeepLocal: vi.fn(),
     };
 
     it('renders conflict dialog when open', () => {
@@ -28,10 +28,10 @@ describe('ConflictDialog', () => {
         ).toBeInTheDocument();
     });
 
-    it('shows Reload and Force Save buttons', () => {
+    it('shows deliberate remote reload and keep-local choices', () => {
         render(<ConflictDialog {...defaultProps} />);
         expect(screen.getByRole('button', { name: /reload/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /force save/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /keep local edits/i })).toBeInTheDocument();
     });
 
     it('calls onReload when Reload button is clicked', async () => {
@@ -44,27 +44,27 @@ describe('ConflictDialog', () => {
         expect(onReload).toHaveBeenCalledTimes(1);
     });
 
-    it('calls onForceSave when Force Save button is clicked', async () => {
+    it('keeps local edits without triggering an overwrite', async () => {
         const user = userEvent.setup();
-        const onForceSave = vi.fn();
-        render(<ConflictDialog {...defaultProps} onForceSave={onForceSave} />);
+        const onKeepLocal = vi.fn();
+        render(<ConflictDialog {...defaultProps} onKeepLocal={onKeepLocal} />);
 
-        await user.click(screen.getByRole('button', { name: /force save/i }));
+        await user.click(screen.getByRole('button', { name: /keep local edits/i }));
 
-        expect(onForceSave).toHaveBeenCalledTimes(1);
+        expect(onKeepLocal).toHaveBeenCalledTimes(1);
     });
 
     it('disables buttons when isLoading is true', () => {
         render(<ConflictDialog {...defaultProps} isLoading={true} />);
 
         expect(screen.getByRole('button', { name: /reload/i })).toBeDisabled();
-        expect(screen.getByRole('button', { name: /force save/i })).toBeDisabled();
+        expect(screen.getByRole('button', { name: /keep local edits/i })).toBeDisabled();
     });
 
     it('shows resolution options explanation', () => {
         render(<ConflictDialog {...defaultProps} />);
         expect(screen.getByText(/Discard your local changes/)).toBeInTheDocument();
-        expect(screen.getByText(/Override the server version/)).toBeInTheDocument();
+        expect(screen.getByText(/continue editing without overwriting/)).toBeInTheDocument();
     });
 
     it('has accessible alert icon', () => {

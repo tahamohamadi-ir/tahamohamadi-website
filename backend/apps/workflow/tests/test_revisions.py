@@ -305,6 +305,23 @@ class TestRestoreRevision:
         assert blocks[0].block_type == "hero"
         assert blocks[0].settings["title"] == "Hello"
 
+    def test_restore_page_rejects_historical_raw_html_before_creating_a_draft(
+        self, page_with_content, admin_user
+    ):
+        unsafe_block = page_with_content.sections.get().blocks.get(block_type="text")
+        unsafe_block.settings = {
+            "content": '<img src=x onerror="alert(1)">',
+            "alignment": "start",
+        }
+        unsafe_block.save(update_fields=["settings"])
+        revision = create_revision(page_with_content, label="Historical unsafe snapshot")
+        page_count = Page.objects.count()
+
+        with pytest.raises(ValueError, match="raw HTML"):
+            restore_revision(revision.pk, admin_user)
+
+        assert Page.objects.count() == page_count
+
     def test_restore_article_creates_new_draft(self, article_with_blocks, admin_user):
         revision = create_revision(article_with_blocks, label="Article snap")
 

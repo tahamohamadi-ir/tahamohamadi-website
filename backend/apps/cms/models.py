@@ -37,6 +37,28 @@ class Page(VersionedModel):
         return f"Page({self.slug_en})"
 
 
+class ComposerTemplate(VersionedModel):
+    """A portable, validated snapshot that can only create a new Draft Page."""
+
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Draft"
+
+    name = models.CharField(max_length=255)
+    manifest = models.JSONField(default=dict)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT,
+    )
+
+    class Meta:
+        ordering = ["name", "id"]
+        indexes = [models.Index(fields=["status", "name"])]
+
+    def __str__(self) -> str:
+        return f"ComposerTemplate({self.name})"
+
+
 class Section(models.Model):
     """An ordered section within a Page, grouping Blocks together."""
 

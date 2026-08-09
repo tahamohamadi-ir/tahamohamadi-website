@@ -72,6 +72,9 @@ class AuditLoggingMiddleware:
 
     def _should_log(self, request, response) -> bool:
         """Determine if this request should be audit-logged."""
+        if getattr(request, "_skip_audit_logging", False):
+            return False
+
         # Only mutating methods
         if request.method not in MUTATING_METHODS:
             return False
@@ -123,6 +126,13 @@ class AuditLoggingMiddleware:
     @staticmethod
     def _audit_details(request) -> tuple[str, str]:
         """Name known state actions so timelines remain meaningful to operators."""
+        explicit_action = getattr(request, "_audit_action", None)
+        if explicit_action:
+            return explicit_action, getattr(
+                request,
+                "_audit_reason",
+                f"Admin API: {request.method} {request.path}",
+            )
         if request.path.endswith("/mark-read/"):
             return "read", "Contact message marked as read."
         if request.path.endswith("/archive/") and request.path.startswith("/api/admin/contact-messages/"):
@@ -140,6 +150,15 @@ class AuditLoggingMiddleware:
         2. 'id' field in response data (for create operations)
         3. 'object_id' in request data (for workflow operations)
         """
+        # Strategy 0: A view can identify a nested or ID-free response target.
+        target = getattr(request, "_audit_target", None)
+        target_id = getattr(target, "pk", None)
+        if target_id:
+            try:
+                return uuid.UUID(str(target_id))
+            except (ValueError, AttributeError):
+                pass
+
         # Strategy 1: Extract UUID from URL path
         path_parts = request.path.rstrip("/").split("/")
         for part in reversed(path_parts):
@@ -178,6 +197,10 @@ class AuditLoggingMiddleware:
         - /api/admin/portfolio/... → portfolio.casestudy
         - /api/admin/workflow/... → workflow.auditevent (generic)
         """
+        target = getattr(request, "_audit_target", None)
+        if target is not None:
+            return ContentType.objects.get_for_model(target)
+
         path = request.path
 
         # Map URL segments to app_label.model
