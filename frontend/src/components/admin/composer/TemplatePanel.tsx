@@ -7,6 +7,7 @@ import type { ComposerSection } from "./types";
 import { createTemplateManifest, type TemplateManifest } from "./template-store";
 
 const IMPORT_URL = "/api/admin/pages/templates/import/";
+const TEMPLATES_URL = "/api/admin/pages/templates/";
 const UUID_PATTERN = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
 
 export interface TemplatePageIdentity {
@@ -21,6 +22,15 @@ interface TemplateImportResponse {
     valid: true;
     manifest: TemplateManifest;
     page?: { id: string; status: string };
+}
+
+interface StoredTemplate {
+    name: string;
+    manifest: TemplateManifest;
+    status: string;
+    version: number;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface TemplatePanelProps {
@@ -44,6 +54,8 @@ export function TemplatePanel({ sections, initialIdentity, onImported }: Templat
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
+    const [storedTemplates, setStoredTemplates] = useState<StoredTemplate[]>([]);
+    const [templateName, setTemplateName] = useState("");
     const currentInputFingerprint = useRef(inputFingerprint("", initialIdentity));
 
     useEffect(() => {
@@ -51,6 +63,14 @@ export function TemplatePanel({ sections, initialIdentity, onImported }: Templat
         currentInputFingerprint.current = inputFingerprint(manifestText, initialIdentity);
         invalidateDryRun();
     }, [initialIdentity]);
+
+    useEffect(() => {
+        let active = true;
+        Promise.resolve(adminFetch<StoredTemplate[]>(TEMPLATES_URL))
+            .then((templates) => { if (active && Array.isArray(templates)) setStoredTemplates(templates); })
+            .catch((requestError) => { if (active) setError(safeTemplateError(requestError, "Template library")); });
+        return () => { active = false; };
+    }, []);
 
     const identityComplete = useMemo(
         () => Object.values(identity).every((value) => value.trim().length > 0),
@@ -68,6 +88,31 @@ export function TemplatePanel({ sections, initialIdentity, onImported }: Templat
         setManifestText(text);
         currentInputFingerprint.current = inputFingerprint(text, identity);
         invalidateDryRun();
+    }
+
+    function selectStoredTemplate(template: StoredTemplate): void {
+        updateManifestText(JSON.stringify(template.manifest, null, 2));
+    }
+
+    async function saveCurrentTemplate(): Promise<void> {
+        const name = templateName.trim();
+        if (!name) return;
+        setBusy(true);
+        setError(null);
+        setMessage(null);
+        try {
+            const template = await adminFetch<StoredTemplate>(TEMPLATES_URL, {
+                method: "POST",
+                body: JSON.stringify({ name, manifest: createTemplateManifest(sections) }),
+            });
+            setStoredTemplates((current) => [...current, template]);
+            setTemplateName("");
+            setMessage("Template saved to the library.");
+        } catch (requestError) {
+            setError(safeTemplateError(requestError, "Template save"));
+        } finally {
+            setBusy(false);
+        }
     }
 
     function updateManifestText(value: string): void {
@@ -155,6 +200,40 @@ export function TemplatePanel({ sections, initialIdentity, onImported }: Templat
             <button type="button" className="w-full rounded border bg-white px-3 py-2 text-sm" onClick={exportManifest}>
                 Export manifest
             </button>
+            <div className="space-y-2 border-y py-3">
+                <h3 className="text-xs font-semibold text-gray-900">Stored templates</h3>
+                <label className="block text-xs font-medium text-gray-700">
+                    Template name
+                    <input
+                        className="mt-1 w-full rounded border px-2 py-1.5 text-sm"
+                        value={templateName}
+                        onChange={(event) => setTemplateName(event.target.value)}
+                    />
+                </label>
+                <button
+                    type="button"
+                    className="w-full rounded border bg-white px-3 py-2 text-sm disabled:opacity-50"
+                    disabled={busy || !templateName.trim()}
+                    onClick={() => void saveCurrentTemplate()}
+                >
+                    Save current template
+                </button>
+                {storedTemplates.length > 0 && (
+                    <div className="space-y-1" aria-label="Stored template list">
+                        {storedTemplates.map((template) => (
+                            <button
+                                key={`${template.name}-${template.version}-${template.updated_at}`}
+                                type="button"
+                                className="w-full rounded border bg-white px-2 py-1.5 text-left text-xs"
+                                disabled={busy}
+                                onClick={() => selectStoredTemplate(template)}
+                            >
+                                {template.name}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
             {manifestText && (
                 <a
                     className="block text-center text-xs font-medium text-blue-700 underline"

@@ -164,6 +164,22 @@ describe("PageEditorPage", () => {
     vi.useRealTimers();
   });
 
+  it("resets undo history after a successful Draft autosave", async () => {
+    vi.useFakeTimers();
+    adminFetchMock.mockReset();
+    adminFetchMock.mockResolvedValueOnce(draftPage).mockResolvedValueOnce({ ...draftPage, version: 2 });
+    render(<PageEditorPage />);
+
+    await act(async () => { await Promise.resolve(); });
+    await act(async () => { screen.getByRole("button", { name: "Edit composition" }).click(); });
+    expect(screen.getByRole("button", { name: "Undo composition change" })).toBeEnabled();
+
+    await act(async () => { vi.advanceTimersByTime(750); });
+    await act(async () => { await Promise.resolve(); });
+    expect(screen.getByRole("button", { name: "Undo composition change" })).toBeDisabled();
+    vi.useRealTimers();
+  });
+
   it("does not autosave published composition changes", async () => {
     const user = userEvent.setup();
     render(<PageEditorPage />);

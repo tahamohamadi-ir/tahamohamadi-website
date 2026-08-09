@@ -353,6 +353,7 @@
 - [x] import ابتدا dry-run کاملاً بدون write، حتی بدون AuditEvent، انجام می‌دهد؛ رابط Composer پاسخ دیررس را پس از تغییر manifest/identity دور می‌اندازد و فقط برای fingerprint تأییدشده confirmation را نمایش می‌دهد.
 - [x] schema ناشناخته، block/settings نامعتبر، HTML خام، همهٔ URL fieldهای ثبت‌شده (canonical، legacy و animation) و media مفقود/آرشیوشده با Problem Details رد می‌شوند.
 - [x] template و Draft واردشده actorهای audit دارند؛ event به content type و UUID واقعی target با action دقیق create/import متصل است، import واقعی در transaction انجام می‌شود و rollback آن atomic است.
+- [x] رابط Composer اکنون library ذخیره‌شدهٔ `ComposerTemplate` را از endpoint موجود نمایش می‌دهد، manifest canonical صفحهٔ فعلی را با نام author ذخیره می‌کند و template انتخاب‌شده را فقط به جریان dry-run سپس confirmation import می‌فرستد.
 
 **پذیرش:** template سرعت authoring را بالا می‌برد بدون اینکه ساختار page زنده یا ترجمه‌های مستقل را خراب کند.
 

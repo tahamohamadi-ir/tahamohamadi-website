@@ -144,6 +144,7 @@ export default function PageEditorPage() {
             if (payload) await saveExistingPage(payload);
         },
         onSuccess: () => {
+            reset();
             markClean();
             setManualSaveState("saved");
             clearDraftRecoveryMarker(pageId);
