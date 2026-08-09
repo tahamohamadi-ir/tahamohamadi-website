@@ -406,7 +406,7 @@
 - [ ] reading time از محتوای واقعی و نه metric ساختگی محاسبه شود.
 - [x] preview امن و public renderer parity برقرار باشد.
 
-**شاهد اجرا — 2026-08-08:** editor بلاک‌ها را با locale صریح و warning برای node پشتیبانی‌نشده تبدیل می‌کند؛ image/gallery فقط از Media Library انتخاب می‌شوند و payload ذخیره فقط UUID reference مجاز را نگه می‌دارد. فرم Admin متادیتای اجباری دوزبانه و status را می‌فرستد و preview از همان `BlockRenderer` با context مقاله استفاده می‌کند. 23 تست متمرکز Vitest این قراردادها را پوشش دادند.
+**شاهد اجرا — 2026-08-08:** editor بلاک‌ها را با locale صریح تبدیل می‌کند؛ هر block یا inline mark که lossless قابل تبدیل نیست warning صریح می‌دهد و تا رفع آن save و navigation درون صفحه بسته می‌ماند. image/gallery فقط از Media Library انتخاب می‌شوند، payload ذخیره فقط UUID reference مجاز را نگه می‌دارد و preview پیش از تحویل به همان `BlockRenderer` با context مقاله، assetهای media را به projection محلی URL/alt/caption/items تبدیل می‌کند. 29 تست متمرکز Vitest این قراردادها را پوشش دادند.
 
 ### T3.4 — Blog listing/detail و SEO
 

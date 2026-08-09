@@ -5,9 +5,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import ArticleEditorPage from "./page";
 import type { ArticleBlock, EditorArticle } from "@/components/admin/editor/types";
 
-const { adminFetchMock, paramsMock, pushMock } = vi.hoisted(() => ({
+const { adminFetchMock, paramsMock, previewBlocksMock, pushMock } = vi.hoisted(() => ({
     adminFetchMock: vi.fn(),
     paramsMock: { id: "new" },
+    previewBlocksMock: { current: [] as ArticleBlock[] },
     pushMock: vi.fn(),
 }));
 
@@ -24,13 +25,15 @@ vi.mock("@/components/admin/editor", () => ({
         locale,
         onSave,
         onPreview,
+        onWarningsChange,
     }: {
         article: EditorArticle;
         locale: "fa" | "en";
         onSave: (blocks: ArticleBlock[]) => void;
         onPreview: (blocks: ArticleBlock[]) => void;
+        onWarningsChange: (warnings: string[]) => void;
     }) => {
-        const blocks: ArticleBlock[] = [
+        const defaultBlocks: ArticleBlock[] = [
             {
                 block_type: "paragraph",
                 content: { text: "Preview parity" },
@@ -41,11 +44,14 @@ vi.mock("@/components/admin/editor", () => ({
         return (
             <div>
                 <span>{article.status}</span>
-                <button type="button" onClick={() => onSave(blocks)}>
+                <button type="button" onClick={() => onSave(defaultBlocks)}>
                     Save editor
                 </button>
-                <button type="button" onClick={() => onPreview(blocks)}>
+                <button type="button" onClick={() => onPreview(previewBlocksMock.current.length > 0 ? previewBlocksMock.current : defaultBlocks)}>
                     Preview editor
+                </button>
+                <button type="button" onClick={() => onWarningsChange(["Lossy content"])}>
+                    Raise conversion warning
                 </button>
             </div>
         );
@@ -57,6 +63,7 @@ describe("ArticleEditorPage", () => {
         paramsMock.id = "new";
         adminFetchMock.mockReset();
         pushMock.mockReset();
+        previewBlocksMock.current = [];
     });
 
     it("creates an article with required bilingual metadata, status, and locale-owned blocks", async () => {
@@ -101,5 +108,65 @@ describe("ArticleEditorPage", () => {
         expect(screen.getByRole("region", { name: "Article preview" })).toHaveTextContent(
             "Preview parity"
         );
+    });
+
+    it("resolves media UUIDs before rendering image and gallery preview", async () => {
+        previewBlocksMock.current = [
+            {
+                block_type: "image",
+                content: { media_id: "11111111-2222-4333-8444-555555555555" },
+                locale: "en",
+                ordering: 0,
+            },
+            {
+                block_type: "gallery",
+                content: {
+                    media_ids: ["66666666-7777-4888-8999-000000000000"],
+                    layout: "grid",
+                },
+                locale: "en",
+                ordering: 1,
+            },
+        ];
+        adminFetchMock
+            .mockResolvedValueOnce({
+                id: "11111111-2222-4333-8444-555555555555",
+                file: "/media/hero.jpg",
+                alt_text_fa: "",
+                alt_text_en: "Resolved hero",
+                caption_fa: "",
+                caption_en: "Hero caption",
+                width: 1200,
+                height: 800,
+            })
+            .mockResolvedValueOnce({
+                id: "66666666-7777-4888-8999-000000000000",
+                file: "/media/gallery.jpg",
+                alt_text_fa: "",
+                alt_text_en: "Resolved gallery image",
+                caption_fa: "",
+                caption_en: "Gallery caption",
+                width: 900,
+                height: 600,
+            });
+        render(<ArticleEditorPage />);
+
+        await userEvent.selectOptions(await screen.findByLabelText("Editing locale"), "en");
+        await userEvent.click(await screen.findByRole("button", { name: "Preview editor" }));
+
+        expect(await screen.findByAltText("Resolved hero")).toHaveAttribute("src", "/media/hero.jpg");
+        expect(screen.getByAltText("Resolved gallery image")).toHaveAttribute("src", "/media/gallery.jpg");
+        expect(screen.getByText("Hero caption")).toBeInTheDocument();
+        expect(screen.getByText("Gallery caption")).toBeInTheDocument();
+    });
+
+    it("gates route and locale navigation while conversion warnings are unresolved", async () => {
+        render(<ArticleEditorPage />);
+
+        await userEvent.click(await screen.findByRole("button", { name: "Raise conversion warning" }));
+
+        expect(screen.getByRole("button", { name: "Back to articles" })).toBeDisabled();
+        expect(screen.getByLabelText("Editing locale")).toBeDisabled();
+        expect(pushMock).not.toHaveBeenCalled();
     });
 });

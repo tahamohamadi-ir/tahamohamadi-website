@@ -60,6 +60,7 @@ export function ArticleEditor({
     locale,
     onSave,
     onPreview,
+    onWarningsChange,
 }: ArticleEditorProps) {
     const [showSlashMenu, setShowSlashMenu] = useState(false);
     const [slashMenuPos, setSlashMenuPos] = useState<{
@@ -75,14 +76,13 @@ export function ArticleEditor({
     const editorContainerRef = useRef<HTMLDivElement>(null);
 
     // Build initial content from article blocks
-    const initialContent = useMemo(() => {
-        if (article?.blocks && article.blocks.length > 0) {
-            return articleBlocksToTiptapDoc(
-                article.blocks.filter((block) => block.locale === locale)
-            );
-        }
-        return undefined;
+    const initialConversion = useMemo(() => {
+        return articleBlocksToTiptapDoc(
+            article?.blocks.filter((block) => block.locale === locale) ?? [],
+            { reportWarnings: true }
+        );
     }, [article?.blocks, locale]);
+    const initialContent = initialConversion.doc;
 
     const editor = useEditor({
         extensions: [
@@ -137,6 +137,14 @@ export function ArticleEditor({
     useEffect(() => {
         if (editor && initialContent) editor.commands.setContent(initialContent);
     }, [editor, initialContent]);
+
+    useEffect(() => {
+        setConversionWarnings(initialConversion.warnings);
+    }, [initialConversion]);
+
+    useEffect(() => {
+        onWarningsChange?.(conversionWarnings);
+    }, [conversionWarnings, onWarningsChange]);
 
     const openMediaPicker = useCallback((mode: "image" | "gallery") => {
         setMediaMode(mode);
@@ -293,18 +301,20 @@ export function ArticleEditor({
     const handleSave = useCallback(() => {
         if (!editor || !onSave) return;
         const { blocks, warnings } = tiptapDocToArticleBlocks(editor.getJSON(), locale);
-        setConversionWarnings(warnings);
+        const allWarnings = [...initialConversion.warnings, ...warnings];
+        setConversionWarnings(allWarnings);
+        if (allWarnings.length > 0) return;
         onSave(blocks);
-    }, [editor, locale, onSave]);
+    }, [editor, initialConversion.warnings, locale, onSave]);
 
     // ─── Preview Handler ───────────────────────────────────────────────────────
 
     const handlePreview = useCallback(() => {
         if (!editor || !onPreview) return;
         const { blocks, warnings } = tiptapDocToArticleBlocks(editor.getJSON(), locale);
-        setConversionWarnings(warnings);
+        setConversionWarnings([...initialConversion.warnings, ...warnings]);
         onPreview(blocks);
-    }, [editor, locale, onPreview]);
+    }, [editor, initialConversion.warnings, locale, onPreview]);
 
     // ─── Keyboard Shortcuts (Save) ─────────────────────────────────────────────
 

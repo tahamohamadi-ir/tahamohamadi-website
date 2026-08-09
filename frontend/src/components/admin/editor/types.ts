@@ -37,11 +37,19 @@ export interface ArticleEditorProps {
     onSave?: (blocks: ArticleBlock[]) => void;
     /** Called with converted ArticleBlock[] for preview */
     onPreview?: (blocks: ArticleBlock[]) => void;
+    /** Reports unresolved lossy-conversion warnings to the route owner. */
+    onWarningsChange?: (warnings: string[]) => void;
 }
 
 /** Result of a potentially lossy editor/document conversion. */
 export interface ArticleBlockConversionResult {
     blocks: ArticleBlock[];
+    warnings: string[];
+}
+
+/** Result of importing stored article blocks into the editor schema. */
+export interface ArticleDocConversionResult {
+    doc: import("@tiptap/react").JSONContent;
     warnings: string[];
 }
 

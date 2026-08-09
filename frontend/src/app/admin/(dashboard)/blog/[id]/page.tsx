@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import type { EditorArticle, ArticleBlock } from "@/components/admin/editor/types";
+import type { MediaAssetDTO } from "@/lib/types/media";
 
 export default function ArticleEditorPage() {
     const params = useParams();
@@ -21,6 +22,8 @@ export default function ArticleEditorPage() {
     const [error, setError] = useState<string | null>(null);
     const [locale, setLocale] = useState<"fa" | "en">("fa");
     const [previewBlocks, setPreviewBlocks] = useState<ArticleBlock[]>([]);
+    const [previewError, setPreviewError] = useState<string | null>(null);
+    const [editorWarnings, setEditorWarnings] = useState<string[]>([]);
 
     useEffect(() => {
         if (articleId === "new") {
@@ -51,6 +54,16 @@ export default function ArticleEditorPage() {
         }
         fetchArticle();
     }, [articleId]);
+
+    useEffect(() => {
+        if (editorWarnings.length === 0) return;
+        const preventUnsafeNavigation = (event: BeforeUnloadEvent) => {
+            event.preventDefault();
+            event.returnValue = "";
+        };
+        window.addEventListener("beforeunload", preventUnsafeNavigation);
+        return () => window.removeEventListener("beforeunload", preventUnsafeNavigation);
+    }, [editorWarnings]);
 
     const handleSave = useCallback(
         async (blocks: ArticleBlock[]) => {
@@ -92,6 +105,50 @@ export default function ArticleEditorPage() {
         [article, articleId, router]
     );
 
+    const handlePreview = useCallback(
+        async (blocks: ArticleBlock[]) => {
+            setPreviewError(null);
+            const mediaIds = Array.from(
+                new Set(
+                    blocks.flatMap((block) => {
+                        if (block.block_type === "image") {
+                            return typeof block.content.media_id === "string"
+                                ? [block.content.media_id]
+                                : [];
+                        }
+                        if (block.block_type === "gallery") {
+                            return Array.isArray(block.content.media_ids)
+                                ? block.content.media_ids.filter(
+                                    (mediaId): mediaId is string => typeof mediaId === "string"
+                                )
+                                : [];
+                        }
+                        return [];
+                    })
+                )
+            );
+
+            try {
+                const assets = await Promise.all(
+                    mediaIds.map((mediaId) =>
+                        adminFetch<MediaAssetDTO>(`/api/admin/media/${mediaId}/`)
+                    )
+                );
+                const assetsById = new Map(assets.map((asset) => [asset.id, asset]));
+                setPreviewBlocks(
+                    blocks.map((block) => ({
+                        ...block,
+                        content: projectPreviewContent(block, locale, assetsById),
+                    }))
+                );
+            } catch (err) {
+                setPreviewBlocks([]);
+                setPreviewError(err instanceof Error ? err.message : "Preview media could not be loaded");
+            }
+        },
+        [locale]
+    );
+
     const updateField = (field: keyof EditorArticle, value: string) => {
         setArticle((current) => current ? { ...current, [field]: value } : current);
     };
@@ -129,6 +186,7 @@ export default function ArticleEditorPage() {
                 <div className="flex items-center gap-2">
                     <select
                         aria-label="Editing locale"
+                        disabled={editorWarnings.length > 0}
                         value={locale}
                         onChange={(e) => setLocale(e.target.value as "fa" | "en")}
                         className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
@@ -136,7 +194,12 @@ export default function ArticleEditorPage() {
                         <option value="fa">فارسی</option>
                         <option value="en">English</option>
                     </select>
-                    <Button variant="outline" onClick={() => router.push("/admin/blog")}>
+                    <Button
+                        aria-label="Back to articles"
+                        variant="outline"
+                        disabled={editorWarnings.length > 0}
+                        onClick={() => router.push("/admin/blog")}
+                    >
                         بازگشت
                     </Button>
                 </div>
@@ -182,9 +245,12 @@ export default function ArticleEditorPage() {
                     article={article}
                     locale={locale}
                     onSave={handleSave}
-                    onPreview={setPreviewBlocks}
+                    onPreview={handlePreview}
+                    onWarningsChange={setEditorWarnings}
                 />
             </div>
+
+            {previewError && <p role="alert" className="text-sm text-red-700">{previewError}</p>}
 
             {previewBlocks.length > 0 && (
                 <section role="region" aria-label="Article preview" className="space-y-6 rounded-lg border bg-white p-6">
@@ -205,4 +271,40 @@ export default function ArticleEditorPage() {
             )}
         </div>
     );
+}
+
+function projectPreviewContent(
+    block: ArticleBlock,
+    locale: "fa" | "en",
+    assetsById: Map<string, MediaAssetDTO>
+): Record<string, unknown> {
+    if (block.block_type === "image" && typeof block.content.media_id === "string") {
+        const asset = assetsById.get(block.content.media_id);
+        if (!asset) return block.content;
+        return {
+            ...block.content,
+            url: asset.file ?? "",
+            alt: locale === "fa" ? asset.alt_text_fa : asset.alt_text_en,
+            caption: locale === "fa" ? asset.caption_fa : asset.caption_en,
+            width: asset.width ?? undefined,
+            height: asset.height ?? undefined,
+        };
+    }
+    if (block.block_type === "gallery" && Array.isArray(block.content.media_ids)) {
+        return {
+            ...block.content,
+            items: block.content.media_ids.flatMap((mediaId) => {
+                if (typeof mediaId !== "string") return [];
+                const asset = assetsById.get(mediaId);
+                if (!asset) return [];
+                return [{
+                    media_id: asset.id,
+                    url: asset.file ?? "",
+                    alt: locale === "fa" ? asset.alt_text_fa : asset.alt_text_en,
+                    caption: locale === "fa" ? asset.caption_fa : asset.caption_en,
+                }];
+            }),
+        };
+    }
+    return block.content;
 }

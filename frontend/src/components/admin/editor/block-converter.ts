@@ -6,7 +6,11 @@
  */
 
 import type { Locale } from "@/components/blocks/types";
-import type { ArticleBlock, ArticleBlockConversionResult } from "./types";
+import type {
+    ArticleBlock,
+    ArticleBlockConversionResult,
+    ArticleDocConversionResult,
+} from "./types";
 import type { JSONContent } from "@tiptap/react";
 
 // ─── Tiptap Document → ArticleBlock[] ────────────────────────────────────────
@@ -37,6 +41,11 @@ export function tiptapDocToArticleBlocks(
         } else {
             warnings.push(
                 `Unsupported editor node "${node.type ?? "unknown"}" at position ${index + 1} was not converted.`
+            );
+        }
+        if (converted && containsInlineMarks(node)) {
+            warnings.push(
+                `Inline formatting in editor node "${node.type ?? "unknown"}" at position ${index + 1} cannot be preserved.`
             );
         }
     }
@@ -161,20 +170,43 @@ function nodeToArticleBlock(
 /**
  * Converts ArticleBlock[] back to a Tiptap-compatible JSON document.
  */
-export function articleBlocksToTiptapDoc(blocks: ArticleBlock[]): JSONContent {
+export function articleBlocksToTiptapDoc(blocks: ArticleBlock[]): JSONContent;
+export function articleBlocksToTiptapDoc(
+    blocks: ArticleBlock[],
+    options: { reportWarnings: true }
+): ArticleDocConversionResult;
+export function articleBlocksToTiptapDoc(
+    blocks: ArticleBlock[],
+    options?: { reportWarnings: true }
+): JSONContent | ArticleDocConversionResult {
     const content: JSONContent[] = [];
+    const warnings: string[] = [];
 
-    for (const block of blocks) {
+    for (const [index, block] of blocks.entries()) {
+        if (
+            options?.reportWarnings &&
+            ["callout", "reference", "caption"].includes(block.block_type)
+        ) {
+            warnings.push(
+                `Article block "${block.block_type}" at position ${index + 1} cannot be edited losslessly.`
+            );
+            continue;
+        }
         const node = articleBlockToNode(block);
         if (node) {
             content.push(node);
+        } else if (options?.reportWarnings) {
+            warnings.push(
+                `Article block "${block.block_type}" at position ${index + 1} cannot be edited losslessly.`
+            );
         }
     }
 
-    return {
+    const doc: JSONContent = {
         type: "doc",
         content: content.length > 0 ? content : [{ type: "paragraph" }],
     };
+    return options?.reportWarnings ? { doc, warnings } : doc;
 }
 
 /**
@@ -311,4 +343,9 @@ function extractBlockquoteText(node: JSONContent): string {
 function textToContent(text: string | undefined | null): JSONContent[] {
     if (!text) return [];
     return [{ type: "text", text }];
+}
+
+function containsInlineMarks(node: JSONContent): boolean {
+    if (node.marks && node.marks.length > 0) return true;
+    return node.content?.some(containsInlineMarks) ?? false;
 }

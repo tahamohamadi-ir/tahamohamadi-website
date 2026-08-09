@@ -131,4 +131,40 @@ describe("ArticleEditor media authoring", () => {
             },
         ]);
     });
+
+    it("blocks save when inline formatting would be lost", async () => {
+        editorDocument.content = [
+            {
+                type: "paragraph",
+                content: [{ type: "text", text: "Styled", marks: [{ type: "bold" }] }],
+            },
+        ];
+        const onSave = vi.fn<(blocks: ArticleBlock[]) => void>();
+        render(<ArticleEditor article={{ blocks: [] }} locale="en" onSave={onSave} />);
+
+        await userEvent.click(screen.getByRole("button", { name: "Save article blocks" }));
+
+        expect(onSave).not.toHaveBeenCalled();
+        expect(screen.getByRole("alert")).toHaveTextContent("cannot be preserved");
+    });
+
+    it("blocks save when loaded blocks cannot be edited losslessly", async () => {
+        const onSave = vi.fn<(blocks: ArticleBlock[]) => void>();
+        const blocks = [
+            { block_type: "callout", content: { text: "Note" }, locale: "en", ordering: 0 },
+            { block_type: "reference", content: { text: "Source" }, locale: "en", ordering: 1 },
+            { block_type: "caption", content: { text: "Caption" }, locale: "en", ordering: 2 },
+            { block_type: "legacy_embed", content: {}, locale: "en", ordering: 3 },
+        ] as unknown as ArticleBlock[];
+        render(<ArticleEditor article={{ blocks }} locale="en" onSave={onSave} />);
+
+        await userEvent.click(screen.getByRole("button", { name: "Save article blocks" }));
+
+        expect(onSave).not.toHaveBeenCalled();
+        const alert = screen.getByRole("alert");
+        expect(alert).toHaveTextContent("callout");
+        expect(alert).toHaveTextContent("reference");
+        expect(alert).toHaveTextContent("caption");
+        expect(alert).toHaveTextContent("legacy_embed");
+    });
 });

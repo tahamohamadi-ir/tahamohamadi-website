@@ -40,6 +40,27 @@ describe("tiptapDocToArticleBlocks", () => {
         ]);
     });
 
+    it("reports inline marks that the article document cannot preserve", () => {
+        const result = tiptapDocToArticleBlocks(
+            {
+                type: "doc",
+                content: [
+                    {
+                        type: "paragraph",
+                        content: [
+                            { type: "text", text: "Styled", marks: [{ type: "bold" }] },
+                        ],
+                    },
+                ],
+            },
+            "en"
+        );
+
+        expect(result.warnings).toEqual([
+            'Inline formatting in editor node "paragraph" at position 1 cannot be preserved.',
+        ]);
+    });
+
     it("converts a paragraph node", () => {
         const doc: JSONContent = {
             type: "doc",
@@ -235,6 +256,28 @@ describe("tiptapDocToArticleBlocks", () => {
 });
 
 describe("articleBlocksToTiptapDoc", () => {
+    it("reports and excludes blocks that the Tiptap schema cannot preserve losslessly", () => {
+        const blocks = [
+            { block_type: "callout", content: { text: "Note", type: "info" }, locale: "en", ordering: 0 },
+            { block_type: "reference", content: { text: "Source", url: "https://example.com" }, locale: "en", ordering: 1 },
+            { block_type: "caption", content: { text: "Caption" }, locale: "en", ordering: 2 },
+            { block_type: "legacy_embed", content: { url: "https://example.com" }, locale: "en", ordering: 3 },
+        ] as unknown as ArticleBlock[];
+
+        const result = articleBlocksToTiptapDoc(blocks, { reportWarnings: true }) as unknown as {
+            doc: JSONContent;
+            warnings: string[];
+        };
+
+        expect(result.doc.content).toEqual([{ type: "paragraph" }]);
+        expect(result.warnings).toEqual([
+            'Article block "callout" at position 1 cannot be edited losslessly.',
+            'Article block "reference" at position 2 cannot be edited losslessly.',
+            'Article block "caption" at position 3 cannot be edited losslessly.',
+            'Article block "legacy_embed" at position 4 cannot be edited losslessly.',
+        ]);
+    });
+
     it("converts paragraph blocks back to doc", () => {
         const blocks: ArticleBlock[] = [
             { block_type: "paragraph", content: { text: "Hello" }, ordering: 0 },
