@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAutosave, useDirtyGuard } from "@/hooks";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select } from "@/components/ui/select";
 
 interface SiteSettings {
   id: string;
@@ -28,7 +28,7 @@ interface SiteSettings {
   default_og_image: string | null;
   theme_preset: string;
   density: string;
-  design_tokens: any;
+  design_tokens: Record<string, unknown>;
   status: string;
 }
 
@@ -54,7 +54,7 @@ export default function SiteConfigPage() {
         setPrimaryColorFa(loaded.design_tokens?.colors?.fa?.primary || "#000000");
         setPrimaryColorEn(loaded.design_tokens?.colors?.en?.primary || "#000000");
       }
-    } catch (e) {
+    } catch {
       setError("دریافت تنظیمات سایت با خطا مواجه شد.");
     } finally {
       setLoading(false);
@@ -85,19 +85,20 @@ export default function SiteConfigPage() {
       setSettings(response);
       setError(null);
       return response;
-    } catch (e: any) {
-      setError("خطا در ذخیره تنظیمات: " + e.message);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError("خطا در ذخیره تنظیمات: " + msg);
       throw e;
     }
   };
 
-  const { isDirty, markDirty, clearDirty, saving, saveError } = useAutosave({
+  const { isDirty, markDirty, saving, saveError } = useAutosave({
     onSave: saveSettings,
     debounceMs: 2000,
   });
   useDirtyGuard(isDirty);
 
-  const updateField = (field: keyof SiteSettings, value: any) => {
+  const updateField = (field: keyof SiteSettings, value: string | Record<string, unknown>) => {
     if (!settings) return;
     setSettings({ ...settings, [field]: value });
     markDirty();
@@ -186,24 +187,26 @@ export default function SiteConfigPage() {
             <h2 className="text-lg font-semibold">توکن‌های طراحی (Design Tokens)</h2>
             <div className="space-y-2">
               <Label>قالب پیش‌فرض (Theme Preset)</Label>
-              <Select value={settings.theme_preset} onValueChange={(val) => updateField("theme_preset", val)}>
-                <SelectTrigger dir="ltr"><SelectValue /></SelectTrigger>
-                <SelectContent dir="ltr">
-                  <SelectItem value="default">Default</SelectItem>
-                  <SelectItem value="minimal">Minimal</SelectItem>
-                  <SelectItem value="dark">Dark</SelectItem>
-                </SelectContent>
-              </Select>
+              <Select 
+                value={settings.theme_preset} 
+                onChange={(e) => updateField("theme_preset", e.target.value)}
+                options={[
+                  { value: "default", label: "Default" },
+                  { value: "minimal", label: "Minimal" },
+                  { value: "dark", label: "Dark" }
+                ]}
+              />
             </div>
             <div className="space-y-2">
               <Label>تراکم (Density)</Label>
-              <Select value={settings.density} onValueChange={(val) => updateField("density", val)}>
-                <SelectTrigger dir="ltr"><SelectValue /></SelectTrigger>
-                <SelectContent dir="ltr">
-                  <SelectItem value="comfortable">Comfortable</SelectItem>
-                  <SelectItem value="compact">Compact</SelectItem>
-                </SelectContent>
-              </Select>
+              <Select 
+                value={settings.density} 
+                onChange={(e) => updateField("density", e.target.value)}
+                options={[
+                  { value: "comfortable", label: "Comfortable" },
+                  { value: "compact", label: "Compact" }
+                ]}
+              />
             </div>
           </div>
 

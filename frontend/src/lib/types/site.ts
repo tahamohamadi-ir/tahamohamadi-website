@@ -8,7 +8,7 @@ export interface PublicSiteSettingsDTO {
   footer_text: string;
   theme_preset: string;
   density: string;
-  design_tokens: any;
+  design_tokens: Record<string, unknown>;
 }
 
 export interface PublicNavigationItemDTO {
