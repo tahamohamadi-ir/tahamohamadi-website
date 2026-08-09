@@ -14,6 +14,7 @@ Creates:
 
 import uuid
 from datetime import date
+from typing import Any
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
@@ -268,7 +269,7 @@ class Command(BaseCommand):
 
     def _create_pages(self):
         """Create sample CMS pages with sections and blocks."""
-        pages_data = [
+        pages_data: list[dict[str, Any]] = [
             {
                 "slug_fa": "خانه",
                 "slug_en": "home",
@@ -430,7 +431,7 @@ class Command(BaseCommand):
 
     def _create_articles(self, topics, media_assets):
         """Create sample blog articles with blocks."""
-        articles_data = [
+        articles_data: list[dict[str, Any]] = [
             {
                 "slug_fa": "مقدمه-ای-بر-هوش-مصنوعی",
                 "slug_en": "introduction-to-artificial-intelligence",
@@ -543,7 +544,7 @@ class Command(BaseCommand):
 
     def _create_case_studies(self, media_assets):
         """Create sample portfolio case studies."""
-        cases_data = [
+        cases_data: list[dict[str, Any]] = [
             {
                 "slug_fa": "سیستم-مدیریت-محتوا",
                 "slug_en": "content-management-system",
