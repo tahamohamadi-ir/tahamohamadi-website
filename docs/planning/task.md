@@ -674,18 +674,19 @@
   - [x] 14.1.5 Preview & Admin: X-Robots-Tag: noindex, no-store enforcement
   - [ ] 14.1.6 Secrets audit: .env only, zero credentials in Git repository
 
-- [ ] 14.2 Image & Asset Optimization ← 9.1
-  - [ ] 14.2.1 `next/image`: WebP/AVIF formats, `sizes` responsive attribute
-  - [ ] 14.2.2 Hero/above-fold images: `priority` prop
-  - [ ] 14.2.3 Below-fold images: `loading="lazy"`
-  - [ ] 14.2.4 Explicit dimensions/aspect-ratio for CLS prevention
-  - [ ] 14.2.5 Blurred placeholder generation for rich image loading
+- [x] 14.2 Image & Asset Optimization ← 9.1
+  - [x] 14.2.1 `next/image`: WebP/AVIF formats, `sizes` responsive attribute
+  - [x] 14.2.2 Hero/above-fold images: `priority` prop
+  - [x] 14.2.3 Below-fold images: `loading="lazy"`
+  - [x] 14.2.4 Explicit dimensions/aspect-ratio for CLS prevention
+  - [x] 14.2.5 Blurred placeholder generation for rich image loading
 
-- [ ] 14.3 Bundle & Architecture Optimization ← 9.1, 11.1
-  - [ ] 14.3.1 Admin/public bundle separation verification
-  - [ ] 14.3.2 Dynamic imports for heavy components (Tiptap, @dnd-kit, charts, CodeHighlight)
-  - [ ] 14.3.3 RSC-first architecture on public pages
-  - [ ] 14.3.4 Font optimization: next/font + preconnect headers
+- [x] 14.3 Bundle & Architecture Optimization ← 9.1, 11.1
+  - [x] 14.3.1 Admin/public bundle separation verification
+  - [x] 14.3.2 Dynamic imports for heavy components (Tiptap, @dnd-kit, charts, CodeHighlight)
+  - [x] 14.3.3 RSC-first architecture on public pages
+  - [x] 14.3.4 Font optimization: next/font + preconnect headers
+
 
 - [ ] 14.4 Database & Query Optimization ← Phases 3-7
   - [ ] 14.4.1 `select_related` + `prefetch_related` audit across all endpoints (prevent N+1 queries)
