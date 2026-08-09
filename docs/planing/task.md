@@ -730,7 +730,8 @@
   - [x] 15.3.3 Backup scripts: PostgreSQL `pg_dump` + media files `tar`
   - [x] 15.3.4 Restore procedure verification & rehearsal
   - [x] 15.3.5 README documentation (setup, dev, deploy, runbooks)
-  - [ ] 15.3.6 Health endpoint monitoring (`/api/health/`)
+  - [x] 15.3.6 Health endpoint monitoring (`/api/health/`)
+
   - [ ] 15.3.7 Sentry error tracking verification & alert routing
 
 
