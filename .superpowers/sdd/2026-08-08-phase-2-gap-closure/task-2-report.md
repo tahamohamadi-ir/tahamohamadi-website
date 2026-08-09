@@ -36,3 +36,10 @@ Updated T2.5 only after the UI and focused tests existed: the Composer UI now ex
 ## Concerns
 
 - Focused frontend tests are green. Browser/visual/full-suite validation remains deferred exactly as previously documented and was not modified by this task.
+
+## Round 1 reviewer follow-up — stale initial template list
+
+- RED regression test: `keeps a newly saved template when the initial library request resolves late` deferred the first `GET /api/admin/pages/templates/`, completed a faster `POST` create, then resolved the initial GET with an empty library. Before the fix, the late response replaced the created item. Focused RED result: 1 failed, 7 passed (8 total).
+- GREEN implementation: the initial list request captures the library generation. A successful create increments that generation before appending its server response, so the mounted initial request can no longer overwrite a newer create result. Mounted cleanup, sanitized error handling, and import dry-run fingerprint behavior are unchanged.
+- GREEN command: `npm.cmd run test:run -- --run "src/app/admin/(dashboard)/pages/[id]/page.test.tsx" src/components/admin/composer/TemplatePanel.test.tsx`
+- GREEN result: 2 test files passed; 27 tests passed; 0 failures.

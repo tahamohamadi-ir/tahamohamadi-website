@@ -57,6 +57,7 @@ export function TemplatePanel({ sections, initialIdentity, onImported }: Templat
     const [storedTemplates, setStoredTemplates] = useState<StoredTemplate[]>([]);
     const [templateName, setTemplateName] = useState("");
     const currentInputFingerprint = useRef(inputFingerprint("", initialIdentity));
+    const libraryGeneration = useRef(0);
 
     useEffect(() => {
         setIdentity(initialIdentity);
@@ -66,8 +67,13 @@ export function TemplatePanel({ sections, initialIdentity, onImported }: Templat
 
     useEffect(() => {
         let active = true;
+        const initialGeneration = libraryGeneration.current;
         Promise.resolve(adminFetch<StoredTemplate[]>(TEMPLATES_URL))
-            .then((templates) => { if (active && Array.isArray(templates)) setStoredTemplates(templates); })
+            .then((templates) => {
+                if (active && initialGeneration === libraryGeneration.current && Array.isArray(templates)) {
+                    setStoredTemplates(templates);
+                }
+            })
             .catch((requestError) => { if (active) setError(safeTemplateError(requestError, "Template library")); });
         return () => { active = false; };
     }, []);
@@ -105,6 +111,7 @@ export function TemplatePanel({ sections, initialIdentity, onImported }: Templat
                 method: "POST",
                 body: JSON.stringify({ name, manifest: createTemplateManifest(sections) }),
             });
+            libraryGeneration.current += 1;
             setStoredTemplates((current) => [...current, template]);
             setTemplateName("");
             setMessage("Template saved to the library.");

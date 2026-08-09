@@ -115,6 +115,33 @@ describe("TemplatePanel", () => {
         expect(screen.getByRole("button", { name: "Homepage section" })).toBeInTheDocument();
     });
 
+    it("keeps a newly saved template when the initial library request resolves late", async () => {
+        let resolveInitialList: ((value: []) => void) | undefined;
+        const createdTemplate = {
+            name: "Homepage section",
+            manifest: { schema_version: 1, sections: [], block_types: [], media_references: [], translation_completeness: { fa: true, en: true } },
+            status: "draft",
+            version: 1,
+            created_at: "2026-08-08T00:00:00Z",
+            updated_at: "2026-08-08T00:00:00Z",
+        };
+        adminFetchMock
+            .mockImplementationOnce(() => new Promise((resolve) => { resolveInitialList = resolve; }))
+            .mockResolvedValueOnce(createdTemplate);
+        render(<TemplatePanel sections={sections} initialIdentity={identity} onImported={vi.fn()} />);
+
+        await userEvent.type(screen.getByLabelText("Template name"), "Homepage section");
+        await userEvent.click(screen.getByRole("button", { name: "Save current template" }));
+        expect(await screen.findByRole("button", { name: "Homepage section" })).toBeInTheDocument();
+
+        await act(async () => {
+            resolveInitialList?.([]);
+            await Promise.resolve();
+        });
+
+        expect(screen.getByRole("button", { name: "Homepage section" })).toBeInTheDocument();
+    });
+
     it("requires a successful dry-run and an explicit confirmation before importing", async () => {
         const onImported = vi.fn();
         const manifest = {
