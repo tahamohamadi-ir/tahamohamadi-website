@@ -51,7 +51,8 @@ export default function SiteConfigPage() {
       if (response.results.length > 0) {
         const loaded = response.results[0];
         setSettings(loaded);
-        const tokens = loaded.design_tokens as any;
+        interface ColorTokens { primary?: string }
+        const tokens = loaded.design_tokens as { colors?: { fa?: ColorTokens; en?: ColorTokens } };
         setPrimaryColorFa(tokens?.colors?.fa?.primary || "#000000");
         setPrimaryColorEn(tokens?.colors?.en?.primary || "#000000");
       }
