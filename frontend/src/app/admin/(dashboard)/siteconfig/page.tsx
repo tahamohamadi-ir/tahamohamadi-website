@@ -67,26 +67,25 @@ export default function SiteConfigPage() {
     void loadSettings();
   }, [loadSettings]);
 
-  const saveSettings = async () => {
-    if (!settings) return;
+  const saveSettings = async (data: SiteSettings | null) => {
+    if (!data) return;
     try {
       // Assemble tokens
       const updatedTokens = {
-        ...settings.design_tokens,
+        ...data.design_tokens,
         colors: {
           fa: { primary: primaryColorFa },
           en: { primary: primaryColorEn }
         }
       };
 
-      const payload = { ...settings, design_tokens: updatedTokens };
-      const response = await adminFetch<SiteSettings>(`/api/admin/site/settings/${settings.id}/`, {
+      const payload = { ...data, design_tokens: updatedTokens };
+      const response = await adminFetch<SiteSettings>(`/api/admin/site/settings/${data.id}/`, {
         method: "PUT",
         body: JSON.stringify(payload),
       });
       setSettings(response);
       setError(null);
-      return response;
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       setError("خطا در ذخیره تنظیمات: " + msg);
@@ -94,11 +93,15 @@ export default function SiteConfigPage() {
     }
   };
 
-  const { isDirty, markDirty, saving, saveError } = useAutosave({
+  const { isDirty, markDirty, markClean } = useDirtyGuard();
+
+  const { autosaveStatus, save: triggerSave } = useAutosave({
+    data: settings,
+    status: isDirty ? "draft" : "idle",
     onSave: saveSettings,
     debounceMs: 2000,
+    onSuccess: markClean,
   });
-  useDirtyGuard(isDirty);
 
   const updateField = (field: keyof SiteSettings, value: string | Record<string, unknown>) => {
     if (!settings) return;
@@ -125,11 +128,14 @@ export default function SiteConfigPage() {
           <h1 className="text-2xl font-bold tracking-tight">تنظیمات عمومی سایت (Site Settings)</h1>
           <p className="text-muted-foreground">مدیریت پیکربندی‌های کلی و رنگ‌بندی (Design Tokens).</p>
         </div>
-        <div className="flex items-center gap-4">
-          {saving && <span className="text-sm text-muted-foreground">در حال ذخیره...</span>}
-          {saveError && <span className="text-sm text-red-500">خطا در ذخیره</span>}
-          {!saving && !saveError && !isDirty && <span className="text-sm text-green-600">ذخیره شد</span>}
-          <Button onClick={() => void saveSettings()} disabled={saving || !isDirty}>ذخیره تغییرات</Button>
+        <div className="flex gap-2 items-center">
+          {error && <span className="text-sm text-red-500">{error}</span>}
+          <span className="text-sm text-muted-foreground mr-4">
+            {autosaveStatus === "saving" ? "در حال ذخیره..." : autosaveStatus === "saved" ? "ذخیره شد" : isDirty ? "تغییرات ذخیره نشده" : ""}
+          </span>
+          <Button onClick={() => triggerSave()} disabled={autosaveStatus === "saving" || !isDirty}>
+            {autosaveStatus === "saving" ? "در حال ذخیره..." : "ذخیره تنظیمات"}
+          </Button>
         </div>
       </div>
 
