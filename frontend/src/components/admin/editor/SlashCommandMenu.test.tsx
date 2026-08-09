@@ -16,6 +16,6 @@ describe("SlashCommandMenu", () => {
 
         expect(screen.getByRole("option", { name: /Image/ })).toBeInTheDocument();
         expect(screen.getByRole("option", { name: /Gallery/ })).toBeInTheDocument();
-        expect(screen.queryByRole("option", { name: /Callout/ })).not.toBeInTheDocument();
+        expect(screen.getByRole("option", { name: /Callout/ })).toBeInTheDocument();
     });
 });

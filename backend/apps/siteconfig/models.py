@@ -25,6 +25,8 @@ class SiteSettings(VersionedModel):
         "media.MediaAsset", on_delete=models.SET_NULL, null=True, blank=True,
         related_name="site_default_og_images",
     )
+    theme_preset = models.CharField(max_length=50, default="default")
+    density = models.CharField(max_length=50, default="comfortable")
     status = models.CharField(max_length=20, default="draft")
 
     class Meta:

@@ -46,6 +46,36 @@ const ArticleGalleryNode = Node.create({
     renderHTML: () => ["div", { "data-article-gallery": "" }, "Selected gallery"],
 });
 
+const CalloutNode = Node.create({
+    name: "callout",
+    group: "block",
+    content: "inline*",
+    defining: true,
+    addAttributes: () => ({
+        type: { default: "info" },
+    }),
+    parseHTML: () => [{ tag: "div[data-article-callout]" }],
+    renderHTML: ({ HTMLAttributes }) => ["div", { "data-article-callout": "", "data-type": HTMLAttributes.type }, 0],
+});
+
+const CaptionNode = Node.create({
+    name: "caption",
+    group: "block",
+    content: "inline*",
+    defining: true,
+    parseHTML: () => [{ tag: "div[data-article-caption]" }],
+    renderHTML: () => ["div", { "data-article-caption": "" }, 0],
+});
+
+const ReferenceNode = Node.create({
+    name: "reference",
+    group: "block",
+    content: "inline*",
+    defining: true,
+    parseHTML: () => [{ tag: "div[data-article-reference]" }],
+    renderHTML: () => ["div", { "data-article-reference": "" }, 0],
+});
+
 function localizedAssetText(asset: MediaAssetDTO, locale: "fa" | "en") {
     return {
         alt: locale === "fa" ? asset.alt_text_fa : asset.alt_text_en,
@@ -61,6 +91,7 @@ export function ArticleEditor({
     onSave,
     onPreview,
     onWarningsChange,
+    onDirtyChange,
 }: ArticleEditorProps) {
     const [showSlashMenu, setShowSlashMenu] = useState(false);
     const [slashMenuPos, setSlashMenuPos] = useState<{
@@ -99,6 +130,9 @@ export function ArticleEditor({
             }),
             ArticleImageNode,
             ArticleGalleryNode,
+            CalloutNode,
+            CaptionNode,
+            ReferenceNode,
             Placeholder.configure({
                 placeholder: ({ node }) => {
                     if (node.type.name === "heading") {
@@ -131,6 +165,7 @@ export function ArticleEditor({
         },
         onUpdate: ({ editor: ed }) => {
             handleSlashDetection(ed);
+            onDirtyChange?.(true);
         },
     });
 
@@ -286,6 +321,15 @@ export function ArticleEditor({
                     break;
                 case "gallery":
                     openMediaPicker("gallery");
+                    break;
+                case "callout":
+                    editor.chain().focus().insertContent({ type: "callout", content: [{ type: "text", text: "Callout text..." }] }).run();
+                    break;
+                case "caption":
+                    editor.chain().focus().insertContent({ type: "caption", content: [{ type: "text", text: "Caption text..." }] }).run();
+                    break;
+                case "reference":
+                    editor.chain().focus().insertContent({ type: "reference", content: [{ type: "text", text: "Reference text..." }] }).run();
                     break;
                 default:
                     break;

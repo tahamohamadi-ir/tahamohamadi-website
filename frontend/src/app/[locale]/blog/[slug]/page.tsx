@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import type { Metadata } from "next";
 import {
     isValidLocale,
@@ -13,6 +14,7 @@ import {
 } from "@/lib/api";
 import { BlockRenderer, filterKnownBlocks } from "@/components/blocks";
 import type { BlockDTO } from "@/components/blocks";
+import { PrevNextNav } from "@/components/blog";
 import { TableOfContents } from "./TableOfContents";
 import { RelatedArticles } from "./RelatedArticles";
 import { BlogPostingJsonLd } from "./BlogPostingJsonLd";
@@ -325,12 +327,13 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                 {/* Featured Image */}
                 {article.featured_image && (
                     <figure className="mb-8 overflow-hidden rounded-lg">
-                        <img
+                        <Image
                             src={article.featured_image.file ?? ""}
                             alt={featuredImageAlt}
-                            width={article.featured_image.width ?? undefined}
-                            height={article.featured_image.height ?? undefined}
+                            width={article.featured_image.width || 1200}
+                            height={article.featured_image.height || 630}
                             className="w-full object-cover"
+                            sizes="(max-width: 1024px) 100vw, 1024px"
                         />
                     </figure>
                 )}
@@ -356,6 +359,12 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                         </aside>
                     )}
                 </div>
+                
+                <PrevNextNav
+                    previous={article.previous}
+                    next={article.next}
+                    locale={validLocale}
+                />
 
             </article>
 

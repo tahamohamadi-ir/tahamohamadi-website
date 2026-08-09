@@ -27,12 +27,14 @@ describe("HomePage", () => {
       title_fa: "صفحه اصلی",
       title_en: "Home",
       page_type: "home",
+      status: "published",
       published_at: "2026-07-28T00:00:00Z",
       sections: [
         {
           id: "hero-section",
           ordering: 0,
           layout: "hero",
+          enabled: true,
           blocks: [
             {
               id: "hero-block",

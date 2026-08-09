@@ -40,6 +40,12 @@ class CaseStudy(VersionedModel):
     # --- Technologies ---
     technologies = models.JSONField(default=list)
 
+    # --- Statement & Problem ---
+    statement_fa = models.TextField(blank=True, default="")
+    statement_en = models.TextField(blank=True, default="")
+    problem_fa = models.TextField(blank=True, default="")
+    problem_en = models.TextField(blank=True, default="")
+
     # --- Outcome ---
     outcome_fa = models.TextField(blank=True, default="")
     outcome_en = models.TextField(blank=True, default="")

@@ -40,7 +40,7 @@ describe("tiptapDocToArticleBlocks", () => {
         ]);
     });
 
-    it("reports inline marks that the article document cannot preserve", () => {
+    it("preserves inline formatting by converting them to Markdown", () => {
         const result = tiptapDocToArticleBlocks(
             {
                 type: "doc",
@@ -54,11 +54,18 @@ describe("tiptapDocToArticleBlocks", () => {
                 ],
             },
             "en"
-        );
+        ) as unknown as {
+            blocks: ArticleBlock[];
+            warnings: string[];
+        };
 
-        expect(result.warnings).toEqual([
-            'Inline formatting in editor node "paragraph" at position 1 cannot be preserved.',
-        ]);
+        expect(result.warnings).toEqual([]);
+        expect(result.blocks[0]).toEqual({
+            block_type: "paragraph",
+            content: { text: "**Styled**" },
+            locale: "en",
+            ordering: 0,
+        });
     });
 
     it("converts a paragraph node", () => {
@@ -269,11 +276,12 @@ describe("articleBlocksToTiptapDoc", () => {
             warnings: string[];
         };
 
-        expect(result.doc.content).toEqual([{ type: "paragraph" }]);
+        expect(result.doc.content).toEqual([
+            { type: "callout", attrs: { type: "info" }, content: [{ type: "text", text: "Note" }] },
+            { type: "reference", content: [{ type: "text", text: "Source" }] },
+            { type: "caption", content: [{ type: "text", text: "Caption" }] },
+        ]);
         expect(result.warnings).toEqual([
-            'Article block "callout" at position 1 cannot be edited losslessly.',
-            'Article block "reference" at position 2 cannot be edited losslessly.',
-            'Article block "caption" at position 3 cannot be edited losslessly.',
             'Article block "legacy_embed" at position 4 cannot be edited losslessly.',
         ]);
     });

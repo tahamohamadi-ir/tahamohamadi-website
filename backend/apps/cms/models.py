@@ -22,6 +22,7 @@ class Page(VersionedModel):
     title_fa = models.CharField(max_length=255)
     title_en = models.CharField(max_length=255)
     page_type = models.CharField(max_length=50)  # "home" | "custom"
+    template_variant = models.CharField(max_length=50, default="default")
     status = models.CharField(max_length=20, default="draft")
     published_at = models.DateTimeField(null=True, blank=True)
 

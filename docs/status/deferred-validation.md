@@ -11,6 +11,8 @@
 
 - [ ] `FASTTRACK-QA-001` — بازبینی و اعتبارسنجی انیمیشن‌ها، WCAG 2.1 AA و A11y در مرورگر واقعی. **Owner:** frontend/QA. **Trigger:** پیش از انتشار نسخهٔ عمومی. **Mitigation:** قوانین `globals.css` با `prefers-reduced-motion` و `:focus-visible` بروزرسانی شدند.
 - [ ] `FASTTRACK-PERF-002` — تست و پایش دقیق Lighthouse / Core Web Vitals رو دیتای اصلی تولید. **Owner:** platform. **Trigger:** پیش از deploy تولید. **Mitigation:** بهینه‌سازی کامپوننت‌های SSR و تصویر انجام شده است.
+- [ ] `FASTTRACK-CUSTOMIZATION-003` — اجرای T6 (Design presets, Token governance, Header/Footer Templates). **Owner:** frontend. **Trigger:** پیش از نیاز به سفارشی‌سازی تم توسط ادمین در محیط Production. **Mitigation:** تنظیمات پایه SiteSettings موجود است اما سیستم Theme و Visual Selector برای سرعت عملیاتی‌سازی به تعویق افتاد.
+- [ ] `FASTTRACK-QA-004` — اجرای T7 (SEO Quality Gate, Performance Budget, Accessibility Validation). **Owner:** QA/frontend. **Trigger:** پیش از Release عمومی و Indexing گوگل. **Mitigation:** سئوی پایه و ساختار HTML Semantic پیاده‌سازی شده اما Quality Gate که پابلیش را در Admin مسدود کند، برای سرعت به تعویق افتاد.
 
 این فایل برای ثبت شفاف کارهایی است که در توسعهٔ سریع عمداً در همان برش انجام
 نشده‌اند. هر مورد باید پیش از اعلام آماده‌بودن release متناظر بسته یا با تصمیم

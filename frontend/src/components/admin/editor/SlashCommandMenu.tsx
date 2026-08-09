@@ -76,6 +76,27 @@ const SLASH_COMMANDS: SlashCommandItem[] = [
         icon: "▦",
         command: "gallery",
     },
+    {
+        id: "callout",
+        label: "Callout",
+        description: "Important highlighted note",
+        icon: "💡",
+        command: "callout",
+    },
+    {
+        id: "caption",
+        label: "Caption",
+        description: "Small descriptive text",
+        icon: "📝",
+        command: "caption",
+    },
+    {
+        id: "reference",
+        label: "Reference",
+        description: "Academic or external reference",
+        icon: "🔗",
+        command: "reference",
+    },
 ];
 
 // ─── Props ───────────────────────────────────────────────────────────────────

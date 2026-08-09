@@ -94,6 +94,10 @@ class CaseStudySerializer(serializers.ModelSerializer):
             "date_start",
             "date_end",
             "technologies",
+            "statement_fa",
+            "statement_en",
+            "problem_fa",
+            "problem_en",
             "outcome_fa",
             "outcome_en",
             "gallery",
@@ -198,6 +202,10 @@ class CaseStudyListSerializer(serializers.ModelSerializer):
             "date_start",
             "date_end",
             "technologies",
+            "statement_fa",
+            "statement_en",
+            "problem_fa",
+            "problem_en",
             "featured",
             "status",
             "published_at",
@@ -240,6 +248,10 @@ class PublicCaseStudySerializer(serializers.ModelSerializer):
             "date_start",
             "date_end",
             "technologies",
+            "statement_fa",
+            "statement_en",
+            "problem_fa",
+            "problem_en",
             "outcome_fa",
             "outcome_en",
             "gallery",
@@ -267,6 +279,7 @@ class PublicCaseStudyListSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.UUIDField(read_only=True)
+    gallery = MediaAssetSerializer(many=True, read_only=True)
 
     class Meta:
         model = CaseStudy
@@ -283,8 +296,13 @@ class PublicCaseStudyListSerializer(serializers.ModelSerializer):
             "date_start",
             "date_end",
             "technologies",
+            "statement_fa",
+            "statement_en",
+            "problem_fa",
+            "problem_en",
             "outcome_fa",
             "outcome_en",
+            "gallery",
             "featured",
             "status",
             "published_at",

@@ -33,12 +33,14 @@ describe("PublicLayout", () => {
       title_fa: "خانه",
       title_en: "Home",
       page_type: "home",
+      status: "published",
       published_at: null,
       sections: [
         {
           id: "hero",
           ordering: 0,
           layout: "hero",
+          enabled: true,
           blocks: [
             {
               id: "hero-block",

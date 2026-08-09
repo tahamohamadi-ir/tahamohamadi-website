@@ -150,6 +150,8 @@ export interface PublicArticleDetailDTO extends PublicArticleSummaryDTO {
   blocks: BlockDTO[];
   toc: Array<{ id: string; text: string; level: number }>;
   related: PublicArticleSummaryDTO[];
+  previous: { slug: string; title: string } | null;
+  next: { slug: string; title: string } | null;
 }
 
 /**

@@ -47,6 +47,10 @@ export interface CaseStudyData {
     client_fa: string;
     client_en: string;
     technologies: string[];
+    statement_fa: string;
+    statement_en: string;
+    problem_fa: string;
+    problem_en: string;
     outcome_fa: string;
     outcome_en: string;
     date_start: string;
@@ -494,6 +498,58 @@ export function CaseStudyEditor({ caseStudy, locale, onSave }: CaseStudyEditorPr
                     />
                 </div>
 
+                {/* Statement */}
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="statement_fa">Statement (FA)</Label>
+                        <Textarea
+                            id="statement_fa"
+                            dir="rtl"
+                            value={data.statement_fa}
+                            onChange={(e) => updateField("statement_fa", e.target.value)}
+                            placeholder="بیانیه یا معرفی پروژه"
+                            rows={3}
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="statement_en">Statement (EN)</Label>
+                        <Textarea
+                            id="statement_en"
+                            dir="ltr"
+                            value={data.statement_en}
+                            onChange={(e) => updateField("statement_en", e.target.value)}
+                            placeholder="Project statement"
+                            rows={3}
+                        />
+                    </div>
+                </div>
+
+                {/* Problem */}
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="problem_fa">Problem (FA)</Label>
+                        <Textarea
+                            id="problem_fa"
+                            dir="rtl"
+                            value={data.problem_fa}
+                            onChange={(e) => updateField("problem_fa", e.target.value)}
+                            placeholder="مسئله یا چالش"
+                            rows={3}
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="problem_en">Problem (EN)</Label>
+                        <Textarea
+                            id="problem_en"
+                            dir="ltr"
+                            value={data.problem_en}
+                            onChange={(e) => updateField("problem_en", e.target.value)}
+                            placeholder="Problem or challenge"
+                            rows={3}
+                        />
+                    </div>
+                </div>
+
                 {/* Outcome */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-1.5">
@@ -543,25 +599,43 @@ export function CaseStudyEditor({ caseStudy, locale, onSave }: CaseStudyEditorPr
                     </div>
                 </div>
 
-                {/* Featured Toggle */}
-                <div className="flex items-center gap-3">
-                    <button
-                        type="button"
-                        role="switch"
-                        aria-checked={data.featured}
-                        aria-label="Featured case study"
-                        onClick={() => updateField("featured", !data.featured)}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${data.featured ? "bg-blue-600" : "bg-gray-200"
-                            }`}
-                    >
-                        <span
-                            className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm ring-0 transition-transform ${data.featured ? "translate-x-5" : "translate-x-0"
+                {/* Featured Toggle and Status */}
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="flex items-center gap-3 h-full pt-6">
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={data.featured}
+                            aria-label="Featured case study"
+                            onClick={() => updateField("featured", !data.featured)}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${data.featured ? "bg-blue-600" : "bg-gray-200"
                                 }`}
-                        />
-                    </button>
-                    <Label className="cursor-pointer" onClick={() => updateField("featured", !data.featured)}>
-                        Featured case study
-                    </Label>
+                        >
+                            <span
+                                className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm ring-0 transition-transform ${data.featured ? "translate-x-5" : "translate-x-0"
+                                    }`}
+                            />
+                        </button>
+                        <Label className="cursor-pointer" onClick={() => updateField("featured", !data.featured)}>
+                            Featured case study
+                        </Label>
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                        <Label htmlFor="status">Status</Label>
+                        <select
+                            id="status"
+                            value={data.status ?? "draft"}
+                            onChange={(event) => updateField("status", event.target.value)}
+                            className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                            <option value="draft">Draft</option>
+                            <option value="in_review">In review</option>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="published">Published</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                    </div>
                 </div>
             </section>
 

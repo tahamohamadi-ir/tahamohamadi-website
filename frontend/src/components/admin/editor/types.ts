@@ -39,6 +39,8 @@ export interface ArticleEditorProps {
     onPreview?: (blocks: ArticleBlock[]) => void;
     /** Reports unresolved lossy-conversion warnings to the route owner. */
     onWarningsChange?: (warnings: string[]) => void;
+    /** Reports when the editor content changes from its initial state. */
+    onDirtyChange?: (dirty: boolean) => void;
 }
 
 /** Result of a potentially lossy editor/document conversion. */

@@ -353,4 +353,32 @@ class PublicArticleDetailView(APIView):
             related_qs, many=True, context={"locale": locale}
         ).data
 
+        # Previous and Next articles based on published_at
+        prev_article = (
+            Article.objects.filter(status="published", published_at__lt=article.published_at)
+            .order_by("-published_at")
+            .only("slug_fa", "slug_en", "title_fa", "title_en")
+            .first()
+        )
+        next_article = (
+            Article.objects.filter(status="published", published_at__gt=article.published_at)
+            .order_by("published_at")
+            .only("slug_fa", "slug_en", "title_fa", "title_en")
+            .first()
+        )
+
+        data["previous"] = None
+        if prev_article:
+            data["previous"] = {
+                "slug": prev_article.slug_fa if locale == "fa" else prev_article.slug_en,
+                "title": prev_article.title_fa if locale == "fa" else prev_article.title_en,
+            }
+            
+        data["next"] = None
+        if next_article:
+            data["next"] = {
+                "slug": next_article.slug_fa if locale == "fa" else next_article.slug_en,
+                "title": next_article.title_fa if locale == "fa" else next_article.title_en,
+            }
+
         return Response(data)

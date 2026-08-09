@@ -43,11 +43,6 @@ export function tiptapDocToArticleBlocks(
                 `Unsupported editor node "${node.type ?? "unknown"}" at position ${index + 1} was not converted.`
             );
         }
-        if (converted && containsInlineMarks(node)) {
-            warnings.push(
-                `Inline formatting in editor node "${node.type ?? "unknown"}" at position ${index + 1} cannot be preserved.`
-            );
-        }
     }
 
     return locale ? { blocks, warnings } : blocks;
@@ -160,6 +155,33 @@ function nodeToArticleBlock(
             };
         }
 
+        case "callout":
+            return {
+                block_type: "callout",
+                content: {
+                    text: extractText(node),
+                    type: node.attrs?.type ?? "info",
+                },
+                ...localized,
+                ordering,
+            };
+
+        case "caption":
+            return {
+                block_type: "caption",
+                content: { text: extractText(node) },
+                ...localized,
+                ordering,
+            };
+
+        case "reference":
+            return {
+                block_type: "reference",
+                content: { text: extractText(node) },
+                ...localized,
+                ordering,
+            };
+
         default:
             return null;
     }
@@ -183,15 +205,6 @@ export function articleBlocksToTiptapDoc(
     const warnings: string[] = [];
 
     for (const [index, block] of blocks.entries()) {
-        if (
-            options?.reportWarnings &&
-            ["callout", "reference", "caption"].includes(block.block_type)
-        ) {
-            warnings.push(
-                `Article block "${block.block_type}" at position ${index + 1} cannot be edited losslessly.`
-            );
-            continue;
-        }
         const node = articleBlockToNode(block);
         if (node) {
             content.push(node);
@@ -286,24 +299,20 @@ function articleBlockToNode(block: ArticleBlock): JSONContent | null {
 
         case "callout":
             return {
-                type: "blockquote",
-                content: [
-                    {
-                        type: "paragraph",
-                        content: textToContent(c.text as string),
-                    },
-                ],
+                type: "callout",
+                attrs: { type: c.type ?? "info" },
+                content: textToContent(c.text as string),
             };
 
         case "caption":
             return {
-                type: "paragraph",
+                type: "caption",
                 content: textToContent(c.text as string),
             };
 
         case "reference":
             return {
-                type: "paragraph",
+                type: "reference",
                 content: textToContent(c.text as string),
             };
 
@@ -318,9 +327,19 @@ function extractText(node: JSONContent): string {
     if (!node.content) return "";
     return node.content
         .map((child) => {
-            if (child.type === "text") return child.text ?? "";
+            let text = child.text ?? "";
+            if (child.type === "text" && child.marks) {
+                // Apply marks from inside out
+                for (const mark of [...child.marks].reverse()) {
+                    if (mark.type === "bold") text = `**${text}**`;
+                    else if (mark.type === "italic") text = `_${text}_`;
+                    else if (mark.type === "code") text = `\`${text}\``;
+                    else if (mark.type === "link") text = `[${text}](${mark.attrs?.href || ""})`;
+                }
+                return text;
+            }
             if (child.content) return extractText(child);
-            return "";
+            return text;
         })
         .join("");
 }
@@ -342,7 +361,46 @@ function extractBlockquoteText(node: JSONContent): string {
 
 function textToContent(text: string | undefined | null): JSONContent[] {
     if (!text) return [];
-    return [{ type: "text", text }];
+    
+    // Simple naive markdown inline parser to Tiptap JSONContent
+    const content: JSONContent[] = [];
+    
+    // This regex splits on links, bold, italic, and inline code.
+    // E.g., [text](url), **bold**, _italic_, `code`
+    const regex = /(\[.*?\]\(.*?\)|\*\*.*?\*\*|_.*?_|`.*?`)/g;
+    const parts = text.split(regex);
+    
+    for (const part of parts) {
+        if (!part) continue;
+        
+        const marks = [];
+        let cleanText = part;
+        
+        if (part.startsWith("[") && part.includes("](")) {
+            const match = part.match(/\[(.*?)\]\((.*?)\)/);
+            if (match) {
+                cleanText = match[1];
+                marks.push({ type: "link", attrs: { href: match[2] } });
+            }
+        } else if (part.startsWith("**") && part.endsWith("**")) {
+            cleanText = part.slice(2, -2);
+            marks.push({ type: "bold" });
+        } else if (part.startsWith("_") && part.endsWith("_")) {
+            cleanText = part.slice(1, -1);
+            marks.push({ type: "italic" });
+        } else if (part.startsWith("`") && part.endsWith("`")) {
+            cleanText = part.slice(1, -1);
+            marks.push({ type: "code" });
+        }
+        
+        if (marks.length > 0) {
+            content.push({ type: "text", text: cleanText, marks });
+        } else {
+            content.push({ type: "text", text: cleanText });
+        }
+    }
+    
+    return content.length > 0 ? content : [{ type: "text", text }];
 }
 
 function containsInlineMarks(node: JSONContent): boolean {

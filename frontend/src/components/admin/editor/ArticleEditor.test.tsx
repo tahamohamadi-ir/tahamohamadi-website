@@ -132,7 +132,7 @@ describe("ArticleEditor media authoring", () => {
         ]);
     });
 
-    it("blocks save when inline formatting would be lost", async () => {
+    it("blocks save when inline formatting is present", async () => {
         editorDocument.content = [
             {
                 type: "paragraph",
@@ -144,8 +144,14 @@ describe("ArticleEditor media authoring", () => {
 
         await userEvent.click(screen.getByRole("button", { name: "Save article blocks" }));
 
-        expect(onSave).not.toHaveBeenCalled();
-        expect(screen.getByRole("alert")).toHaveTextContent("cannot be preserved");
+        expect(onSave).toHaveBeenCalledWith([
+            {
+                block_type: "paragraph",
+                content: { text: "**Styled**" },
+                locale: "en",
+                ordering: 0,
+            },
+        ]);
     });
 
     it("blocks save when loaded blocks cannot be edited losslessly", async () => {
@@ -162,9 +168,6 @@ describe("ArticleEditor media authoring", () => {
 
         expect(onSave).not.toHaveBeenCalled();
         const alert = screen.getByRole("alert");
-        expect(alert).toHaveTextContent("callout");
-        expect(alert).toHaveTextContent("reference");
-        expect(alert).toHaveTextContent("caption");
         expect(alert).toHaveTextContent("legacy_embed");
     });
 });

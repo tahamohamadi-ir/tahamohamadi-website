@@ -480,6 +480,10 @@ def _restore_case_study(model_class, snapshot: dict, username: str):
         title_en=snapshot.get("title_en", ""),
         role_fa=snapshot.get("role_fa", ""),
         role_en=snapshot.get("role_en", ""),
+        statement_fa=snapshot.get("statement_fa", ""),
+        statement_en=snapshot.get("statement_en", ""),
+        problem_fa=snapshot.get("problem_fa", ""),
+        problem_en=snapshot.get("problem_en", ""),
         client_fa=snapshot.get("client_fa", ""),
         client_en=snapshot.get("client_en", ""),
         date_start=snapshot.get("date_start"),
@@ -683,6 +687,21 @@ def transition_status(
 
     # Step 4: For "published" target, set published_at and create revision
     if target_status == "published":
+        # T7.1: Minimal SEO Quality Gate
+        title_fa = getattr(entity, "title_fa", "")
+        title_en = getattr(entity, "title_en", "")
+        if not title_fa and not title_en:
+             return TransitionError("SEO Quality Gate Failed: Published content must have at least one title.")
+
+        model_label = f"{entity._meta.app_label}.{entity._meta.model_name}"
+        if model_label == "blog.article":
+            excerpt_fa = getattr(entity, "excerpt_fa", "")
+            excerpt_en = getattr(entity, "excerpt_en", "")
+            if not excerpt_fa and not excerpt_en:
+                return TransitionError("SEO Quality Gate Failed: Article must have at least one excerpt.")
+            if not getattr(entity, "featured_image_id", None) and not getattr(entity, "featured_image", None):
+                return TransitionError("SEO Quality Gate Failed: Article must have a featured image.")
+
         entity.published_at = timezone.now()
         username = _get_username(user)
         create_revision(

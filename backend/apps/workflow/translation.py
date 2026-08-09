@@ -36,7 +36,7 @@ SUPPORTED_LOCALES: tuple[str, ...] = ("fa", "en")
 _LOCALE_FIELDS_MAP: dict[str, list[str]] = {
     "cms.page": ["title"],
     "blog.article": ["title", "excerpt"],
-    "portfolio.casestudy": ["title", "role", "outcome"],
+    "portfolio.casestudy": ["title", "role", "outcome", "statement", "problem"],
 }
 
 

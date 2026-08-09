@@ -664,7 +664,7 @@ class TranslationStatusView(APIView):
                 "portfolio.casestudy",
                 CaseStudy,
                 "/admin/portfolio",
-                ("title", "role", "outcome"),
+                ("title", "role", "outcome", "statement", "problem"),
             ),
         ]
 

@@ -19,8 +19,13 @@ export interface CaseStudyListItem {
     date_start: string; // ISO date
     date_end: string | null; // ISO date or null (ongoing)
     technologies: string[];
+    statement_fa: string;
+    statement_en: string;
+    problem_fa: string;
+    problem_en: string;
     outcome_fa: string;
     outcome_en: string;
+    gallery: import("./media").MediaAssetDTO[];
     featured: boolean;
     status: string;
     published_at: string | null; // ISO datetime
