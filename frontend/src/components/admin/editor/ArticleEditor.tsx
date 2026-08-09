@@ -365,18 +365,6 @@ export function ArticleEditor({
             {mediaMode && (
                 <section aria-label={mediaMode === "image" ? "Insert image" : "Insert gallery"} className="space-y-3 rounded-lg border border-border p-3">
                     <MediaPicker allowedTypes={["image"]} locale={locale} onSelect={handleMediaSelect} />
-                    {mediaMode === "image" && mediaDraft.length > 0 && (
-                        <div className="grid gap-3 sm:grid-cols-2">
-                            <label className="space-y-1 text-sm">
-                                <span>Localized alt text</span>
-                                <Input value={localizedAlt} onChange={(event) => setLocalizedAlt(event.target.value)} />
-                            </label>
-                            <label className="space-y-1 text-sm">
-                                <span>Localized caption</span>
-                                <Input value={localizedCaption} onChange={(event) => setLocalizedCaption(event.target.value)} />
-                            </label>
-                        </div>
-                    )}
                     {mediaMode === "gallery" && mediaDraft.length > 0 && (
                         <p className="text-sm text-muted-foreground">{mediaDraft.length} image selected</p>
                     )}
@@ -390,6 +378,7 @@ export function ArticleEditor({
                     </div>
                 </section>
             )}
+
 
             {/* Editor Area */}
             <div

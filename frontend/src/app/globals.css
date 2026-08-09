@@ -62,6 +62,29 @@
     color: hsl(var(--foreground));
   }
 
+  /* Visible focus indicators for keyboard navigation (WCAG 2.1 AA) */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Standard Motion Design Utilities */
+  .transition-button {
+    transition: background-color 150ms ease-in-out, box-shadow 150ms ease-in-out, color 150ms ease-in-out, border-color 150ms ease-in-out;
+  }
+
+  .transition-card {
+    transition: box-shadow 200ms ease-out, transform 200ms ease-out;
+  }
+
+  .transition-page {
+    transition: opacity 200ms ease-out;
+  }
+
+  .transition-nav {
+    transition: color 150ms ease-in-out, border-color 150ms ease-in-out;
+  }
+
   /* Reduced motion: disable non-essential animations globally */
   @media (prefers-reduced-motion: reduce) {
 
@@ -75,3 +98,17 @@
     }
   }
 }
+
+/* Skeleton Pulse Animation */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.animate-skeleton {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}

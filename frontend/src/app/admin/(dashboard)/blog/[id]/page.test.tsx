@@ -26,12 +26,14 @@ vi.mock("@/components/admin/editor", () => ({
         onSave,
         onPreview,
         onWarningsChange,
+        onDirtyChange,
     }: {
         article: EditorArticle;
         locale: "fa" | "en";
         onSave: (blocks: ArticleBlock[]) => void;
         onPreview: (blocks: ArticleBlock[]) => void;
         onWarningsChange: (warnings: string[]) => void;
+        onDirtyChange: (dirty: boolean) => void;
     }) => {
         const defaultBlocks: ArticleBlock[] = [
             {
@@ -53,6 +55,10 @@ vi.mock("@/components/admin/editor", () => ({
                 <button type="button" onClick={() => onWarningsChange(["Lossy content"])}>
                     Raise conversion warning
                 </button>
+                <button type="button" onClick={() => onDirtyChange?.(true)}>
+                    Edit article body
+                </button>
+
             </div>
         );
     },
@@ -64,6 +70,7 @@ describe("ArticleEditorPage", () => {
         adminFetchMock.mockReset();
         pushMock.mockReset();
         previewBlocksMock.current = [];
+        vi.restoreAllMocks();
     });
 
     it("creates an article with required bilingual metadata, status, and locale-owned blocks", async () => {
@@ -213,6 +220,28 @@ describe("ArticleEditorPage", () => {
 
         expect(screen.getByRole("button", { name: "Back to articles" })).toBeDisabled();
         expect(screen.getByLabelText("Editing locale")).toBeDisabled();
+        expect(pushMock).not.toHaveBeenCalled();
+    });
+
+    it("confirms ordinary unsaved metadata edits before in-app navigation", async () => {
+        const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+        render(<ArticleEditorPage />);
+
+        await userEvent.type(await screen.findByLabelText("English title"), "Draft title");
+        await userEvent.click(screen.getByRole("button", { name: "Back to articles" }));
+
+        expect(confirmSpy).toHaveBeenCalledWith("You have unsaved changes. Leave?");
+        expect(pushMock).not.toHaveBeenCalled();
+    });
+
+    it("treats ordinary editor body changes as dirty", async () => {
+        const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+        render(<ArticleEditorPage />);
+
+        await userEvent.click(await screen.findByRole("button", { name: "Edit article body" }));
+        await userEvent.click(screen.getByRole("button", { name: "Back to articles" }));
+
+        expect(confirmSpy).toHaveBeenCalledTimes(1);
         expect(pushMock).not.toHaveBeenCalled();
     });
 });

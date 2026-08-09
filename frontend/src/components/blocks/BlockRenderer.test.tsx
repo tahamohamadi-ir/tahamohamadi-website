@@ -271,6 +271,25 @@ describe("BlockRenderer", () => {
             expect(container.querySelector("img")).not.toBeInTheDocument();
             expect(container).toHaveTextContent(content);
         });
+
+        it.each([
+            ["paragraph", { text: '<img src=x onerror="alert(1)">' }],
+            ["list", { items: ['<img src=x onerror="alert(1)">'], ordered: false }],
+        ])("renders article %s content as inert text", (blockType, content) => {
+            const block: BlockDTO = {
+                id: `historical-${blockType}`,
+                block_type: blockType,
+                content,
+                ordering: 0,
+            };
+
+            const { container } = render(
+                <BlockRenderer block={block} locale="en" context="article" />
+            );
+
+            expect(container.querySelector("img")).not.toBeInTheDocument();
+            expect(container).toHaveTextContent('<img src=x onerror="alert(1)">');
+        });
     });
 
     describe("RTL/LTR locale handling", () => {

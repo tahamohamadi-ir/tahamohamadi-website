@@ -1,19 +1,20 @@
 # پلن پیاده‌سازی جامع — TahaMohamadi.ir
 
-**نسخه:** 1.0  
-**تاریخ:** 2026-07-29  
-**منابع:** `.kiro/specs/react-django-rewrite`, `.kiro/specs/ui-ux-overhaul`, `.kiro/specs/ui-animations-page-builder`  
-**وضعیت:** آماده پیاده‌سازی
+**نسخه:** 1.2  
+**تاریخ:** 2026-08-09  
+**منابع:** `.kiro/specs/react-django-rewrite`, `.kiro/specs/ui-ux-overhaul`, `.kiro/specs/ui-animations-page-builder`, `docs/wordpress-capability-extraction-and-cms-reference.md`, `docs/012-cms-v2-wordpress-capability-task-list.md`, `docs/planning/development-master-plan.md`  
+**وضعیت:** در حال اجرا تا فاز نهایی استقرار (Phase 15 / Release 8)
 
 ---
 
 ## 1. خلاصه اجرایی
 
-این پلن، سه اسپک مجزا را در یک نقشه راه یکپارچه ادغام می‌کند:
+این پلن، اسناد تخصصی زیرساخت، UI/UX، Composer، انیمیشن و CMS V2 را در یک نقشه راه یکپارچه ادغام می‌کند:
 
 1. **React + Django Rewrite** — بازنویسی کامل از Java Spring Boot + Vue/Quasar به Django DRF + Next.js App Router
 2. **UI/UX Overhaul** — مدرن‌سازی بصری با design tokens، dark mode، typography دوزبانه، component library، motion design و accessibility
 3. **UI Animations Page Builder** — ابزار بصری admin برای ساخت صفحات انیمیشنی بدون کد
+4. **CMS V2 & WordPress Capability Extraction** — ساختار تکامل‌یافتهٔ CMS ریلیشنال (کلاس `Page → Section → Block`) با قابلیت‌های کنترل‌شدهٔ مدیریت محتوا، مدیریت پیشرفتهٔ رسانه (`MediaPicker` / `MediaAsset`)، مدیریت پیشرفتهٔ انتشار و زمان‌بندی (Workflow/Revisions/Freshness) و Quality Gates انتشار.
 
 ### استک فنی نهایی
 
@@ -650,7 +651,7 @@ ALLOWED_TRANSITIONS = {
 - Minimum 1 block validation before save
 - Draft/published states (integrate with Workflow module)
 - Revision history + restore
-- LocalStorage fallback on network error + retry
+- LocalStorage fallback on network error
 
 #### 12.6 Public Renderer
 - GPU-accelerated: CSS transforms + opacity

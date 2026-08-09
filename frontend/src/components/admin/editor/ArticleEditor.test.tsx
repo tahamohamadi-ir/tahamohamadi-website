@@ -84,7 +84,7 @@ describe("ArticleEditor media authoring", () => {
         editorDocument.content = [];
     });
 
-    it("inserts an image from MediaPicker with localized alt/caption and saves only its UUID reference", async () => {
+    it("uses Media Library metadata without exposing article-local text controls that cannot persist", async () => {
         const onSave = vi.fn<(blocks: ArticleBlock[]) => void>();
         const user = userEvent.setup();
         render(<ArticleEditor article={{ blocks: [] }} locale="fa" onSave={onSave} />);
@@ -93,8 +93,8 @@ describe("ArticleEditor media authoring", () => {
         expect(screen.queryByLabelText(/UUID/i)).not.toBeInTheDocument();
         await user.click(screen.getByRole("button", { name: "Choose library image" }));
 
-        expect(screen.getByLabelText("Localized alt text")).toHaveValue("متن جایگزین فارسی");
-        expect(screen.getByLabelText("Localized caption")).toHaveValue("شرح فارسی");
+        expect(screen.queryByLabelText("Localized alt text")).not.toBeInTheDocument();
+        expect(screen.queryByLabelText("Localized caption")).not.toBeInTheDocument();
         await user.click(screen.getByRole("button", { name: "Insert image" }));
         await user.click(screen.getByRole("button", { name: "Save article blocks" }));
 

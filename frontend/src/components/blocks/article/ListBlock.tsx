@@ -14,8 +14,9 @@ export function ListBlock({ data, locale }: BlockComponentProps<ListContent>) {
             )}
         >
             {data.items.map((item, index) => (
-                <li key={index} dangerouslySetInnerHTML={{ __html: item }} />
+                <li key={index}>{item}</li>
             ))}
+
         </Tag>
     );
 }

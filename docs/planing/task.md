@@ -41,7 +41,7 @@
   - [x] 1.3.3 تنظیم path aliases (`@/`) در `tsconfig.json`
   - [x] 1.3.4 بررسی ساختار `src/app/`, `src/components/`, `src/lib/`, `src/hooks/`
   - [x] 1.3.5 ایجاد `next.config.ts` تنظیمات (images, rewrites, i18n)
-  - [x] 1.3.6 ایجاد Dockerfile (`frontend/Dockerfile`)
+  - [x] 1.3.6 ایجاد Dockerfile (`infra/docker/Dockerfile.frontend`)
 
 - [x] 1.4 Nginx Configuration ← 1.1
   - [x] 1.4.1 ایجاد `docker/nginx/nginx.conf` با routing rules
@@ -640,16 +640,6 @@
 
 ## فاز 13: Motion, Interaction & Accessibility
 
-- [ ] 13.1 Motion Design ← 9.1, 10.2
-  - [ ] 13.1.1 Button hover/focus: 150ms ease-in-out (background, box-shadow)
-  - [ ] 13.1.2 Card hover: 200ms ease-out (box-shadow, transform)
-  - [ ] 13.1.3 Page transitions: 200ms ease-out (opacity)
-  - [ ] 13.1.4 Navigation state: 150ms ease-in-out (color, border)
-  - [ ] 13.1.5 Skeleton pulse: 1.5s infinite ease-in-out (opacity)
-  - [ ] 13.1.6 Drawer open: 300ms cubic-bezier(0.32,0.72,0,1) (transform)
-  - [ ] 13.1.7 Use transform + opacity only (avoid layout thrashing)
-
-- [ ] 13.2 Reduced Motion ← 13.1
   - [ ] 13.2.1 Global `@media (prefers-reduced-motion: reduce)` in globals.css
   - [ ] 13.2.2 `motion-reduce:transition-none` on interactive components
   - [ ] 13.2.3 Verify all non-essential animations disabled
@@ -659,91 +649,112 @@
   - [ ] 13.3.2 Sequential heading hierarchy (H1→H6, no skipping)
   - [ ] 13.3.3 ARIA live regions for route changes
   - [ ] 13.3.4 Visible focus indicators on all interactive elements
-  - [ ] 13.3.5 All form inputs: programmatically associated labels
-  - [ ] 13.3.6 Images: alt text audit (meaningful vs decorative)
-  - [ ] 13.3.7 Full keyboard navigation verification
-  - [ ] 13.3.8 Touch targets: ≥44×44px verification
+  - [ ] 13.3.5 All form inputs: programmatically associated labels (`htmlFor`, `aria-describedby`)
+  - [ ] 13.3.6 Images: alt text audit (meaningful with fa/en alt vs decorative)
+  - [ ] 13.3.7 Full keyboard navigation verification (Tab, Escape, Enter, Space, Arrows)
+  - [ ] 13.3.8 Touch targets: ≥44×44px verification across mobile components
   - [ ] 13.3.9 Color contrast: 4.5:1 normal, 3:1 large text
-  - [ ] 13.3.10 Form errors: `aria-describedby` linked
+  - [ ] 13.3.10 Form errors: `aria-describedby` linked with inline messages
 
 - [*] 13.4 Accessibility Tests
-  - [ ] 13.4.1 axe-core audit on all page templates
-  - [ ] 13.4.2 Heading hierarchy tests
+  - [ ] 13.4.1 axe-core / @axe-core/playwright audit on all page templates
+  - [ ] 13.4.2 Heading hierarchy automated tests
   - [ ] 13.4.3 Focus indicator visibility tests
-  - [ ] 13.4.4 Keyboard navigation: menus, dialogs, forms
+  - [ ] 13.4.4 Focus trap tests: MobileNavDrawer, MediaPickerModal, ConfirmationDialogs
 
 ---
 
 ## فاز 14: Security, Performance & Optimization
 
 - [ ] 14.1 Security Hardening ← Phase 1
-  - [ ] 14.1.1 Security headers in Nginx (HSTS, CSP, X-Frame, X-Content-Type)
-  - [ ] 14.1.2 Rate limiting verification (login, upload, public API)
-  - [ ] 14.1.3 Audit logging completeness check
-  - [ ] 14.1.4 Input sanitization verification (fail-closed)
-  - [ ] 14.1.5 Preview: X-Robots-Tag: noindex, no-store
-  - [ ] 14.1.6 Secrets: .env only, zero in Git
+  - [ ] 14.1.1 Security headers in Nginx (HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy)
+  - [ ] 14.1.2 Rate limiting verification (login: 5/min, upload: 20/min, public API: 100/min)
+  - [ ] 14.1.3 Audit logging completeness check for all Admin mutations
+  - [ ] 14.1.4 Input sanitization verification (fail-closed, HTML/Script stripping)
+  - [ ] 14.1.5 Preview & Admin: X-Robots-Tag: noindex, no-store enforcement
+  - [ ] 14.1.6 Secrets audit: .env only, zero credentials in Git repository
 
-- [ ] 14.2 Image Optimization ← 9.1
-  - [ ] 14.2.1 `next/image`: WebP/AVIF, `sizes` attribute
-  - [ ] 14.2.2 Hero/above-fold: `priority` prop
-  - [ ] 14.2.3 Below-fold: `loading="lazy"`
+- [ ] 14.2 Image & Asset Optimization ← 9.1
+  - [ ] 14.2.1 `next/image`: WebP/AVIF formats, `sizes` responsive attribute
+  - [ ] 14.2.2 Hero/above-fold images: `priority` prop
+  - [ ] 14.2.3 Below-fold images: `loading="lazy"`
   - [ ] 14.2.4 Explicit dimensions/aspect-ratio for CLS prevention
-  - [ ] 14.2.5 Blurred placeholder generation
+  - [ ] 14.2.5 Blurred placeholder generation for rich image loading
 
-- [ ] 14.3 Bundle Optimization ← 9.1, 11.1
+- [ ] 14.3 Bundle & Architecture Optimization ← 9.1, 11.1
   - [ ] 14.3.1 Admin/public bundle separation verification
-  - [ ] 14.3.2 Dynamic imports for heavy components (Tiptap, @dnd-kit, charts)
+  - [ ] 14.3.2 Dynamic imports for heavy components (Tiptap, @dnd-kit, charts, CodeHighlight)
   - [ ] 14.3.3 RSC-first architecture on public pages
-  - [ ] 14.3.4 Font optimization: next/font + preconnect
+  - [ ] 14.3.4 Font optimization: next/font + preconnect headers
 
-- [ ] 14.4 Database Optimization ← Phases 3-7
-  - [ ] 14.4.1 `select_related` + `prefetch_related` audit (no N+1)
-  - [ ] 14.4.2 Query count verification on key endpoints
-  - [ ] 14.4.3 Index usage verification
+- [ ] 14.4 Database & Query Optimization ← Phases 3-7
+  - [ ] 14.4.1 `select_related` + `prefetch_related` audit across all endpoints (prevent N+1 queries)
+  - [ ] 14.4.2 Query count verification on key public APIs
+  - [ ] 14.4.3 Index usage verification on PostgreSQL (slug, status, published_at, locale)
 
 - [ ] 14.5 Core Web Vitals ← 14.2, 14.3
   - [ ] 14.5.1 Lighthouse audit: LCP < 2.5s
   - [ ] 14.5.2 Lighthouse audit: CLS < 0.1
-  - [ ] 14.5.3 Lighthouse audit: FID < 100ms
+  - [ ] 14.5.3 Lighthouse audit: INP / FID < 100ms
 
 - [ ] 14.6 Rich Content Security (RC-003) ← 9.3
-  - [ ] 14.6.1 Security test fixtures: script, onerror, SVG, javascript: URLs, data: URLs, iframe/object/embed
+  - [ ] 14.6.1 Security test fixtures: script, onerror, SVG malicious, javascript: URLs, data: URLs, iframe/object/embed
   - [ ] 14.6.2 Verify: unsafe nodes/attributes absent from SSR HTML and hydrated DOM
   - [ ] 14.6.3 SSR acceptance: deterministic output, request isolation, no browser-only deps on server
-  - [ ] 14.6.4 Hydration: byte/DOM-equivalent SSR ↔ client output, no warnings
+  - [ ] 14.6.4 Hydration: byte/DOM-equivalent SSR ↔ client output, zero warnings
   - [ ] 14.6.5 CSP verification: no inline script/style for CMS output
 
 ---
 
-## فاز 15: E2E Testing & Deployment
+## فاز 15: E2E Testing, Production Rollout & Operations
 
-- [ ] 15.1 E2E Tests (Playwright) ← Phases 9-12
+- [ ] 15.1 E2E Integration Tests (Playwright) ← Phases 9-12
   - [ ] 15.1.1 Flow: login → media upload → page compose → preview → publish
   - [ ] 15.1.2 Flow: article create → blocks → publish → public read
-  - [ ] 15.1.3 Test: anonymous sees only published content
-  - [ ] 15.1.4 Test: locale switching (correct dir, no fallback)
-  - [ ] 15.1.5 Test: contact form submit (success + error paths)
+  - [ ] 15.1.3 Test: anonymous user sees only published content (no draft/archived leak)
+  - [ ] 15.1.4 Test: locale switching (fa/en dir, no fallback)
+  - [ ] 15.1.5 Test: contact form submit (success + error paths + CSRF)
   - [ ] 15.1.6 Test: animation page builder lifecycle
 
-- [ ] 15.2 Manual Tests
-  - [ ] 15.2.1 RTL/LTR at 375, 768, 1024, 1440px
-  - [ ] 15.2.2 Keyboard-only: admin Composer navigation
+- [ ] 15.2 Manual QA & Visual Verification
+  - [ ] 15.2.1 RTL/LTR at 375, 768, 1024, 1440px viewports
+  - [ ] 15.2.2 Keyboard-only: admin Composer navigation & focus restoration
   - [ ] 15.2.3 Screen reader smoke test (VoiceOver/NVDA)
-  - [ ] 15.2.4 No placeholder content visible
-  - [ ] 15.2.5 Reduced motion honored
-  - [ ] 15.2.6 Dark mode: all pages, no broken contrast
+  - [ ] 15.2.4 No placeholder content visible (all production-ready real data)
+  - [ ] 15.2.5 Reduced motion honored across all routes
+  - [ ] 15.2.6 Dark mode: all pages, no broken contrast or invisible text
 
-- [ ] 15.3 Deployment ← 15.1
-  - [ ] 15.3.1 Production Docker Compose (health checks, resource limits)
-  - [ ] 15.3.2 Database seed/migration from existing data
-  - [ ] 15.3.3 Backup scripts: pg_dump + media tar
-  - [ ] 15.3.4 Restore procedure verification
-  - [ ] 15.3.5 README documentation (setup, dev, deploy)
-  - [ ] 15.3.6 Health endpoint monitoring (/api/health/)
-  - [ ] 15.3.7 Sentry error tracking verification
+- [ ] 15.3 Deployment & Operations ← 15.1
+  - [ ] 15.3.1 Production Docker Compose (health checks, resource limits, auto-restart)
+  - [ ] 15.3.2 Database seed/migration from existing approved seed script (`seed_composer_demo`)
+  - [ ] 15.3.3 Backup scripts: PostgreSQL `pg_dump` + media files `tar`
+  - [ ] 15.3.4 Restore procedure verification & rehearsal
+  - [ ] 15.3.5 README documentation (setup, dev, deploy, runbooks)
+  - [ ] 15.3.6 Health endpoint monitoring (`/api/health/`)
+  - [ ] 15.3.7 Sentry error tracking verification & alert routing
 
 - [ ] **15.4 FINAL CHECKPOINT:** E2E pass، production deployed، rollback tested ✅
+
+---
+
+## فاز ویژه: CMS V2 & WordPress Capability Integration (اسناد 012 و WP Ref)
+
+- [ ] V2.1 **Media Picker Integration:**
+  - [ ] V2.1.1 یکپارچه‌سازی کامل `AdminMediaSelector` و `MediaPickerModal` در تمام فرم‌های Admin (Site Settings, Composer, Blog, Portfolio, Publications, Resume).
+  - [ ] V2.1.2 حذف کامل هرگونه ورودی UUID خام یا اتکا به لیست متنی IDها.
+  - [ ] V2.1.3 اعمال فیلتر نوع فیلد (انحصار تصویر برای coverها و انحصار PDF برای اسناد رزومه در backend و frontend).
+- [ ] V2.2 **Composer Templates & Dry-run Import:**
+  - [ ] V2.2.1 ماژول `ComposerTemplate` برای ایجاد snapshotهای قابل‌حمل صفحه.
+  - [ ] V2.2.2 فرایند Dry-run import بدون تغییر دیتابیس زنده جهت اعتبارسنجی ارجاعات رسانه و سلامت ساختار.
+  - [ ] V2.2.3 اعتبارسنجی فیلدهای امنیتی URL و نفی raw HTML در تپلیت‌ها.
+- [ ] V2.3 **Translation Freshness & Queue:**
+  - [ ] V2.3.1 منطق خودکار تشخیص وضعیت ترجمه (Missing / Incomplete / Complete / Outdated).
+  - [ ] V2.3.2 به‌روزرسانی محتوای منبع فقط وضعیت مقصد را به Outdated تغییر دهد (بدون کپی خودکار یا Overwrite).
+  - [ ] V2.3.3 رابط کاربری Side-by-side برای ترجمه هم‌زمان با حفظ استقلال محتوایی fa/en.
+- [ ] V2.4 **Publication & Case Study Narrative:**
+  - [ ] V2.4.1 فیلدهای استاندارد Case Study (Statement, Role, Context, Decisions, Artifacts, Outcome).
+  - [ ] V2.4.2 فیلدهای ارجاع آکادمیک Publications (Title, Authors, Venue, Year, DOI/ISBN, BibTeX).
+  - [ ] V2.4.3 تضمین لود رسانه‌های گالری فقط از `MediaAsset` فعال و دارای alt محلی.
 
 ---
 
@@ -763,7 +774,9 @@
 | Phase 10: Components | 14 | 0 | 10-11 |
 | Phase 11: Admin CMS | 44 | 3 | 11-14 |
 | Phase 12: Animation Builder | 27 | 0 | 14-16 |
-| Phase 13: Motion & A11y | 18 | 4 | 15-16 |
-| Phase 14: Security & Perf | 19 | 0 | 16-17 |
-| Phase 15: E2E & Deploy | 17 | 0 | 17-18 |
-| **مجموع** | **~350** | **~17** | **18 هفته** |
+| Phase 13: Motion & A11y | 24 | 4 | 15-16 |
+| Phase 14: Security & Perf | 25 | 0 | 16-17 |
+| Phase 15: E2E & Deploy | 19 | 0 | 17-18 |
+| CMS V2 Capabilities | 12 | 0 | 18-19 |
+| **مجموع** | **~376** | **~17** | **19 هفته** |
+

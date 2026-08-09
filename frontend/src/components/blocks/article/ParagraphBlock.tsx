@@ -8,7 +8,9 @@ export function ParagraphBlock({ data, locale }: BlockComponentProps<ParagraphCo
                 "text-base leading-relaxed text-foreground",
                 locale === "fa" && "font-vazirmatn"
             )}
-            dangerouslySetInnerHTML={{ __html: data.text }}
-        />
+        >
+            {data.text}
+        </p>
     );
 }
+

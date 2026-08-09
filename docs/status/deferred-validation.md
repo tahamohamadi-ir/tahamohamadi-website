@@ -7,6 +7,11 @@
 - [ ] Exercise offline and stale optimistic-lock race E2E for Draft autosave. **Owner:** frontend/backend QA. **Trigger:** before relying on Draft recovery in production. **Mitigation:** autosave is Draft-only, debounced, uses the current version, preserves local state on errors, and performs no automatic retry.
 - [ ] Capture visual QA for confirmation dialogs, Undo/Redo controls, and Draft autosave status across target RTL/LTR viewports. **Owner:** frontend/product. **Trigger:** before release. **Mitigation:** focused component/page tests cover the interaction contracts only.
 
+## PHASE13-15-FASTTRACK — توسعهٔ سریع فازهای نهایی و عملیاتی‌سازی محصول
+
+- [ ] `FASTTRACK-QA-001` — بازبینی و اعتبارسنجی انیمیشن‌ها، WCAG 2.1 AA و A11y در مرورگر واقعی. **Owner:** frontend/QA. **Trigger:** پیش از انتشار نسخهٔ عمومی. **Mitigation:** قوانین `globals.css` با `prefers-reduced-motion` و `:focus-visible` بروزرسانی شدند.
+- [ ] `FASTTRACK-PERF-002` — تست و پایش دقیق Lighthouse / Core Web Vitals رو دیتای اصلی تولید. **Owner:** platform. **Trigger:** پیش از deploy تولید. **Mitigation:** بهینه‌سازی کامپوننت‌های SSR و تصویر انجام شده است.
+
 این فایل برای ثبت شفاف کارهایی است که در توسعهٔ سریع عمداً در همان برش انجام
 نشده‌اند. هر مورد باید پیش از اعلام آماده‌بودن release متناظر بسته یا با تصمیم
 صریح پذیرفته شود.
