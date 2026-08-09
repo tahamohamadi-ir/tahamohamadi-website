@@ -18,6 +18,8 @@ import { PrevNextNav } from "@/components/blog";
 import { TableOfContents } from "./TableOfContents";
 import { RelatedArticles } from "./RelatedArticles";
 import { BlogPostingJsonLd } from "./BlogPostingJsonLd";
+import { ReadingProgress } from "@/components/ui/ReadingProgress";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -251,6 +253,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
 
     return (
         <>
+            <ReadingProgress />
             {/* Structured Data — only for published, complete articles (Req 6.9) */}
             <BlogPostingJsonLd
                 article={structuredArticle}
@@ -262,6 +265,16 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
             <article className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
                 {/* Article Header */}
                 <header className="mb-8 space-y-4">
+                    <Breadcrumb 
+                        items={[
+                            { label: validLocale === "fa" ? "خانه" : "Home", href: `/${validLocale}` },
+                            { label: validLocale === "fa" ? "بلاگ" : "Blog", href: `/${validLocale}/blog` },
+                            { label: title }
+                        ]}
+                        locale={validLocale}
+                        className="mb-4"
+                    />
+                    
                     {/* Topics */}
                     {article.topics.length > 0 && (
                         <div className="flex flex-wrap gap-2">

@@ -5,6 +5,8 @@ import { isValidLocale, SITE_URL, type Locale } from "@/lib/i18n";
 import { fetchPublicAPI } from "@/lib/api";
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import type { BlockDTO } from "@/components/blocks/types";
+import { ReadingProgress } from "@/components/ui/ReadingProgress";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -147,6 +149,7 @@ export default async function PortfolioCaseStudyPage({ params }: PageProps) {
 
     return (
         <>
+            <ReadingProgress />
             {/* Schema.org Structured Data */}
             <CaseStudyStructuredData
                 caseStudy={caseStudy}
@@ -157,6 +160,16 @@ export default async function PortfolioCaseStudyPage({ params }: PageProps) {
             <article className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
                 {/* Header */}
                 <header className="mb-8 lg:mb-12">
+                    <Breadcrumb 
+                        items={[
+                            { label: validLocale === "fa" ? "خانه" : "Home", href: `/${validLocale}` },
+                            { label: validLocale === "fa" ? "نمونه‌کارها" : "Portfolio", href: `/${validLocale}/portfolio` },
+                            { label: title }
+                        ]}
+                        locale={validLocale}
+                        className="mb-6"
+                    />
+                    
                     <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
                         {title}
                     </h1>
