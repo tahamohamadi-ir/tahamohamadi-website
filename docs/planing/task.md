@@ -741,22 +741,23 @@
 
 ## فاز ویژه: CMS V2 & WordPress Capability Integration (اسناد 012 و WP Ref)
 
-- [ ] V2.1 **Media Picker Integration:**
-  - [ ] V2.1.1 یکپارچه‌سازی کامل `AdminMediaSelector` و `MediaPickerModal` در تمام فرم‌های Admin (Site Settings, Composer, Blog, Portfolio, Publications, Resume).
-  - [ ] V2.1.2 حذف کامل هرگونه ورودی UUID خام یا اتکا به لیست متنی IDها.
-  - [ ] V2.1.3 اعمال فیلتر نوع فیلد (انحصار تصویر برای coverها و انحصار PDF برای اسناد رزومه در backend و frontend).
-- [ ] V2.2 **Composer Templates & Dry-run Import:**
-  - [ ] V2.2.1 ماژول `ComposerTemplate` برای ایجاد snapshotهای قابل‌حمل صفحه.
-  - [ ] V2.2.2 فرایند Dry-run import بدون تغییر دیتابیس زنده جهت اعتبارسنجی ارجاعات رسانه و سلامت ساختار.
-  - [ ] V2.2.3 اعتبارسنجی فیلدهای امنیتی URL و نفی raw HTML در تپلیت‌ها.
-- [ ] V2.3 **Translation Freshness & Queue:**
-  - [ ] V2.3.1 منطق خودکار تشخیص وضعیت ترجمه (Missing / Incomplete / Complete / Outdated).
-  - [ ] V2.3.2 به‌روزرسانی محتوای منبع فقط وضعیت مقصد را به Outdated تغییر دهد (بدون کپی خودکار یا Overwrite).
-  - [ ] V2.3.3 رابط کاربری Side-by-side برای ترجمه هم‌زمان با حفظ استقلال محتوایی fa/en.
-- [ ] V2.4 **Publication & Case Study Narrative:**
-  - [ ] V2.4.1 فیلدهای استاندارد Case Study (Statement, Role, Context, Decisions, Artifacts, Outcome).
-  - [ ] V2.4.2 فیلدهای ارجاع آکادمیک Publications (Title, Authors, Venue, Year, DOI/ISBN, BibTeX).
-  - [ ] V2.4.3 تضمین لود رسانه‌های گالری فقط از `MediaAsset` فعال و دارای alt محلی.
+- [x] V2.1 **Media Picker Integration:**
+  - [x] V2.1.1 یکپارچه‌سازی کامل `AdminMediaSelector` و `MediaPickerModal` در تمام فرم‌های Admin (Site Settings, Composer, Blog, Portfolio, Publications, Resume).
+  - [x] V2.1.2 حذف کامل هرگونه ورودی UUID خام یا اتکا به لیست متنی IDها.
+  - [x] V2.1.3 اعمال فیلتر نوع فیلد (انحصار تصویر برای coverها و انحصار PDF برای اسناد رزومه در backend و frontend).
+- [x] V2.2 **Composer Templates & Dry-run Import:**
+  - [x] V2.2.1 ماژول `ComposerTemplate` برای ایجاد snapshotهای قابل‌حمل صفحه.
+  - [x] V2.2.2 فرایند Dry-run import بدون تغییر دیتابیس زنده جهت اعتبارسنجی ارجاعات رسانه و سلامت ساختار.
+  - [x] V2.2.3 اعتبارسنجی فیلدهای امنیتی URL و نفی raw HTML در تپلیت‌ها.
+- [x] V2.3 **Translation Freshness & Queue:**
+  - [x] V2.3.1 منطق خودکار تشخیص وضعیت ترجمه (Missing / Incomplete / Complete / Outdated).
+  - [x] V2.3.2 به‌روزرسانی محتوای منبع فقط وضعیت مقصد را به Outdated تغییر دهد (بدون کپی خودکار یا Overwrite).
+  - [x] V2.3.3 رابط کاربری Side-by-side برای ترجمه هم‌زمان با حفظ استقلال محتوایی fa/en.
+- [x] V2.4 **Publication & Case Study Narrative:**
+  - [x] V2.4.1 فیلدهای استاندارد Case Study (Statement, Role, Context, Decisions, Artifacts, Outcome).
+  - [x] V2.4.2 فیلدهای ارجاع آکادمیک Publications (Title, Authors, Venue, Year, DOI/ISBN, BibTeX).
+  - [x] V2.4.3 تضمین لود رسانه‌های گالری فقط از `MediaAsset` فعال و دارای alt محلی.
+
 
 ---
 
