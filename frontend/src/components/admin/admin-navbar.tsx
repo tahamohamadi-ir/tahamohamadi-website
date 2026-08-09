@@ -26,7 +26,7 @@ export function AdminNavbar() {
     }
     
     if (hasRole("Admin")) {
-        navItems.push({ href: "/admin/settings", label: "تنظیمات سایت", icon: "⚙️" });
+        navItems.push({ href: "/admin/siteconfig", label: "تنظیمات سایت", icon: "⚙️" });
     }
 
     async function handleLogout() {

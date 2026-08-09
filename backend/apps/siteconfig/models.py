@@ -27,6 +27,7 @@ class SiteSettings(VersionedModel):
     )
     theme_preset = models.CharField(max_length=50, default="default")
     density = models.CharField(max_length=50, default="comfortable")
+    design_tokens = models.JSONField(default=dict, blank=True)
     status = models.CharField(max_length=20, default="draft")
 
     class Meta:

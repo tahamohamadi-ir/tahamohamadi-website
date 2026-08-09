@@ -89,6 +89,7 @@ class PublicSiteSettingsSerializer(serializers.ModelSerializer):
         fields = [
             "site_title", "default_title", "default_description", "public_email",
             "primary_cta_label", "primary_cta_url", "footer_text", "default_og_image",
+            "theme_preset", "density", "design_tokens",
         ]
 
     def _localized(self, instance, field):

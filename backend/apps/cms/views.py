@@ -72,7 +72,7 @@ class AdminPageViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         new_status = serializer.validated_data.get("status")
-        if new_status in ["PUBLISHED", "SCHEDULED"] and not user_has_role(request.user, Roles.PUBLISHER):
+        if new_status in ["published", "scheduled"] and not user_has_role(request.user, Roles.PUBLISHER):
             raise PermissionDenied("You do not have permission to publish or schedule content.")
 
         self.perform_create(serializer)
@@ -136,7 +136,7 @@ class AdminPageViewSet(ModelViewSet):
 
         new_status = serializer.validated_data.get("status")
         # Check permission if status is changing to published or scheduled
-        if new_status in ["PUBLISHED", "SCHEDULED"] and instance.status != new_status:
+        if new_status in ["published", "scheduled"] and instance.status != new_status:
             if not user_has_role(request.user, Roles.PUBLISHER):
                 raise PermissionDenied("You do not have permission to publish or schedule content.")
 

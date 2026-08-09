@@ -92,17 +92,26 @@ class Command(BaseCommand):
         User.objects.filter(is_superuser=True, email="admin@tahamohamadi.ir").delete()
 
     def _create_superuser(self):
-        """Create development superuser."""
+        """Create development superuser and basic RBAC groups."""
+        from django.contrib.auth.models import Group
+        
+        # Create RBAC groups
+        for group_name in ["Content Editor", "Reviewer", "Publisher", "Admin"]:
+            Group.objects.get_or_create(name=group_name)
+            
         if User.objects.filter(username="admin").exists():
             self.stdout.write("  Superuser 'admin' already exists, skipping.")
             return
-        User.objects.create_superuser(
+        user = User.objects.create_superuser(
             username="admin",
             email="admin@tahamohamadi.ir",
             password="admin123!Dev",
             first_name="Taha",
             last_name="Mohamadi",
         )
+        # Assign superuser to Admin group explicitly
+        admin_group, _ = Group.objects.get_or_create(name="Admin")
+        user.groups.add(admin_group)
         self.stdout.write("  Created superuser: admin / admin123!Dev")
 
     def _remove_broken_seed_media(self) -> int:

@@ -6,6 +6,9 @@ export interface PublicSiteSettingsDTO {
   primary_cta_label: string;
   primary_cta_url: string;
   footer_text: string;
+  theme_preset: string;
+  density: string;
+  design_tokens: any;
 }
 
 export interface PublicNavigationItemDTO {

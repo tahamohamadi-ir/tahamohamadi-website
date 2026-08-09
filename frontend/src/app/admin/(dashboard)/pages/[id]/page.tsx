@@ -22,7 +22,9 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ComposerSection } from "@/components/admin/composer/types";
+import { VariantSelector } from "@/components/admin/cms/variant-selector";
 import { useAutosave, useCommandStack, useDirtyGuard } from "@/hooks";
+import { useAuth } from "@/components/admin/auth-context";
 
 interface PageData {
     id: string;
@@ -31,12 +33,13 @@ interface PageData {
     slug_fa: string;
     slug_en: string;
     page_type: string;
+    template_variant: string;
     status: string;
     version: number;
     sections: ComposerSection[];
 }
 
-type PageSavePayload = Pick<PageData, "slug_fa" | "slug_en" | "title_fa" | "title_en" | "page_type" | "status"> & {
+type PageSavePayload = Pick<PageData, "slug_fa" | "slug_en" | "title_fa" | "title_en" | "page_type" | "template_variant" | "status"> & {
     sections: ComposerSection[];
 };
 
@@ -47,6 +50,7 @@ function pageSavePayload(page: PageData, sections: ComposerSection[]): PageSaveP
         title_fa: page.title_fa,
         title_en: page.title_en,
         page_type: page.page_type,
+        template_variant: page.template_variant,
         status: page.status,
         sections,
     };
@@ -56,6 +60,8 @@ export default function PageEditorPage() {
     const params = useParams();
     const router = useRouter();
     const pageId = params.id as string;
+    const { hasRole } = useAuth();
+    const canPublish = hasRole("Admin") || hasRole("Publisher");
 
     const [page, setPage] = useState<PageData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -438,10 +444,14 @@ export default function PageEditorPage() {
                             <Label htmlFor="page-status">وضعیت انتشار</Label>
                             <select id="page-status" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm" value={page.status} onChange={(event) => updatePageField("status", event.target.value)}>
                                 <option value="draft">پیش‌نویس</option>
-                                <option value="published">منتشرشده</option>
-                                <option value="archived">آرشیو</option>
+                                <option value="published" disabled={!canPublish}>منتشرشده</option>
+                                <option value="archived" disabled={!canPublish}>آرشیو</option>
                             </select>
                         </div>
+                        <VariantSelector 
+                            value={page.template_variant || "default"} 
+                            onChange={(value) => updatePageField("template_variant", value)} 
+                        />
                     </div>
                 </section>
             )}
