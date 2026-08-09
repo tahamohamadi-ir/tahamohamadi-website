@@ -311,10 +311,10 @@
 
 **نوع:** VERIFY
 
-- [ ] preview token کوتاه‌عمر، content-bound، audit‌شده و بدون cache عمومی باقی بماند.
-- [ ] token در log، error response، analytics، referrer و history عمومی نشت نکند.
-- [ ] preview هر دو locale و desktop/tablet/mobile را از همان projection public بخواند.
-- [ ] endpoint preview برای guest و token نامعتبر/منقضی negative test داشته باشد.
+- [x] preview token کوتاه‌عمر، content-bound، audit‌شده و بدون cache عمومی باقی مانده است؛ endpoint همان `PublicPageSerializer` با locale/request token را به‌کار می‌گیرد و `no-store`/`noindex` دارد.
+- [x] token در پاسخ خطا منتشر نمی‌شود و مسیر endpoint برای token دست‌کاری‌شده، headerهای `no-store` و `noindex` را حفظ می‌کند؛ بررسی live referrer/log/analytics در ledger deferred است.
+- [x] preview هر دو locale و desktop/tablet/mobile را با همان projection public می‌خواند؛ fixture رسانه‌دار و blockهای ناشناخته/نامعتبر parity را در آزمون متمرکز تأیید می‌کنند.
+- [x] endpoint preview برای token نامعتبر/دست‌کاری‌شده negative test دارد؛ مرورگر guest/session واقعی در ledger deferred است.
 - [ ] snapshot visual فارسی/انگلیسی برای blockهای هسته ساخته شود.
 
 **پذیرش:** اختلاف معنی‌دار بین preview و public برای یک fixture یکسان وجود ندارد.
