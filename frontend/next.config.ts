@@ -36,6 +36,17 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack: (config, { dev, isServer }) => {
+    // Only apply performance budgets to client production builds
+    if (!dev && !isServer) {
+      config.performance = {
+        hints: "warning",
+        maxAssetSize: 150000, // 150 KB
+        maxEntrypointSize: 200000, // 200 KB
+      };
+    }
+    return config;
+  },
 };
 
 export default withAnalyzer(withSentryConfig(nextConfig, {
