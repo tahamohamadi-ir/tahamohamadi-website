@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import type {
     MediaAssetDTO,
     PaginatedMediaResponse,
@@ -292,11 +293,14 @@ export function MediaPicker({
                     <div className="flex items-start gap-3">
                         {/* Thumbnail */}
                         {isImageMime(value.mime_type) ? (
-                            <img
-                                src={value.file || undefined}
-                                alt={altText || value.original_filename}
-                                className="h-16 w-16 rounded-md object-cover border border-border"
-                            />
+                            <div className="relative h-16 w-16 overflow-hidden rounded-md border border-border">
+                                <OptimizedImage
+                                    src={value.file || ""}
+                                    alt={altText || value.original_filename}
+                                    fill
+                                    className="object-cover"
+                                />
+                            </div>
                         ) : (
                             <div className="flex h-16 w-16 items-center justify-center rounded-md border border-border bg-muted">
                                 {getMimeIcon(value.mime_type)}
@@ -515,16 +519,18 @@ export function MediaPicker({
                                             }
                                         >
                                             {isImageMime(asset.mime_type) ? (
-                                                <img
-                                                    src={asset.file || undefined}
-                                                    alt={
-                                                        locale === "fa"
-                                                            ? asset.alt_text_fa || asset.original_filename
-                                                            : asset.alt_text_en || asset.original_filename
-                                                    }
-                                                    className="h-full w-full object-cover"
-                                                    loading="lazy"
-                                                />
+                                                <div className="relative h-full w-full">
+                                                    <OptimizedImage
+                                                        src={asset.file || ""}
+                                                        alt={
+                                                            locale === "fa"
+                                                                ? asset.alt_text_fa || asset.original_filename
+                                                                : asset.alt_text_en || asset.original_filename
+                                                        }
+                                                        fill
+                                                        className="object-cover"
+                                                    />
+                                                </div>
                                             ) : (
                                                 <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-muted p-2">
                                                     {getMimeIcon(asset.mime_type)}

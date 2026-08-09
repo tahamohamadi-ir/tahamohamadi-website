@@ -92,11 +92,11 @@ export function ArticleCard({ article, locale, featured = false }: ArticleCardPr
             <Link href={`/${locale}/blog/${slug}`} className="flex flex-col h-full">
                 {article.featured_image && (
                     <div className="relative aspect-video w-full overflow-hidden">
-                        <img
+                        <OptimizedImage
                             src={article.featured_image.file_url}
                             alt={alt || title}
-                            className="h-full w-full object-cover transition-transform duration-300 motion-reduce:transition-none group-hover:scale-105 motion-reduce:group-hover:transform-none"
-                            loading="lazy"
+                            fill
+                            className="object-cover transition-transform duration-300 motion-reduce:transition-none group-hover:scale-105 motion-reduce:group-hover:transform-none"
                         />
                     </div>
                 )}

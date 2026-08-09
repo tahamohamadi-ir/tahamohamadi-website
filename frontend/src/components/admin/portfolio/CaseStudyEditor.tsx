@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { ComposerBlock, BlockType } from "../composer/types";
 import { SortableBlock } from "../composer/SortableBlock";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -186,7 +187,9 @@ function GalleryItemCard({ item, onRemove, onMoveUp, onMoveDown, isFirst, isLast
         <div className="group flex items-center gap-3 rounded-md border border-gray-200 bg-white p-3">
             <div className="h-12 w-12 shrink-0 rounded bg-gray-100 flex items-center justify-center">
                 {item.url ? (
-                    <img src={item.url} alt={item.alt ?? ""} className="h-full w-full rounded object-cover" />
+                    <div className="relative h-full w-full rounded">
+                        <OptimizedImage src={item.url} alt={item.alt ?? ""} fill className="object-cover rounded" />
+                    </div>
                 ) : (
                     <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.41a2.25 2.25 0 013.182 0l2.909 2.91m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />

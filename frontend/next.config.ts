@@ -34,6 +34,11 @@ const nextConfig: NextConfig = {
         hostname: "www.tahamohamadi.ir",
         pathname: "/media/**",
       },
+      {
+        protocol: "https",
+        hostname: "api.tahamohamadi.ir",
+        pathname: "/media/**",
+      },
     ],
   },
   webpack: (config, { dev, isServer }) => {
