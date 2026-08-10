@@ -41,3 +41,8 @@ export {
   validatePageDocument,
 } from './validation';
 export type { PageDocumentInput } from './validation';
+
+export * from './document';
+export * from './node-types';
+export * from './validation';
+export * from './style';
