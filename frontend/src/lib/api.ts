@@ -193,7 +193,8 @@ export async function getArticle(
   slug: string,
   locale: Locale,
 ): Promise<PublicArticleDetailDTO | null> {
-  const path = `/public/blog/articles/${encodeURIComponent(slug)}/?locale=${locale}`;
+  const decodedSlug = decodeURIComponent(slug);
+  const path = `/public/blog/articles/${encodeURIComponent(decodedSlug)}/?locale=${locale}`;
   try {
     return await fetchPublicAPI<PublicArticleDetailDTO>(path);
   } catch (error) {
@@ -221,8 +222,9 @@ export async function fetchResearchProject(
   slug: string,
   locale: Locale,
 ): Promise<ResearchProjectDTO> {
+  const decodedSlug = decodeURIComponent(slug);
   return fetchPublicAPI<ResearchProjectDTO>(
-    `/public/identity/research-projects/${encodeURIComponent(slug)}/?locale=${locale}`,
+    `/public/identity/research-projects/${encodeURIComponent(decodedSlug)}/?locale=${locale}`,
   );
 }
 
@@ -245,8 +247,9 @@ export async function fetchPublication(
   slug: string,
   locale: Locale,
 ): Promise<PublicationDTO> {
+  const decodedSlug = decodeURIComponent(slug);
   return fetchPublicAPI<PublicationDTO>(
-    `/public/identity/publications/${encodeURIComponent(slug)}/?locale=${locale}`,
+    `/public/identity/publications/${encodeURIComponent(decodedSlug)}/?locale=${locale}`,
   );
 }
 
@@ -267,8 +270,9 @@ export async function fetchResumeVariant(
   slug: string,
   locale: Locale,
 ): Promise<ResumeVariantDTO> {
+  const decodedSlug = decodeURIComponent(slug);
   return fetchPublicAPI<ResumeVariantDTO>(
-    `/public/identity/resumes/${encodeURIComponent(slug)}/?locale=${locale}`,
+    `/public/identity/resumes/${encodeURIComponent(decodedSlug)}/?locale=${locale}`,
   );
 }
 
