@@ -35,12 +35,19 @@ export function Header({ locale, brandName, navigationItems, primaryCta }: Heade
       ? { label: primaryCta.label.trim(), href: primaryCta.href.trim() }
       : null;
 
+  const getLocalizedHref = (href: string) => {
+    if (isExternalHref(href)) return href;
+    const cleanHref = href.startsWith('/') ? href : `/${href}`;
+    return cleanHref === '/' ? `/${locale}` : `/${locale}${cleanHref}`;
+  };
+
   const navigation = (mobile = false) => (
     <nav aria-label={mobile ? `${navigationLabel} — ${menuLabel}` : navigationLabel}>
       <ul className={mobile ? "flex flex-col" : "flex items-center gap-7 lg:gap-9"}>
         {navigationItems.map((link) => {
           const external = isExternalHref(link.href);
-          const active = isActive(link.href);
+          const localizedHref = getLocalizedHref(link.href);
+          const active = isActive(localizedHref);
           return (
             <li key={link.href}>
               {external ? (
@@ -58,7 +65,7 @@ export function Header({ locale, brandName, navigationItems, primaryCta }: Heade
                 </a>
               ) : (
                 <Link
-                  href={link.href}
+                  href={localizedHref}
                   aria-current={active ? "page" : undefined}
                   className={
                     mobile

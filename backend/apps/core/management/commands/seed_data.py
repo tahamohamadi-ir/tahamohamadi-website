@@ -160,18 +160,26 @@ class Command(BaseCommand):
             )
             self.stdout.write("  Created published site settings.")
 
-        NavigationItem.objects.get_or_create(
-            label_en="Home",
-            location="header",
-            defaults={
-                "label_fa": "خانه",
-                "href": "/en",
-                "ordering": 0,
-                "status": "published",
-                "created_by": "seed",
-                "updated_by": "seed",
-            },
-        )
+        nav_items = [
+            ("Home", "خانه", "/", 0),
+            ("About", "درباره من", "/about", 1),
+            ("Blog", "مقالات", "/blog", 2),
+            ("Portfolio", "نمونه‌کارها", "/portfolio", 3),
+            ("Contact", "تماس با من", "/contact", 4),
+        ]
+        for label_en, label_fa, href, ordering in nav_items:
+            NavigationItem.objects.get_or_create(
+                label_en=label_en,
+                location="header",
+                defaults={
+                    "label_fa": label_fa,
+                    "href": href,
+                    "ordering": ordering,
+                    "status": "published",
+                    "created_by": "seed",
+                    "updated_by": "seed",
+                },
+            )
 
     def _create_skills(self):
         skills = [

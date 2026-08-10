@@ -20,6 +20,12 @@ export function Footer({ locale, siteConfig }: FooterProps) {
 
   const copyright = settings?.footer_text || (settings?.site_title ? `© ${currentYear} ${settings.site_title}` : "");
 
+  const getLocalizedHref = (href: string) => {
+    if (isExternalHref(href)) return href;
+    const cleanHref = href.startsWith('/') ? href : `/${href}`;
+    return cleanHref === '/' ? `/${locale}` : `/${locale}${cleanHref}`;
+  };
+
   return (
     <footer className="border-t border-border/40 bg-muted/30">
       <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -28,7 +34,9 @@ export function Footer({ locale, siteConfig }: FooterProps) {
           {links.length > 0 && (
             <nav aria-label={locale === "fa" ? "ناوبری پاورقی" : "Footer navigation"}>
               <ul className="flex flex-wrap items-center gap-2">
-                {links.map((item) => (
+                {links.map((item) => {
+                  const localizedHref = getLocalizedHref(item.href);
+                  return (
                   <li key={`${item.href}-${item.label}`}>
                     {isExternalHref(item.href) ? (
                       <a
@@ -41,14 +49,14 @@ export function Footer({ locale, siteConfig }: FooterProps) {
                       </a>
                     ) : (
                       <Link
-                        href={item.href}
+                        href={localizedHref}
                         className="inline-flex min-h-11 items-center rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       >
                         {item.label}
                       </Link>
                     )}
                   </li>
-                ))}
+                )})}
               </ul>
             </nav>
           )}
