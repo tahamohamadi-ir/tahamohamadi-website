@@ -21,6 +21,7 @@ export const NODE_COMMAND_TYPES = {
   UPDATE_PROPS: 'node.updateProps',
   MOVE: 'node.move',
   DUPLICATE: 'node.duplicate',
+  BATCH_DELETE: 'node.batchDelete',
   UPDATE_METADATA: 'node.updateMetadata',
 } as const;
 
@@ -30,6 +31,48 @@ export const NODE_COMMAND_TYPES = {
 
 function generateNodeId(): string {
   return `node_${uuidv4().slice(0, 8)}`;
+}
+
+/**
+ * Clone a subtree of nodes starting at nodeId, assigning new IDs.
+ */
+function cloneSubtree(
+  nodes: Record<NodeId, PageNode>,
+  rootId: NodeId,
+): { newRootId: NodeId; clonedNodes: PageNode[] } {
+  const rootNode = nodes[rootId];
+  if (!rootNode) throw new Error(`Node "${rootId}" not found`);
+
+  const clonedNodes: PageNode[] = [];
+  const idMap = new Map<NodeId, NodeId>();
+
+  function traverse(originalId: NodeId): NodeId {
+    const original = nodes[originalId];
+    if (!original) return originalId;
+
+    const newId = generateNodeId();
+    idMap.set(originalId, newId);
+
+    const clonedSlots: Record<string, NodeId[]> = {};
+    for (const [slotName, children] of Object.entries(original.slots)) {
+      clonedSlots[slotName] = children.map(traverse);
+    }
+
+    const clonedNode: PageNode = {
+      ...original,
+      id: newId,
+      props: JSON.parse(JSON.stringify(original.props)),
+      slots: clonedSlots,
+      styleRefs: [...original.styleRefs],
+      metadata: original.metadata ? { ...original.metadata } : undefined,
+    };
+
+    clonedNodes.push(clonedNode);
+    return newId;
+  }
+
+  const newRootId = traverse(rootId);
+  return { newRootId, clonedNodes };
 }
 
 /**
@@ -140,6 +183,73 @@ export const insertNodeHandler: CommandHandler = (
 };
 
 // ---------------------------------------------------------------------------
+// node.duplicate
+// ---------------------------------------------------------------------------
+
+interface DuplicatePayload {
+  nodeId: NodeId;
+}
+
+export const duplicateNodeHandler: CommandHandler = (
+  document: PageDocument,
+  command: BuilderCommand,
+): CommandResult => {
+  const { nodeId } = command.payload as unknown as DuplicatePayload;
+
+  if (nodeId === document.rootNodeId) {
+    throw new Error('Cannot duplicate the root node');
+  }
+
+  const parentSlot = findParentSlot(document.nodes, nodeId);
+  if (!parentSlot) {
+    throw new Error(`Node "${nodeId}" has no parent`);
+  }
+
+  const { newRootId, clonedNodes } = cloneSubtree(document.nodes, nodeId);
+
+  const currentSlot = document.nodes[parentSlot.parentId].slots[parentSlot.slotName];
+  const insertIndex = parentSlot.index + 1;
+  const newSlot = [
+    ...currentSlot.slice(0, insertIndex),
+    newRootId,
+    ...currentSlot.slice(insertIndex),
+  ];
+
+  const patches: Patch = [];
+  const inversePatches: Patch = [];
+
+  // Add all cloned nodes
+  for (const cloned of clonedNodes) {
+    patches.push({ op: 'add', path: `nodes.${cloned.id}`, value: cloned });
+  }
+
+  // Insert duplicate root ID into parent slot
+  patches.push({
+    op: 'replace',
+    path: `nodes.${parentSlot.parentId}.slots.${parentSlot.slotName}`,
+    value: newSlot,
+    oldValue: currentSlot,
+  });
+
+  // Inverse: remove parent slot reference, remove all cloned nodes
+  inversePatches.push({
+    op: 'replace',
+    path: `nodes.${parentSlot.parentId}.slots.${parentSlot.slotName}`,
+    value: currentSlot,
+    oldValue: newSlot,
+  });
+  for (const cloned of [...clonedNodes].reverse()) {
+    inversePatches.push({ op: 'remove', path: `nodes.${cloned.id}`, oldValue: cloned });
+  }
+
+  return {
+    patches,
+    inversePatches,
+    affectedNodeIds: [newRootId, parentSlot.parentId],
+  };
+};
+
+// ---------------------------------------------------------------------------
 // node.delete
 // ---------------------------------------------------------------------------
 
@@ -212,6 +322,102 @@ export const deleteNodeHandler: CommandHandler = (
     patches,
     inversePatches,
     affectedNodeIds: [parentSlot.parentId, ...allNodeIds],
+  };
+};
+
+// ---------------------------------------------------------------------------
+// node.batchDelete
+// ---------------------------------------------------------------------------
+
+interface BatchDeletePayload {
+  nodeIds: NodeId[];
+}
+
+export const batchDeleteHandler: CommandHandler = (
+  document: PageDocument,
+  command: BuilderCommand,
+): CommandResult => {
+  const { nodeIds } = command.payload as unknown as BatchDeletePayload;
+  const validIds = nodeIds.filter((id) => id !== document.rootNodeId && !!document.nodes[id]);
+
+  if (validIds.length === 0) {
+    return { patches: [], inversePatches: [], affectedNodeIds: [] };
+  }
+
+  const patches: Patch = [];
+  const inversePatches: Patch = [];
+  const allAffectedNodes: Set<NodeId> = new Set();
+
+  // Group by parent slot to execute slot updates cleanly
+  const slotUpdates = new Map<string, { parentId: NodeId; slotName: string; originalSlot: NodeId[]; removeSet: Set<NodeId> }>();
+
+  for (const nodeId of validIds) {
+    const parentSlot = findParentSlot(document.nodes, nodeId);
+    if (!parentSlot) continue;
+
+    const key = `${parentSlot.parentId}:${parentSlot.slotName}`;
+    if (!slotUpdates.has(key)) {
+      slotUpdates.set(key, {
+        parentId: parentSlot.parentId,
+        slotName: parentSlot.slotName,
+        originalSlot: document.nodes[parentSlot.parentId].slots[parentSlot.slotName],
+        removeSet: new Set(),
+      });
+    }
+    slotUpdates.get(key)!.removeSet.add(nodeId);
+    allAffectedNodes.add(parentSlot.parentId);
+  }
+
+  // Apply slot updates
+  for (const update of slotUpdates.values()) {
+    const newSlot = update.originalSlot.filter((id) => !update.removeSet.has(id));
+    patches.push({
+      op: 'replace',
+      path: `nodes.${update.parentId}.slots.${update.slotName}`,
+      value: newSlot,
+      oldValue: update.originalSlot,
+    });
+  }
+
+  // Collect all nodes to remove (including subtrees)
+  const allNodesToRemove: NodeId[] = [];
+  for (const nodeId of validIds) {
+    allNodesToRemove.push(nodeId);
+    allNodesToRemove.push(...collectDescendants(document.nodes, nodeId));
+  }
+  const uniqueToRemove = Array.from(new Set(allNodesToRemove));
+
+  for (const id of uniqueToRemove) {
+    allAffectedNodes.add(id);
+    patches.push({
+      op: 'remove',
+      path: `nodes.${id}`,
+      oldValue: document.nodes[id],
+    });
+  }
+
+  // Inverses
+  for (const id of [...uniqueToRemove].reverse()) {
+    inversePatches.push({
+      op: 'add',
+      path: `nodes.${id}`,
+      value: document.nodes[id],
+    });
+  }
+  for (const update of slotUpdates.values()) {
+    const newSlot = update.originalSlot.filter((id) => !update.removeSet.has(id));
+    inversePatches.push({
+      op: 'replace',
+      path: `nodes.${update.parentId}.slots.${update.slotName}`,
+      value: update.originalSlot,
+      oldValue: newSlot,
+    });
+  }
+
+  return {
+    patches,
+    inversePatches,
+    affectedNodeIds: Array.from(allAffectedNodes),
   };
 };
 
@@ -425,8 +631,11 @@ export function registerNodeCommands(bus: {
   registerHandler: (type: string, handler: CommandHandler) => void;
 }): void {
   bus.registerHandler(NODE_COMMAND_TYPES.INSERT, insertNodeHandler);
+  bus.registerHandler(NODE_COMMAND_TYPES.DUPLICATE, duplicateNodeHandler);
   bus.registerHandler(NODE_COMMAND_TYPES.DELETE, deleteNodeHandler);
+  bus.registerHandler(NODE_COMMAND_TYPES.BATCH_DELETE, batchDeleteHandler);
   bus.registerHandler(NODE_COMMAND_TYPES.UPDATE_PROPS, updatePropsHandler);
   bus.registerHandler(NODE_COMMAND_TYPES.MOVE, moveNodeHandler);
   bus.registerHandler(NODE_COMMAND_TYPES.UPDATE_METADATA, updateMetadataHandler);
 }
+

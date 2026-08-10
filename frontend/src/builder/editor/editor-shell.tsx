@@ -24,6 +24,7 @@ import {
 import type { DocumentStoreApi, EditorStoreApi, DocumentState, EditorState } from '../state';
 import { componentRegistry, registerBuiltInComponents } from '../registry';
 import { PageRenderer } from '../renderer';
+import { CanvasFrame } from '../canvas';
 import { BuilderToolbar } from './toolbar';
 import { LayersPanel } from './layers-panel';
 import { InspectorPanel } from './inspector-panel';
@@ -61,6 +62,8 @@ export interface EditorShellProps {
   onSave?: (document: PageDocument) => Promise<void>;
   /** Page ID for display purposes. */
   pageId?: string;
+  /** Whether autosave is enabled (default: true). */
+  autoSaveEnabled?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -72,6 +75,7 @@ export function EditorShell({
   initialRevision = 0,
   onSave,
   pageId,
+  autoSaveEnabled = true,
 }: EditorShellProps) {
   // Create stores (once)
   const documentStoreRef = useRef<DocumentStoreApi | null>(null);
@@ -130,6 +134,7 @@ export function EditorShell({
   const isDirty = useStore(docStore, (s: DocumentState) => s.isDirty);
   const selectedIds = useStore(editorStore, (s: EditorState) => s.selection.selectedIds);
   const primaryId = useStore(editorStore, (s: EditorState) => s.selection.primaryId);
+  const hoveredId = useStore(editorStore, (s: EditorState) => s.selection.hoveredId);
   const openPanels = useStore(editorStore, (s: EditorState) => s.openPanels);
   const isPreviewMode = useStore(editorStore, (s: EditorState) => s.isPreviewMode);
 
@@ -190,6 +195,17 @@ export function EditorShell({
     }
   }, [onSave, document, docStore, editorStore]);
 
+  // Debounced Autosave (2000ms after document becomes dirty)
+  useEffect(() => {
+    if (!autoSaveEnabled || !isDirty || !onSave) return;
+
+    const timer = setTimeout(() => {
+      handleSave();
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [isDirty, autoSaveEnabled, onSave, handleSave]);
+
   const handleInsertNode = useCallback(
     (componentType: string) => {
       const def = componentRegistry.get(componentType);
@@ -218,14 +234,41 @@ export function EditorShell({
     [commandBus, primaryId, document.rootNodeId],
   );
 
-  const handleDeleteNode = useCallback(() => {
-    if (!primaryId || primaryId === document.rootNodeId) return;
-    commandBus.execute({
-      type: NODE_COMMAND_TYPES.DELETE,
-      payload: { nodeId: primaryId },
-    });
-    editorStore.getState().clearSelect();
-  }, [commandBus, primaryId, document.rootNodeId, editorStore]);
+  const handleDuplicateNode = useCallback(
+    (targetId?: NodeId) => {
+      const nodeId = targetId || primaryId;
+      if (!nodeId || nodeId === document.rootNodeId) return;
+
+      commandBus.execute({
+        type: NODE_COMMAND_TYPES.DUPLICATE,
+        payload: { nodeId },
+      });
+    },
+    [commandBus, primaryId, document.rootNodeId],
+  );
+
+  const handleDeleteNode = useCallback(
+    (targetId?: NodeId) => {
+      if (selectedIds.length > 1 && !targetId) {
+        commandBus.execute({
+          type: NODE_COMMAND_TYPES.BATCH_DELETE,
+          payload: { nodeIds: selectedIds },
+        });
+        editorStore.getState().clearSelect();
+        return;
+      }
+
+      const nodeId = targetId || primaryId;
+      if (!nodeId || nodeId === document.rootNodeId) return;
+
+      commandBus.execute({
+        type: NODE_COMMAND_TYPES.DELETE,
+        payload: { nodeId },
+      });
+      editorStore.getState().clearSelect();
+    },
+    [commandBus, primaryId, selectedIds, document.rootNodeId, editorStore],
+  );
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -243,6 +286,9 @@ export function EditorShell({
       } else if (isCtrl && e.key === 'y') {
         e.preventDefault();
         handleRedo();
+      } else if (isCtrl && e.key === 'd') {
+        e.preventDefault();
+        handleDuplicateNode();
       } else if (isCtrl && e.key === 's') {
         e.preventDefault();
         handleSave();
@@ -255,7 +301,7 @@ export function EditorShell({
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [handleUndo, handleRedo, handleSave, handleDeleteNode, editorStore]);
+  }, [handleUndo, handleRedo, handleSave, handleDuplicateNode, handleDeleteNode, editorStore]);
 
   // Get primary node for inspector
   const primaryNode = primaryId ? document.nodes[primaryId] : null;
@@ -299,7 +345,15 @@ export function EditorShell({
               <LayersPanel
                 document={document}
                 selectedIds={selectedIds}
-                onSelect={(id) => editorStore.getState().select(id)}
+                onSelect={(id, e) => {
+                  if (e.ctrlKey || e.metaKey) {
+                    editorStore.getState().toggleSelect(id);
+                  } else {
+                    editorStore.getState().select(id);
+                  }
+                }}
+                onDuplicate={handleDuplicateNode}
+                onDelete={handleDeleteNode}
               />
               <BlockLibraryPanel onInsert={handleInsertNode} />
             </div>
@@ -314,23 +368,14 @@ export function EditorShell({
             justifyContent: 'center',
             padding: '2rem',
           }}>
-            <div style={{
-              width: '100%',
-              maxWidth: isPreviewMode ? '100%' : '1280px',
-              backgroundColor: '#ffffff',
-              borderRadius: isPreviewMode ? 0 : '0.5rem',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              overflow: 'auto',
-              minHeight: '600px',
-            }}>
-              <PageRenderer
-                document={document}
-                isEditor={!isPreviewMode}
-                selectedNodeIds={selectedIds}
-                onNodeClick={handleNodeClick}
-                onNodeHover={handleNodeHover}
-              />
-            </div>
+            <CanvasFrame
+              document={document}
+              isEditor={!isPreviewMode}
+              selectedNodeIds={selectedIds}
+              hoveredNodeId={hoveredId}
+              onNodeClick={handleNodeClick}
+              onNodeHover={handleNodeHover}
+            />
           </div>
 
           {/* Right panel: Inspector */}

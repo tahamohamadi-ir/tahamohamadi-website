@@ -13,9 +13,10 @@ import type { ComponentDefinition } from './registry-types';
 // Registry
 // ---------------------------------------------------------------------------
 
-class ComponentRegistryImpl {
+export class ComponentRegistryImpl {
   private definitions = new Map<string, ComponentDefinition>();
   private typeVersions = new Map<string, Map<number, ComponentDefinition>>();
+
 
   /**
    * Register a component definition.
