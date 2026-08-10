@@ -91,14 +91,13 @@ export function Header({ locale, brandName, navigationItems, primaryCta }: Heade
     <header className="relative z-50 w-full border-b border-black/10 bg-white text-black">
       <div className="mx-auto grid min-h-16 w-full max-w-[1440px] grid-cols-[1fr_auto] items-center gap-4 px-5 sm:px-8 md:min-h-[76px] md:grid-cols-[1fr_auto_1fr] lg:px-12">
         <div className="min-w-0">
-          {brandName && (
-            <Link
-              href={`/${locale}`}
-              className="block truncate text-base font-bold tracking-[-0.025em] sm:text-lg"
-            >
-              {brandName}
-            </Link>
-          )}
+          <Link
+            href={`/${locale}`}
+            className="flex items-center gap-3 truncate text-base font-bold tracking-[-0.025em] sm:text-lg"
+          >
+            <img src="/logo.png" alt="" className="h-8 w-auto object-contain" />
+            {brandName && <span>{brandName}</span>}
+          </Link>
         </div>
 
         {navigationItems.length > 0 && <div className="hidden md:block">{navigation()}</div>}

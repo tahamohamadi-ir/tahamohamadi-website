@@ -19,7 +19,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" dir="ltr">
+    <html lang="en" dir="ltr" suppressHydrationWarning>
       <body className="min-h-screen bg-gray-50 antialiased">
         <AuthProvider>{children}</AuthProvider>
       </body>
