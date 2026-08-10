@@ -59,6 +59,8 @@ export interface EditorShellProps {
   initialRevision?: number;
   /** Callback when the document is saved. */
   onSave?: (document: PageDocument) => Promise<void>;
+  /** Callback when the document is published. */
+  onPublish?: (document: PageDocument) => Promise<void>;
   /** Page ID for display purposes. */
   pageId?: string;
   /** Whether autosave is enabled (default: true). */
@@ -194,6 +196,20 @@ export function EditorShell({
     }
   }, [onSave, document, docStore, editorStore]);
 
+  const [isPublishing, setIsPublishing] = React.useState(false);
+
+  const handlePublish = useCallback(async () => {
+    if (!onPublish || isDirty) return;
+    setIsPublishing(true);
+    try {
+      await onPublish(document);
+    } catch (error) {
+      console.error('[EditorShell] Publish error:', error);
+    } finally {
+      setIsPublishing(false);
+    }
+  }, [onPublish, isDirty, document]);
+
   // Debounced Autosave (2000ms after document becomes dirty)
   useEffect(() => {
     if (!autoSaveEnabled || !isDirty || !onSave) return;
@@ -324,6 +340,8 @@ export function EditorShell({
           onUndo={handleUndo}
           onRedo={handleRedo}
           onSave={handleSave}
+          onPublish={handlePublish}
+          isPublishing={isPublishing}
           onTogglePreview={() =>
             editorStore.getState().setPreviewMode(!isPreviewMode)
           }

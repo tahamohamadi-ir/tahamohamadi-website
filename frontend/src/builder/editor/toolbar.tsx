@@ -17,6 +17,8 @@ export interface BuilderToolbarProps {
   onUndo: () => void;
   onRedo: () => void;
   onSave: () => void;
+  onPublish?: () => void;
+  isPublishing?: boolean;
   onTogglePreview: () => void;
   pageTitle: string;
 }
@@ -29,6 +31,8 @@ export function BuilderToolbar({
   onUndo,
   onRedo,
   onSave,
+  onPublish,
+  isPublishing,
   onTogglePreview,
   pageTitle,
 }: BuilderToolbarProps) {
@@ -112,7 +116,7 @@ export function BuilderToolbar({
         <button
           onClick={onSave}
           disabled={!isDirty}
-          title="Save (Ctrl+S)"
+          title="Save Draft (Ctrl+S)"
           style={{
             padding: '0.375rem 1rem',
             fontSize: '0.8125rem',
@@ -127,6 +131,28 @@ export function BuilderToolbar({
         >
           Save
         </button>
+
+        {onPublish && (
+          <button
+            onClick={onPublish}
+            disabled={isPublishing || isDirty}
+            title={isDirty ? 'Save draft before publishing' : 'Publish to production'}
+            style={{
+              padding: '0.375rem 1rem',
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              color: (isPublishing || isDirty) ? '#94a3b8' : '#ffffff',
+              backgroundColor: (isPublishing || isDirty) ? '#334155' : '#10b981',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: (isPublishing || isDirty) ? 'not-allowed' : 'pointer',
+              transition: 'background-color 0.15s',
+              marginLeft: '0.5rem',
+            }}
+          >
+            {isPublishing ? 'Publishing...' : 'Publish'}
+          </button>
+        )}
       </div>
     </div>
   );

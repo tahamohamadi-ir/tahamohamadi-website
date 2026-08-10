@@ -219,5 +219,28 @@ class BuilderPageViewSet(ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
+    # ------------------------------------------------------------------
+    # Published State (For Runtime Renderer)
+    # ------------------------------------------------------------------
+
+    @action(detail=True, methods=["get"], url_path="published")
+    def published(self, request, pk=None):
+        """Retrieve the currently published version schema for runtime rendering."""
+        page = self.get_object()
+        version = page.current_published_version
+
+        if not version:
+            return Response(
+                build_problem(
+                    status.HTTP_404_NOT_FOUND,
+                    "This page has no published version.",
+                    instance=request.path,
+                ),
+                status=status.HTTP_404_NOT_FOUND,
+                content_type=PROBLEM_CONTENT_TYPE,
+            )
+
+        return Response(BuilderPageVersionSerializer(version).data)
+
 
 

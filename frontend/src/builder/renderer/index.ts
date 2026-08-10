@@ -7,3 +7,5 @@ export { PageRenderer } from './node-renderer';
 export type { NodeRendererProps, PageRendererProps } from './node-renderer';
 
 export { resolveComponent, resolveSlots } from './runtime-resolver';
+export { RuntimeRenderer } from './runtime-renderer';
+export type { RuntimeRendererProps } from './runtime-renderer';
