@@ -44,7 +44,7 @@ export function TableOfContents({ items, locale }: TableOfContentsProps) {
     if (items.length === 0) return null;
 
     return (
-        <nav className="sticky top-24">
+        <nav className="sticky top-24" aria-label={locale === "fa" ? "فهرست مطالب" : "Table of Contents"}>
             <h2 className="mb-3 text-sm font-semibold text-foreground">
                 {locale === "fa" ? "فهرست مطالب" : "Table of Contents"}
             </h2>

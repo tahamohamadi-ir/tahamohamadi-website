@@ -367,7 +367,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
 
                     {/* Table of Contents (desktop sidebar) */}
                     {tocItems.length > 0 && (
-                        <aside className="hidden lg:block" aria-label={validLocale === "fa" ? "فهرست مطالب" : "Table of Contents"}>
+                        <aside className="hidden lg:block">
                             <TableOfContents items={tocItems} locale={validLocale} />
                         </aside>
                     )}

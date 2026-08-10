@@ -411,7 +411,7 @@ export function ComposerCanvas({
                 </div>
             )}
             {/* Left: Library panels */}
-            <aside className="w-64 shrink-0 space-y-6 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <aside aria-label="Library Panel" className="w-64 shrink-0 space-y-6 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4">
                 <SectionLibraryPanel onAddSection={addSection} />
                 <div className="border-t border-gray-200" />
                 <BlockLibraryPanel

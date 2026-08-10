@@ -18,7 +18,7 @@ export function PrevNextNav({ previous, next, locale }: PrevNextNavProps) {
     const isRtl = locale === "fa";
 
     return (
-        <nav className="mt-12 flex flex-col justify-between gap-4 border-t border-border py-8 sm:flex-row">
+        <nav aria-label={locale === "fa" ? "مطلب قبلی و بعدی" : "Previous and next article"} className="mt-12 flex flex-col justify-between gap-4 border-t border-border py-8 sm:flex-row">
             {previous ? (
                 <Link
                     href={`/${locale}/blog/${previous.slug}`}
