@@ -122,9 +122,7 @@ export default async function LocaleLayout({
 
   return (
     <html lang={validLocale} dir={dir} suppressHydrationWarning>
-      <head>
-        {customStyles && <style dangerouslySetInnerHTML={{ __html: customStyles }} />}
-      </head>
+      {customStyles ? <style dangerouslySetInnerHTML={{ __html: customStyles }} /> : null}
       <body className={`${fontClass} antialiased`}>
         <A11yProvider>
           <PublicLayout locale={validLocale}>{children}</PublicLayout>

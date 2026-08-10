@@ -156,7 +156,7 @@ export default function AdminDashboard() {
                                             </span>
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-sm">
+                                            <div className="text-sm">
                                                 <span className="font-medium">{item.user}</span>{" "}
                                                 تغییر {formatContentType(item.content_type)} از{" "}
                                                 <Badge variant="outline" className="text-xs">
@@ -166,10 +166,10 @@ export default function AdminDashboard() {
                                                 <Badge variant="secondary" className="text-xs">
                                                     {item.to_status}
                                                 </Badge>
-                                            </p>
-                                            <p className="text-xs text-gray-500">
+                                            </div>
+                                            <div className="text-xs text-gray-500">
                                                 {formatRelativeTime(item.timestamp)}
-                                            </p>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}

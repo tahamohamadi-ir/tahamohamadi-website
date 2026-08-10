@@ -123,7 +123,7 @@ export function ComposerCanvas({
         (updater: (prev: ComposerSection[]) => ComposerSection[]) => {
             setSections((prev) => {
                 const next = updater(prev);
-                onChange?.(next);
+                queueMicrotask(() => onChange?.(next));
                 return next;
             });
         },
