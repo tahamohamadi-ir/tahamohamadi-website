@@ -30,8 +30,9 @@ COLLECTION_RAW_FIELDS = {"id", "status", "technologies", "topics", "featured_ima
 
 @pytest.fixture
 def admin_user(db):
-    return User.objects.create_user(
+    return User.objects.create_superuser(
         username="admin_test",
+        email="admin_test@example.com",
         password="testpass123",
         is_staff=True,
     )

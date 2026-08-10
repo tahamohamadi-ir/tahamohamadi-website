@@ -58,6 +58,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "apps.core",
     "apps.cms",
+    "apps.pages",
     "apps.media",
     "apps.blog",
     "apps.portfolio",
@@ -65,7 +66,6 @@ LOCAL_APPS = [
     "apps.identity",
     "apps.siteconfig",
 ]
-
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 

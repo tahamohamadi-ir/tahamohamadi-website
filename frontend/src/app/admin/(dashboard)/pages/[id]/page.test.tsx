@@ -27,7 +27,7 @@ vi.mock("@/lib/admin-fetch", async (importOriginal) => {
 });
 
 vi.mock("@/components/admin/auth-context", () => ({
-  useAuth: () => ({ user: { username: "editor" }, logout: vi.fn() }),
+  useAuth: () => ({ user: { username: "editor" }, hasRole: vi.fn().mockReturnValue(true), logout: vi.fn() }),
 }));
 
 vi.mock("@/components/admin/composer", async (importOriginal) => {

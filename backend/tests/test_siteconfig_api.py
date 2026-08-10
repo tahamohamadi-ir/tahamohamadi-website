@@ -27,6 +27,7 @@ def test_public_site_config_projects_published_localized_settings_and_navigation
             "site_title": "عنوان فارسی", "default_title": "سئو فارسی", "default_description": "",
             "public_email": "", "primary_cta_label": "تماس", "primary_cta_url": "/fa/contact",
             "footer_text": "پاورقی", "default_og_image": None,
+            "theme_preset": "default", "density": "comfortable", "design_tokens": {},
         },
         "navigation": {
             "header": [{"label": "خانه", "href": "/fa"}],
@@ -41,7 +42,7 @@ def test_site_config_admin_requires_auth_and_rejects_unsafe_destinations():
     navigation = {"label_fa": "خانه", "label_en": "Home", "href": "/fa", "location": "header"}
     assert client.post("/api/admin/site/navigation/", navigation, format="json").status_code == 403
 
-    user = get_user_model().objects.create_user(username="siteconfig-admin")
+    user = get_user_model().objects.create_superuser(username="siteconfig-admin", email="sa@example.com", password="pass")
     client.force_authenticate(user)
     assert client.post("/api/admin/site/navigation/", {**navigation, "href": "javascript:alert(1)"}, format="json").status_code == 422
     assert client.post("/api/admin/site/navigation/", {**navigation, "href": "//evil.example"}, format="json").status_code == 422
@@ -85,7 +86,7 @@ def test_site_aggregate_omits_incomplete_locale_records_and_supports_etag():
 @pytest.mark.django_db
 def test_site_config_admin_supports_filter_search_ordering_and_optimistic_locking():
     client = APIClient()
-    user = get_user_model().objects.create_user(username="siteconfig-list-admin")
+    user = get_user_model().objects.create_superuser(username="siteconfig-list-admin", email="sla@example.com", password="pass")
     client.force_authenticate(user)
     for label, ordering, status in (("Home later", 2, "published"), ("Home first", 1, "published"), ("Draft", 0, "draft")):
         assert client.post(

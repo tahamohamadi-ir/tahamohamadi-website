@@ -38,6 +38,9 @@ export function Header({ locale, brandName, navigationItems, primaryCta }: Heade
   const getLocalizedHref = (href: string) => {
     if (isExternalHref(href)) return href;
     const cleanHref = href.startsWith('/') ? href : `/${href}`;
+    if (cleanHref === `/${locale}` || cleanHref.startsWith(`/${locale}/`)) {
+      return cleanHref;
+    }
     return cleanHref === '/' ? `/${locale}` : `/${locale}${cleanHref}`;
   };
 

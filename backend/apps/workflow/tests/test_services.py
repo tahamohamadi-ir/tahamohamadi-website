@@ -18,6 +18,7 @@ from django.contrib.auth.models import Group, User
 from django.utils import timezone
 
 from apps.blog.models import Article
+from apps.media.models import MediaAsset
 from apps.workflow.models import AuditEvent, Revision, ScheduledPublish
 from apps.workflow.services import (
     ALLOWED_TRANSITIONS,
@@ -62,11 +63,21 @@ def reviewer_user(db):
 @pytest.fixture
 def draft_article(db):
     """Create a draft article for testing transitions."""
+    media = MediaAsset.objects.create(
+        original_filename="test.jpg",
+        file_size=1000,
+        mime_type="image/jpeg",
+        file="media/test.jpg",
+        status="active",
+    )
     return Article.objects.create(
         slug_fa="مقاله-تست",
         slug_en="test-article",
         title_fa="مقاله تست",
         title_en="Test Article",
+        excerpt_fa="توضیحات تست مقاله",
+        excerpt_en="Test article excerpt",
+        featured_image=media,
         status="draft",
     )
 

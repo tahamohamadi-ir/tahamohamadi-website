@@ -7,7 +7,7 @@ DEBUG = env.bool("DJANGO_DEBUG", default=True)
 
 ALLOWED_HOSTS = env.list(
     "DJANGO_ALLOWED_HOSTS",
-    default=["localhost", "127.0.0.1", "0.0.0.0", "backend"],
+    default=["localhost", "127.0.0.1", "0.0.0.0", "backend", "testserver"],
 )
 
 # `runserver` serves static files itself; WhiteNoise is a production concern and

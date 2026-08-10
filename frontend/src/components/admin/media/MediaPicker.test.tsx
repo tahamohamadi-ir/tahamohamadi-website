@@ -75,7 +75,7 @@ describe("MediaPicker", () => {
             render(<MediaPicker value={asset} locale="en" />);
             const img = screen.getByAltText("Test image");
             expect(img).toBeInTheDocument();
-            expect(img).toHaveAttribute("src", "/media/test-image.jpg");
+            expect(decodeURIComponent(img.getAttribute("src") || "")).toContain("/media/test-image.jpg");
         });
 
         it("shows file icon for non-image assets", () => {

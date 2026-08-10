@@ -88,11 +88,11 @@ VALID_STATES: set[str] = set(ALLOWED_TRANSITIONS.keys())
 
 # Maps target_status to the set of roles allowed to transition TO that state
 _TRANSITION_PERMISSIONS: dict[str, set[str]] = {
-    "draft": {"admin", "editor", "reviewer"},
-    "in_review": {"admin", "editor", "reviewer"},
-    "scheduled": {"admin", "editor"},
-    "published": {"admin", "editor"},
-    "archived": {"admin"},
+    "draft": {"admin", "editor", "reviewer", "Admin", "Content Editor", "Reviewer", "Publisher", "Site Owner"},
+    "in_review": {"admin", "editor", "reviewer", "Admin", "Content Editor", "Reviewer", "Publisher", "Site Owner"},
+    "scheduled": {"admin", "editor", "Admin", "Content Editor", "Publisher", "Site Owner"},
+    "published": {"admin", "editor", "Admin", "Content Editor", "Publisher", "Site Owner"},
+    "archived": {"admin", "Admin", "Site Owner"},
 }
 
 
@@ -128,7 +128,9 @@ def _user_has_transition_permission(user: Any, target_status: str) -> bool:
             if hasattr(user.groups, "values_list")
             else []
         )
-        if user_groups & allowed_roles:
+        user_groups_lower = {g.lower() for g in user_groups}
+        allowed_roles_lower = {r.lower() for r in allowed_roles}
+        if (user_groups & allowed_roles) or (user_groups_lower & allowed_roles_lower):
             return True
 
     return False
@@ -648,7 +650,7 @@ def transition_status(
         )
 
     # Step 1: Check if transition is allowed
-    allowed = ALLOWED_TRANSITIONS.get(current_status, [])
+    allowed = ALLOWED_TRANSITIONS.get(current_status or "", [])
     if target_status not in allowed:
         return TransitionError(
             f"Cannot transition from '{current_status}' to '{target_status}'. "

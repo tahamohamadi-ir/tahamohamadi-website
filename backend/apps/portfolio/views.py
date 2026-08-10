@@ -21,6 +21,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
+from django.db import NotSupportedError
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import PermissionDenied
 
@@ -70,10 +71,14 @@ class AdminCaseStudyViewSet(ModelViewSet):
         # Filter by technologies (JSON list contains)
         technologies = self.request.query_params.get("technologies")
         if technologies:
-            # Support comma-separated technology filter
             tech_list = [t.strip() for t in technologies.split(",") if t.strip()]
             for tech in tech_list:
-                queryset = queryset.filter(technologies__contains=[tech])
+                try:
+                    q = queryset.filter(technologies__contains=[tech])
+                    bool(q[:1])
+                    queryset = q
+                except NotSupportedError:
+                    queryset = queryset.filter(technologies__icontains=tech)
 
         return queryset
 
@@ -246,7 +251,12 @@ class PublicCaseStudyListView(ListAPIView):
         if technologies:
             tech_list = [t.strip() for t in technologies.split(",") if t.strip()]
             for tech in tech_list:
-                queryset = queryset.filter(technologies__contains=[tech])
+                try:
+                    q = queryset.filter(technologies__contains=[tech])
+                    bool(q[:1])
+                    queryset = q
+                except NotSupportedError:
+                    queryset = queryset.filter(technologies__icontains=tech)
 
         # Filter by role (checks both FA and EN)
         role = self.request.query_params.get("role")

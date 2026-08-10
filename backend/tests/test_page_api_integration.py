@@ -65,12 +65,12 @@ def _composer_default_blocks():
         ("divider", {"style": "line"}),
         ("research_focus", {"title": "", "description": "", "icon": None}),
         ("scroll_reveal", {"title": "", "description": None, "direction": "up", **animation}),
-        ("parallax", {"title": "", "subtitle": None, "media_url": None, "speed": 0.5, **animation}),
+        ("parallax", {"title": "", "subtitle": None, "media_id": None, "speed": 0.5, **animation}),
         ("text_stagger", {"content": "", "stagger_delay": 50, **animation}),
         ("fade_in_sequence", {"items": [], **animation}),
         ("hover_card", {"title": "", "description": "", "icon": None, "hover_effect": "lift", **animation}),
         ("counter_animation", {"label": "", "target_number": 0, "suffix": None, **animation}),
-        ("image_reveal", {"media_url": "", "alt": None, "reveal_direction": "left", **animation}),
+        ("image_reveal", {"media_id": None, "alt": None, "reveal_direction": "left", **animation}),
         ("section_transition", {"transition_type": "fade", **animation}),
     ]
     return [

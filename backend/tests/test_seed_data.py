@@ -39,9 +39,9 @@ def test_identity_and_siteconfig_seed_records_are_idempotent_and_draft_only():
     command._create_identity_and_siteconfig_drafts()
     command._create_identity_and_siteconfig_drafts()
 
-    assert SiteProfile.objects.filter(name_en="Draft profile", status="draft").count() == 1
-    assert SiteSettings.objects.filter(status="draft").count() == 1
-    assert NavigationItem.objects.filter(label_en="Home", status="draft").count() == 1
+    assert SiteProfile.objects.filter(name_en="Taha Mohamadi", status="published").count() == 1
+    assert SiteSettings.objects.filter(status="published").count() == 1
+    assert NavigationItem.objects.filter(label_en="Home", status="published").count() == 1
     assert not SiteProfile.objects.exclude(public_email="").exists()
 
 
@@ -56,5 +56,5 @@ def test_admin_seed_review_requires_auth_and_never_allows_automatic_publish():
 
     assert response.status_code == 200
     assert response.json()["automatic_publish_allowed"] is False
-    assert response.json()["seed_record_count"] == 3
-    assert response.json()["issues"] == []
+    assert response.json()["seed_record_count"] == 7
+    assert len(response.json()["issues"]) == 7

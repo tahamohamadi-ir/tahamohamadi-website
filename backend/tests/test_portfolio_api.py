@@ -27,8 +27,9 @@ User = get_user_model()
 
 @pytest.fixture
 def admin_user(db):
-    return User.objects.create_user(
+    return User.objects.create_superuser(
         username="portfolio_admin",
+        email="portfolio_admin@example.com",
         password="testpass123",
         is_staff=True,
     )

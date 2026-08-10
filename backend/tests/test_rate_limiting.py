@@ -88,12 +88,12 @@ class TestLoginRateThrottle:
         """Valid credentials should authenticate and create a session."""
         response = api_client.post(
             "/api/admin/login/",
-            {"username": "admin", "password": "adminpass123!"},
+            {"username": admin_user.username, "password": "adminpass123!"},
             format="json",
         )
         assert response.status_code == status.HTTP_200_OK
         assert response.data["status"] == "authenticated"
-        assert response.data["user"] == "admin"
+        assert response.data["user"]["username"] == "admin"
 
 
 @pytest.mark.django_db

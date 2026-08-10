@@ -13,8 +13,8 @@ from apps.workflow.models import AuditEvent
 
 @pytest.fixture
 def admin_client(db):
-    user = get_user_model().objects.create_user(
-        username="media-admin", password="not-used-in-this-test"
+    user = get_user_model().objects.create_superuser(
+        username="media-admin", email="media-admin@example.com", password="not-used-in-this-test"
     )
     client = APIClient()
     client.force_authenticate(user)

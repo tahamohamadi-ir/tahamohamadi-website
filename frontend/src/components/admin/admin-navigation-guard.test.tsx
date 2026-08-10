@@ -10,7 +10,7 @@ import {
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/admin/pages/page-1" }));
 vi.mock("./auth-context", () => ({
-    useAuth: () => ({ user: { username: "editor" }, logout: vi.fn() }),
+    useAuth: () => ({ user: { username: "editor" }, hasRole: vi.fn().mockReturnValue(true), logout: vi.fn() }),
 }));
 
 function DirtyEditorRegistration() {

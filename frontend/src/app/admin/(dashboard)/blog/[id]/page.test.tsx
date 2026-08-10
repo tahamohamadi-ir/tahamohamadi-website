@@ -19,6 +19,10 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/lib/admin-fetch", () => ({ adminFetch: adminFetchMock }));
 
+vi.mock("@/components/admin/auth-context", () => ({
+    useAuth: () => ({ user: { username: "editor" }, hasRole: vi.fn().mockReturnValue(true), logout: vi.fn() }),
+}));
+
 vi.mock("@/components/admin/editor", () => ({
     ArticleEditor: ({
         article,

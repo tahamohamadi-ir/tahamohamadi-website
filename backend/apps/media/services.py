@@ -21,7 +21,7 @@ from datetime import datetime
 from uuid import UUID
 
 from django.core.files.storage import default_storage
-from django.db import transaction
+from django.db import NotSupportedError, transaction
 from PIL import Image
 
 from apps.media.models import MediaAsset, MediaUsageReference
@@ -300,6 +300,25 @@ def upload_media(file, user_id: str = "") -> MediaAsset:
 # --- Media usage tracking (Requirement 5.5) -------------------------------
 
 
+def _safe_json_list_contains(queryset, field_lookup: str, item_str: str) -> list:
+    """Filter queryset for objects where field_lookup (e.g. settings__media_ids) contains item_str.
+
+    Falls back to Python filtering if DB doesn't support JSON __contains (e.g. SQLite).
+    """
+    try:
+        return list(queryset.filter(**{f"{field_lookup}__contains": [item_str]}))
+    except NotSupportedError:
+        field_name, key_name = field_lookup.split("__", 1)
+        results = []
+        for obj in queryset:
+            data = getattr(obj, field_name, {})
+            if isinstance(data, dict):
+                arr = data.get(key_name, [])
+                if isinstance(arr, list) and item_str in arr:
+                    results.append(obj)
+        return results
+
+
 def get_media_usage(media_id: UUID) -> list[dict]:
     """Track where a media asset is referenced across published content models.
 
@@ -342,9 +361,9 @@ def get_media_usage(media_id: UUID) -> list[dict]:
             })
 
     # 2. Check blocks with media_ids list containing the media_id_str
-    blocks_list = Block.objects.filter(
-        settings__media_ids__contains=[media_id_str]
-    ).select_related("section__page")
+    blocks_list = _safe_json_list_contains(
+        Block.objects.select_related("section__page"), "settings__media_ids", media_id_str
+    )
 
     for block in blocks_list:
         page = block.section.page
@@ -368,9 +387,9 @@ def get_media_usage(media_id: UUID) -> list[dict]:
     article_blocks = ArticleBlock.objects.filter(
         content__media_id=media_id_str
     ).select_related("article")
-    article_block_lists = ArticleBlock.objects.filter(
-        content__media_ids__contains=[media_id_str]
-    ).select_related("article")
+    article_block_lists = _safe_json_list_contains(
+        ArticleBlock.objects.select_related("article"), "content__media_ids", media_id_str
+    )
     for block in (*article_blocks, *article_block_lists):
         article = block.article
         if article.id not in seen_article_ids:
@@ -393,9 +412,9 @@ def get_media_usage(media_id: UUID) -> list[dict]:
     case_blocks = CaseStudyBlock.objects.filter(
         content__media_id=media_id_str
     ).select_related("case_study")
-    case_block_lists = CaseStudyBlock.objects.filter(
-        content__media_ids__contains=[media_id_str]
-    ).select_related("case_study")
+    case_block_lists = _safe_json_list_contains(
+        CaseStudyBlock.objects.select_related("case_study"), "content__media_ids", media_id_str
+    )
     for block in (*case_blocks, *case_block_lists):
         case_study = block.case_study
         if case_study.id not in seen_case_study_ids:
@@ -440,7 +459,7 @@ def reconcile_media_usage_references() -> int:
     seen: set[tuple] = set()
 
     def add_reference(
-        media_id: str,
+        media_id: Any,
         source_type: str,
         source_id: UUID,
         owner_type: str,
@@ -448,8 +467,10 @@ def reconcile_media_usage_references() -> int:
         reference_field: str,
         **source,
     ) -> None:
+        if not media_id:
+            return
         try:
-            resolved_media_id = UUID(str(media_id))
+            resolved_media_id = media_id if isinstance(media_id, UUID) else UUID(str(media_id))
         except (TypeError, ValueError):
             return
         if resolved_media_id not in known_media_ids:
@@ -592,9 +613,8 @@ def replace_media_references(source_media_id: UUID, replacement_media_id: UUID) 
             ]
         return updated
 
-    cms_blocks = Block.objects.select_for_update().filter(settings__media_id=source_id)
-    cms_blocks = list(cms_blocks) + list(
-        Block.objects.select_for_update().filter(settings__media_ids__contains=[source_id])
+    cms_blocks = list(Block.objects.select_for_update().filter(settings__media_id=source_id)) + _safe_json_list_contains(
+        Block.objects.select_for_update(), "settings__media_ids", source_id
     )
     seen_block_ids: set = set()
     for block in cms_blocks:
@@ -609,9 +629,8 @@ def replace_media_references(source_media_id: UUID, replacement_media_id: UUID) 
         article.featured_image_id = replacement_media_id
         article.save(update_fields=["featured_image", "updated_at"])
 
-    article_blocks = ArticleBlock.objects.select_for_update().filter(content__media_id=source_id)
-    article_blocks = list(article_blocks) + list(
-        ArticleBlock.objects.select_for_update().filter(content__media_ids__contains=[source_id])
+    article_blocks = list(ArticleBlock.objects.select_for_update().filter(content__media_id=source_id)) + _safe_json_list_contains(
+        ArticleBlock.objects.select_for_update(), "content__media_ids", source_id
     )
     seen_article_block_ids: set = set()
     for block in article_blocks:
@@ -629,9 +648,8 @@ def replace_media_references(source_media_id: UUID, replacement_media_id: UUID) 
         case_study.gallery.remove(source_media_id)
         case_study.gallery.add(replacement_media_id)
 
-    case_blocks = CaseStudyBlock.objects.select_for_update().filter(content__media_id=source_id)
-    case_blocks = list(case_blocks) + list(
-        CaseStudyBlock.objects.select_for_update().filter(content__media_ids__contains=[source_id])
+    case_blocks = list(CaseStudyBlock.objects.select_for_update().filter(content__media_id=source_id)) + _safe_json_list_contains(
+        CaseStudyBlock.objects.select_for_update(), "content__media_ids", source_id
     )
     seen_case_block_ids: set = set()
     for block in case_blocks:
