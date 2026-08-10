@@ -35,7 +35,7 @@ describe('CommandBus & Node Commands', () => {
     });
 
     const doc = docStore.getState().document;
-    const insertedId = result.affectedNodeIds[0];
+    const insertedId = result!.affectedNodeIds[0];
 
     expect(doc.nodes[insertedId]).toBeDefined();
     expect(doc.nodes[insertedId].type).toBe('ui.button');
@@ -60,7 +60,7 @@ describe('CommandBus & Node Commands', () => {
       },
     });
 
-    const node = insertRes.affectedNodeIds[0];
+    const node = insertRes!.affectedNodeIds[0];
 
     commandBus.execute({
       type: NODE_COMMAND_TYPES.UPDATE_PROPS,
@@ -92,7 +92,7 @@ describe('CommandBus & Node Commands', () => {
       },
     });
 
-    const originalId = insertRes.affectedNodeIds[0];
+    const originalId = insertRes!.affectedNodeIds[0];
 
     const dupRes = commandBus.execute({
       type: NODE_COMMAND_TYPES.DUPLICATE,
@@ -100,7 +100,7 @@ describe('CommandBus & Node Commands', () => {
     });
 
     const doc = docStore.getState().document;
-    const duplicatedId = dupRes.affectedNodeIds[0];
+    const duplicatedId = dupRes!.affectedNodeIds[0];
 
     expect(duplicatedId).not.toBe(originalId);
     expect(doc.nodes[duplicatedId]).toBeDefined();
@@ -118,7 +118,7 @@ describe('CommandBus & Node Commands', () => {
         slotName: 'children',
         node: { type: 'ui.button', componentVersion: 1, props: {}, slots: {}, styleRefs: [] },
       },
-    }).affectedNodeIds[0];
+    })!.affectedNodeIds[0];
 
     const n2 = commandBus.execute({
       type: NODE_COMMAND_TYPES.INSERT,
@@ -127,7 +127,7 @@ describe('CommandBus & Node Commands', () => {
         slotName: 'children',
         node: { type: 'ui.button', componentVersion: 1, props: {}, slots: {}, styleRefs: [] },
       },
-    }).affectedNodeIds[0];
+    })!.affectedNodeIds[0];
 
     commandBus.execute({
       type: NODE_COMMAND_TYPES.BATCH_DELETE,

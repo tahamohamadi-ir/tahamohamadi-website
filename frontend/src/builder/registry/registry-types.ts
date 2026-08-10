@@ -84,6 +84,9 @@ export interface ComponentDefinition<
     hidden?: boolean;
   };
 
+  /** Zod or JSON Schema for props validation. */
+  propsSchema?: unknown;
+
   /** Default prop values when a new instance is created. */
   defaults: Partial<TProps>;
 
@@ -97,7 +100,7 @@ export interface ComponentDefinition<
   inspector: InspectorSection[];
 
   /** The React component used to render this node. */
-  render: ComponentType<ComponentRenderProps<TProps>>;
+  render: ComponentType<ComponentRenderProps<any>>;
 
   /** Migration functions: key = from version, value = migration fn. */
   migrations?: Record<number, (props: Record<string, unknown>) => Record<string, unknown>>;
@@ -123,4 +126,6 @@ export interface ComponentRenderProps<
   isEditor: boolean;
   /** Whether this node is currently selected. */
   isSelected: boolean;
+  /** Callback to update props directly from inline editor. */
+  onPropsChange?: (patch: Partial<TProps>) => void;
 }

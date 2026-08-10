@@ -36,7 +36,7 @@ describe('HistoryEngine Undo/Redo', () => {
       },
     });
 
-    const nodeId = res.affectedNodeIds[0];
+    const nodeId = res!.affectedNodeIds[0];
     expect(history.canUndo).toBe(true);
 
     // Undo

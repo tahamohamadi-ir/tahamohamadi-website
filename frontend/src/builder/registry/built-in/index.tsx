@@ -410,6 +410,18 @@ export const mediaImage = defineComponent({
 // Registration helper
 // ---------------------------------------------------------------------------
 
+import { contentRichTextComponent } from './content-richtext';
+import {
+  formFormComponent,
+  formInputComponent,
+  formTextareaComponent,
+  formSubmitComponent,
+} from './form-components';
+import {
+  navigationNavbarComponent,
+  navigationFooterComponent,
+} from './navigation-components';
+
 export const BUILT_IN_COMPONENTS: ComponentDefinition[] = [
   corePage,
   layoutSection,
@@ -419,8 +431,15 @@ export const BUILT_IN_COMPONENTS: ComponentDefinition[] = [
   contentHeading,
   contentText,
   contentParagraph,
+  contentRichTextComponent,
   uiButton,
   mediaImage,
+  formFormComponent,
+  formInputComponent,
+  formTextareaComponent,
+  formSubmitComponent,
+  navigationNavbarComponent,
+  navigationFooterComponent,
 ];
 
 /**
