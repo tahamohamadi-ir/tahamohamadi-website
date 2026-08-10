@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { ComposerBlock, BlockType } from "../composer/types";
 import { SortableBlock } from "../composer/SortableBlock";
 import { OptimizedImage } from "@/components/ui/optimized-image";
+import { useAuth } from "@/components/admin/auth-context";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -238,6 +239,8 @@ function GalleryItemCard({ item, onRemove, onMoveUp, onMoveDown, isFirst, isLast
 export function CaseStudyEditor({ caseStudy, locale, onSave }: CaseStudyEditorProps) {
     const [data, setData] = useState<CaseStudyData>(caseStudy);
     const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+    const { hasRole } = useAuth();
+    const canPublish = hasRole("Admin") || hasRole("Publisher");
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -662,8 +665,8 @@ export function CaseStudyEditor({ caseStudy, locale, onSave }: CaseStudyEditorPr
                         >
                             <option value="draft">Draft</option>
                             <option value="in_review">In review</option>
-                            <option value="scheduled">Scheduled</option>
-                            <option value="published">Published</option>
+                            {canPublish && <option value="scheduled">Scheduled</option>}
+                            {canPublish && <option value="published">Published</option>}
                             <option value="archived">Archived</option>
                         </select>
                     </div>

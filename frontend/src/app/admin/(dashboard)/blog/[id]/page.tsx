@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArticleEditor } from "@/components/admin/editor";
 import { adminFetch } from "@/lib/admin-fetch";
+import { useAuth } from "@/components/admin/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +16,8 @@ export default function ArticleEditorPage() {
     const params = useParams();
     const router = useRouter();
     const articleId = params.id as string;
+    const { hasRole } = useAuth();
+    const canPublish = hasRole("Admin") || hasRole("Publisher");
 
     const [article, setArticle] = useState<EditorArticle | null>(null);
     const [loading, setLoading] = useState(true);
@@ -239,14 +242,16 @@ export default function ArticleEditorPage() {
                         <span>Article status</span>
                         <select
                             value={article.status ?? "draft"}
-                            onChange={(event) => updateField("status", event.target.value)}
+                            onChange={(e) =>
+                                setArticle({ ...article, status: e.target.value as "draft" | "published" | "scheduled" | "in_review" | "archived" })
+                            }
                             className="block w-full rounded-md border border-input bg-background px-3 py-2"
                         >
-                            <option value="draft">Draft</option>
-                            <option value="in_review">In review</option>
-                            <option value="scheduled">Scheduled</option>
-                            <option value="published">Published</option>
-                            <option value="archived">Archived</option>
+                            <option value="draft">Draft (پیش‌نویس)</option>
+                            <option value="in_review">In review (در حال بررسی)</option>
+                            {canPublish && <option value="published">Published (منتشر شده)</option>}
+                            {canPublish && <option value="scheduled">Scheduled (زمان‌بندی شده)</option>}
+                            <option value="archived">Archived (آرشیو)</option>
                         </select>
                     </label>
                 </section>

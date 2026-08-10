@@ -12,6 +12,7 @@ import { fetchPublicSiteConfig } from "@/lib/api";
 import { inter, vazirmatn } from "@/lib/fonts";
 import { PublicLayout } from "@/components/layout";
 import { A11yProvider } from "@/components/a11y-provider";
+import { hexToHsl, getContrastForegroundHsl } from "@/lib/color-utils";
 import "../globals.css";
 
 interface LocaleLayoutProps {
@@ -98,8 +99,32 @@ export default async function LocaleLayout({
       ? `${vazirmatn.variable} font-vazirmatn`
       : `${inter.variable} font-inter`;
 
+  // Fetch site config for design tokens
+  const siteConfig = await fetchPublicSiteConfig(validLocale).catch(() => null);
+  const designTokens = (siteConfig?.settings?.design_tokens || {}) as { colors?: Record<string, { primary?: string }> };
+  const primaryColorHex = designTokens?.colors?.[validLocale]?.primary;
+  
+  let customStyles = "";
+  if (primaryColorHex) {
+    const primaryHsl = hexToHsl(primaryColorHex);
+    const primaryForegroundHsl = getContrastForegroundHsl(primaryColorHex);
+    customStyles = `
+      :root {
+        --primary: ${primaryHsl};
+        --primary-foreground: ${primaryForegroundHsl};
+      }
+      .dark {
+        --primary: ${primaryHsl};
+        --primary-foreground: ${primaryForegroundHsl};
+      }
+    `;
+  }
+
   return (
     <html lang={validLocale} dir={dir} suppressHydrationWarning>
+      <head>
+        {customStyles && <style dangerouslySetInnerHTML={{ __html: customStyles }} />}
+      </head>
       <body className={`${fontClass} antialiased`}>
         <A11yProvider>
           <PublicLayout locale={validLocale}>{children}</PublicLayout>
