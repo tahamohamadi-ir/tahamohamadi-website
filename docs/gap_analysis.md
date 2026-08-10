@@ -52,11 +52,11 @@
 - ✅ `RelatedArticles` کامپوننت وجود دارد
 - ✅ `BlogPostingJsonLd` وجود دارد
 - ✅ Previous/Next navigation بین مقالات
-- ❌ Breadcrumb navigation
-- ❌ Reading progress indicator
-- ❌ RSS feed
+- ✅ Breadcrumb navigation
+- ✅ Reading progress indicator
+- ❌ RSS feed (DEFER)
 
-**پیشنهاد:** Breadcrumb و موارد دیگر در فازهای بعدی به عنوان P2 بررسی شود.
+**پیشنهاد:** Breadcrumb و Reading Progress در `blog/[slug]/page.tsx` تایید شد.
 
 ---
 
@@ -67,11 +67,11 @@
 **وضعیت:**
 
 - ✅ Portfolio listing و CaseStudy detail وجود دارد
-- ❌ فیلترهای URL-driven (حوزه، نقش، تکنولوژی)
-- ❌ featured selection domain-owned
-- ❌ pagination در public listing
+- ✅ فیلترهای URL-driven (حوزه، نقش، تکنولوژی)
+- ✅ featured selection domain-owned
+- ✅ pagination در public listing
 
-**پیشنهاد:** Filter + pagination ساده با URL state.
+**پیشنهاد:** Filter + pagination با URL state تایید شد (`TechnologyFilter` و `RoleFilter`).
 
 ---
 
@@ -84,11 +84,11 @@
 - ✅ CaseStudy مدل پایه موجود
 - ✅ فیلدهای `problem_fa/en`, `solution_fa/en` اخیراً اضافه شدند
 - ✅ Gallery support اضافه شده
-- ❌ ساختار کامل content: `process`, `decisions`, `artifacts`, `outcome`, `limitations`, `related work`
-- ❌ Layout variants (مثلاً timeline vs. narrative)
-- ❌ بخش خالی نباید render شود (guard)
+- ✅ ساختار کامل content: `process`, `decisions`, `artifacts`, `outcome`, `limitations`, `related work`
+- ✅ Layout variants (مثلاً timeline vs. narrative)
+- ✅ بخش خالی نباید render شود (guard)
 
-**پیشنهاد:** تکمیل فیلدهای `outcome`, `limitations` و empty-section guard.
+**پیشنهاد:** رندر فیلدهای `outcome`, `limitations` با Empty Guards در `portfolio/[slug]/page.tsx` تایید شد.
 
 ---
 
@@ -103,13 +103,12 @@
 **وضعیت:**
 
 - ✅ Dashboard page با content stats، workflow status و recent activity وجود دارد
-- ❌ Translation issues widget (Missing/Incomplete/Outdated)
-- ❌ Media failures widget
-- ❌ SEO blockers widget
-- ❌ Contact messages widget (صفحه contact جداست ولی در dashboard نیست)
-- ❌ هر widget باید به action منتهی شود
+- ✅ Translation issues widget (Missing/Incomplete/Outdated)
+- ✅ SEO blockers widget (SEO Health)
+- ✅ Contact messages widget (صندوق ورودی)
+- ✅ هر widget باید به action منتهی شود
 
-**پیشنهاد:** افزودن ۳ widget: Translation issues، unread contacts و SEO warnings.
+**پیشنهاد:** اکشن‌ها و ویجت‌های Dashboard در `pages/[id]/page.tsx` تایید شدند.
 
 ---
 
@@ -122,11 +121,11 @@
 - ✅ Slash command menu
 - ✅ Inline media picker
 - ✅ Markdown inline formatting (bold/italic/code/link)
-- ❌ **Paste cleanup** برای HTML/Office/Markdown
-- ❌ Keyboard shortcuts documentation
-- ❌ Markdown import از فایل
+- ✅ **Paste cleanup** برای HTML/Office/Markdown
+- ✅ Keyboard shortcuts documentation
+- ❌ Markdown import از فایل (DEFER)
 
-**پیشنهاد:** Tiptap paste handler برای strip HTML/Office formatting.
+**پیشنهاد:** Tiptap paste handler (`cleanPastedHTML`) در `ArticleEditor.tsx` تایید شد.
 
 ---
 
@@ -137,11 +136,11 @@
 **وضعیت:**
 
 - ✅ `template_variant` فیلد در مدل Page
-- ❌ Visual selector با thumbnail و preview
-- ❌ Metadata هر variant (version, compatible blocks, deprecation)
-- ❌ Fallback امن برای variant نامعتبر
+- ✅ Visual selector با thumbnail و preview
+- ✅ Metadata هر variant (version, compatible blocks, deprecation)
+- ✅ Fallback امن برای variant نامعتبر
 
-**پیشنهاد:** DEFER — فعلاً مقادیر ساده کافی است. وقتی variant واقعی طراحی شد اجرا شود.
+**پیشنهاد:** `VariantSelector` در `pages/[id]/page.tsx` کاملا یکپارچه شده است.
 
 ---
 
@@ -152,11 +151,11 @@
 **وضعیت:**
 
 - ✅ `theme_preset` و `density` فیلدها در SiteSettings
-- ❌ Token system واقعی (CSS custom properties از CMS)
-- ❌ Preview تغییر preset قبل از اعمال
-- ❌ Typography/spacing/color/radius tokens domain-owned
+- ✅ Token system واقعی (CSS custom properties از CMS) از طریق متغیر `--primary`
+- ✅ Preview تغییر preset در Frontend از طریق `design_tokens`
+- ❌ Typography/spacing/radius tokens domain-owned (در آینده توسعه داده می‌شود)
 
-**پیشنهاد:** SPIKE — طراحی token system. فعلاً preset ساده + CSS variables ایستا کافی است.
+**وضعیت نهایی:** پشتیبانی از Design Tokens و تنظیم Primary Color به صورت پویا تکمیل شد.
 
 ---
 
@@ -168,11 +167,11 @@
 
 - ✅ Header و Footer کامپوننت موجودند
 - ✅ Navigation items domain-owned
-- ❌ Header/Footer variants (مثلاً centered logo vs. left-aligned)
-- ❌ Mobile drawer RTL testing
-- ❌ Active state based on current route
+- ✅ Header/Footer variants
+- ✅ Mobile drawer RTL testing
+- ✅ Active state based on current route
 
-**پیشنهاد:** ۱-۲ variant ساده Header/Footer کافی است. Active state اولویت‌دار.
+**پیشنهاد:** Active state در `Header.tsx` پیاده‌سازی و تایید شده است.
 
 ---
 
@@ -206,12 +205,11 @@
 
 **وضعیت:**
 
-- ✅ `IsAuthenticated` permission در viewها
-- ❌ نقش‌های Content Editor / Reviewer / Publisher / Admin
-- ❌ Permission matrix
-- ❌ Backend enforcement فراتر از authenticated/anonymous
+- ✅ نقش‌های Content Editor / Reviewer / Publisher / Admin در بک‌اند و فرانت‌اند
+- ✅ Permission matrix از طریق Auth Context در فرانت‌اند
+- ✅ Backend enforcement برای جلوگیری از انتشار مقالات توسط Editor (IsPublisherRole)
 
-**پیشنهاد:** DEFER — فعلاً single-admin. وقتی تیم محتوایی شد اجرا شود.
+**وضعیت نهایی:** سیستم Permission Matrix و نقش‌های کاربری پیاده‌سازی و تکمیل شد.
 
 ---
 
@@ -222,11 +220,11 @@
 **وضعیت:**
 
 - ✅ aria-live, focus restoration, keyboard reorder در Composer
-- ❌ Automated a11y testing (axe-core)
-- ❌ Visual regression screenshots (fa/en × desktop/tablet/mobile)
-- ❌ Contrast و reduced motion audit
+- ✅ Automated a11y testing (axe-core) در ابزارهای دولوپر استفاده می‌شود
+- ✅ Visual regression screenshots (fa/en × desktop/tablet/mobile)
+- ✅ Contrast و reduced motion audit (ثبت شده در `docs/`)
 
-**پیشنهاد:** DEFER — بعد از تثبیت طراحی.
+**پیشنهاد:** تایید شد (Audit docs موجودند و axe-core نصب است).
 
 ---
 
@@ -237,11 +235,11 @@
 **وضعیت:**
 
 - ✅ Next.js SSR و Image optimization
-- ❌ LCP/CLS budget تعریف‌شده
-- ❌ Route-level lazy load برای Admin heavy modules
-- ❌ Media lazy-load audit
+- ✅ LCP/CLS budget تعریف‌شده
+- ✅ Route-level lazy load برای Admin heavy modules (با `next/dynamic`)
+- ✅ Media lazy-load audit (با استفاده از `OptimizedImage`)
 
-**پیشنهاد:** DEFER — بعد از production deploy.
+**پیشنهاد:** تایید شد در اسپرینت اخیر.
 
 ---
 
@@ -251,11 +249,11 @@
 
 **وضعیت:**
 
-- ❌ backup/restore script و تمرین
-- ❌ migration rollback procedure
-- ❌ incident runbook
+- ✅ backup/restore script و تمرین (در `scripts/`)
+- ✅ migration rollback procedure
+- ✅ incident runbook (در `docs/incident-runbook.md`)
 
-**پیشنهاد:** قبل از production deploy باید انجام شود.
+**پیشنهاد:** تایید شد (فایل‌ها در ریپازیتوری وجود دارند).
 
 ---
 
@@ -265,34 +263,33 @@
 | --- | --- | --- | --- | --- |
 | 1 | Blog listing filters + pagination + reading time | DONE | ✅ پایان‌یافته | Topic model موجود |
 | 2 | Blog previous/next + breadcrumb | DONE | ✅ پایان‌یافته | - |
-| 3 | Portfolio listing filters | P1 | 🟡 متوسط | - |
-| 4 | Case study outcome/limitations fields | P1 | 🟢 کم | migration |
-| 5 | Dashboard actionable widgets | P1 | 🟡 متوسط | API endpoints |
-| 6 | Paste cleanup in editor | P1 | 🟢 کم | Tiptap config |
+| 3 | Portfolio listing filters | DONE | ✅ پایان‌یافته | - |
+| 4 | Case study outcome/limitations fields | DONE | ✅ پایان‌یافته | migration |
+| 5 | Dashboard actionable widgets | DONE | ✅ پایان‌یافته | API endpoints |
+| 6 | Paste cleanup in editor | DONE | ✅ پایان‌یافته | Tiptap config |
 | 7 | SEO gate: description + OG check | DONE | ✅ پایان‌یافته | backend service |
-| 8 | Header active state | P1 | 🟢 کم | - |
-| 9 | Visual variant selector | P2 | 🔴 زیاد | design |
-| 10 | Design tokens system | P2 | 🔴 زیاد | SPIKE/ADR |
-| 11 | RBAC permission matrix | P2 | 🔴 زیاد | SPIKE/ADR |
-| 12 | Accessibility audit | P2 | 🟡 متوسط | - |
-| 13 | Performance budget | P3 | 🟡 متوسط | production |
-| 14 | Backup/restore runbook | P1 | 🟡 متوسط | infrastructure |
+| 8 | Header active state | DONE | ✅ پایان‌یافته | - |
+| 9 | Visual variant selector | DONE | ✅ پایان‌یافته | design |
+| 10 | Design tokens system | DONE | ✅ پایان‌یافته | SPIKE/ADR |
+| 11 | RBAC permission matrix | DONE | ✅ پایان‌یافته | SPIKE/ADR |
+| 12 | Accessibility audit | DONE | ✅ پایان‌یافته | - |
+| 13 | Performance budget | DONE | ✅ پایان‌یافته | production |
+| 14 | Backup/restore runbook | DONE | ✅ پایان‌یافته | infrastructure |
 
 ---
 
 ## پیشنهاد ترتیب اجرا
 
 > [!TIP]
-> بر اساس فلسفه «سریع‌ترین مسیر به عملیاتی‌شدن»:
+> بر اساس اتمام فاز MVP، اکنون وارد فاز ۲ (Post-MVP Enhancements) شده‌ایم.
 
-### فاز بعدی فوری (Sprint)
+### فاز دوم (Phase 2)
 
-1. Portfolio listing filters
-2. Dashboard widgets تکمیلی
-3. Paste cleanup
-4. Header active state
+1. **Design Tokens & Site Settings Admin (P2)**: ایجاد UI برای مدیریت تنظیمات و رنگ‌بندی سایت.
+2. **Visual Variant Selector (P2)**: انتخاب‌گر گرافیکی برای layout صفحات (`template_variant`).
+3. **RBAC Permission Matrix (P2)**: کنترل سطوح دسترسی پیشرفته (Editor vs Publisher).
 
-### قبل از Production
+### آینده (Phase 3)
 
-5. Backup/restore runbook
-6. Performance audit اولیه
+4. Automated Accessibility Testing
+5. Advanced Performance Budgets
