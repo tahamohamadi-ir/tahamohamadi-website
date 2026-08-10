@@ -46,3 +46,4 @@ export * from './document';
 export * from './node-types';
 export * from './validation';
 export * from './style';
+export * from './symbols';
