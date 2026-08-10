@@ -23,7 +23,6 @@ import {
 } from '../state';
 import type { DocumentStoreApi, EditorStoreApi, DocumentState, EditorState } from '../state';
 import { componentRegistry, registerBuiltInComponents } from '../registry';
-import { PageRenderer } from '../renderer';
 import { CanvasFrame } from '../canvas';
 import { BuilderToolbar } from './toolbar';
 import { LayersPanel } from './layers-panel';

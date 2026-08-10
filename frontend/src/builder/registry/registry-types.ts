@@ -100,6 +100,7 @@ export interface ComponentDefinition<
   inspector: InspectorSection[];
 
   /** The React component used to render this node. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   render: ComponentType<ComponentRenderProps<any>>;
 
   /** Migration functions: key = from version, value = migration fn. */

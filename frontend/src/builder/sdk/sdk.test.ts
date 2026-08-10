@@ -41,4 +41,9 @@ describe('Component SDK', () => {
     registerPlugin(plugin);
     expect(componentRegistry.has('plugin.cta')).toBe(true);
   });
+
+  it('runs migrateNodeProps helper via SDK', () => {
+    const migrated = migrateNodeProps('nonexistent.type', 1, { foo: 'bar' });
+    expect(migrated).toEqual({ foo: 'bar' });
+  });
 });
