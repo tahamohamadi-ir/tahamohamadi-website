@@ -32,6 +32,9 @@ describe("locale metadata", () => {
         primary_cta_label: "",
         primary_cta_url: "",
         footer_text: "",
+        theme_preset: "default",
+        density: "comfortable",
+        design_tokens: {},
       },
       navigation: { header: [], footer: [] },
     });

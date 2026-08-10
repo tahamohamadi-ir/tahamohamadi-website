@@ -16,6 +16,9 @@ describe("Footer", () => {
             primary_cta_label: "",
             primary_cta_url: "",
             footer_text: "CMS footer text",
+            theme_preset: "default",
+            density: "comfortable",
+            design_tokens: {},
           },
           navigation: {
             header: [],
