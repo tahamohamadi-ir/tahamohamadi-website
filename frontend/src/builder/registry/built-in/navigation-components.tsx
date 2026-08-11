@@ -48,6 +48,12 @@ export const navigationNavbarComponent = defineComponent({
       </nav>
     </header>
   ),
+  ai: {
+    purpose: 'Site-wide header navigation bar',
+    bestFor: ['header', 'main menu', 'topbar'],
+    semanticRole: 'header',
+    avoidInside: ['layout.section', 'layout.box', 'navigation.footer']
+  },
 });
 
 // ---------------------------------------------------------------------------
@@ -84,4 +90,10 @@ export const navigationFooterComponent = defineComponent({
       </div>
     </footer>
   ),
+  ai: {
+    purpose: 'Site-wide footer section',
+    bestFor: ['footer', 'bottom area'],
+    semanticRole: 'footer',
+    avoidInside: ['layout.section', 'navigation.navbar']
+  },
 });

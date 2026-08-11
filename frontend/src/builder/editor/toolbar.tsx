@@ -23,7 +23,7 @@ export interface BuilderToolbarProps {
   pageTitle: string;
 }
 
-export function BuilderToolbar({
+export const BuilderToolbar = React.memo(function BuilderToolbar({
   canUndo,
   canRedo,
   isDirty,
@@ -156,7 +156,7 @@ export function BuilderToolbar({
       </div>
     </div>
   );
-}
+});
 
 // ---------------------------------------------------------------------------
 // Toolbar Button

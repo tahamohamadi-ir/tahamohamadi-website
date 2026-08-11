@@ -154,6 +154,11 @@ export const layoutBox = defineComponent({
   capabilities: { style: true, responsive: true },
   inspector: ['layout', 'style'],
   render: BoxRenderer,
+  ai: {
+    purpose: 'Generic layout container without semantic constraints',
+    bestFor: ['grouping elements', 'cards', 'cards grid'],
+    semanticRole: 'div',
+  },
 });
 
 // ---------------------------------------------------------------------------
@@ -184,6 +189,10 @@ export const layoutSpacer = defineComponent({
   capabilities: { style: true, responsive: true },
   inspector: ['layout'],
   render: SpacerRenderer,
+  ai: {
+    purpose: 'Vertical spacing between elements',
+    bestFor: ['creating whitespace'],
+  },
 });
 
 // ---------------------------------------------------------------------------
@@ -259,6 +268,11 @@ export const contentText = defineComponent({
   capabilities: { style: true, responsive: true, dataBinding: true },
   inspector: ['content', 'style'],
   render: TextRenderer,
+  ai: {
+    purpose: 'Inline text element',
+    bestFor: ['inline styles', 'labels'],
+    avoidInside: ['heading', 'button'],
+  },
 });
 
 // ---------------------------------------------------------------------------
@@ -293,6 +307,11 @@ export const contentParagraph = defineComponent({
   capabilities: { style: true, responsive: true, dataBinding: true },
   inspector: ['content', 'style'],
   render: ParagraphRenderer,
+  ai: {
+    purpose: 'Block-level paragraph text',
+    bestFor: ['body text', 'descriptions'],
+    semanticRole: 'paragraph',
+  },
 });
 
 // ---------------------------------------------------------------------------

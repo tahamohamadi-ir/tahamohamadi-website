@@ -25,7 +25,7 @@ export interface CanvasFrameProps {
   viewportWidth?: string | number;
 }
 
-export function CanvasFrame({
+export const CanvasFrame = React.memo(function CanvasFrame({
   document,
   isEditor,
   selectedNodeIds,
@@ -107,4 +107,4 @@ export function CanvasFrame({
       )}
     </div>
   );
-}
+});

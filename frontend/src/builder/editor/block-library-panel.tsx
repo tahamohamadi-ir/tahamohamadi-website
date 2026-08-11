@@ -24,7 +24,7 @@ export interface BlockLibraryPanelProps {
 // Component
 // ---------------------------------------------------------------------------
 
-export function BlockLibraryPanel({ onInsert }: BlockLibraryPanelProps) {
+export const BlockLibraryPanel = React.memo(function BlockLibraryPanel({ onInsert }: BlockLibraryPanelProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const libraryComponents = useMemo(() => {
@@ -159,4 +159,4 @@ export function BlockLibraryPanel({ onInsert }: BlockLibraryPanelProps) {
       </div>
     </div>
   );
-}
+});

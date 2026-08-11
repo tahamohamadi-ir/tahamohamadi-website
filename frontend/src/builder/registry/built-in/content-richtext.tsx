@@ -117,4 +117,9 @@ export const contentRichTextComponent = defineComponent<RichTextProps>({
   render: ({ props, isEditor, onPropsChange }) => (
     <RichTextRenderer props={props} isEditor={isEditor} onPropsChange={onPropsChange} />
   ),
+  ai: {
+    purpose: 'Formatted block of rich text',
+    bestFor: ['articles', 'long descriptions', 'formatted content'],
+    semanticRole: 'article',
+  },
 });

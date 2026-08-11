@@ -8,7 +8,7 @@
 
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import type { PageDocument, NodeId } from '../schema/document';
 import { componentRegistry } from '../registry';
 
@@ -28,7 +28,7 @@ export interface LayersPanelProps {
 // Component
 // ---------------------------------------------------------------------------
 
-export function LayersPanel({
+export const LayersPanel = memo(function LayersPanel({
   document,
   selectedIds,
   onSelect,
@@ -239,22 +239,29 @@ function LayerNode({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Icons
-// ---------------------------------------------------------------------------
+import { FileType, Layout, Type, Image as ImageIcon, MousePointer, FormInput, PanelTop, PanelBottom, Minus, Maximize, Square, Heading, AlignLeft, Send, TextQuote, Box } from 'lucide-react';
 
-function getNodeIcon(type: string): string {
+function getNodeIcon(type: string) {
   const category = type.split('.')[0];
-  switch (category) {
-    case 'core': return '📄';
-    case 'layout': return '📐';
-    case 'content': return '✏️';
-    case 'media': return '🖼️';
-    case 'ui': return '🔘';
-    case 'navigation': return '🧭';
-    case 'form': return '📝';
-    case 'marketing': return '📣';
-    case 'dynamic': return '🔄';
-    default: return '📦';
-  }
+  let Icon = Box;
+  
+  if (type === 'core.page') Icon = FileType;
+  else if (type === 'layout.section') Icon = Layout;
+  else if (type === 'layout.container') Icon = Maximize;
+  else if (type === 'layout.box') Icon = Square;
+  else if (type === 'layout.spacer') Icon = Minus;
+  else if (type === 'content.heading') Icon = Heading;
+  else if (type === 'content.text') Icon = Type;
+  else if (type === 'content.paragraph') Icon = AlignLeft;
+  else if (type === 'content.richtext') Icon = TextQuote;
+  else if (type === 'ui.button') Icon = MousePointer;
+  else if (type === 'media.image') Icon = ImageIcon;
+  else if (type === 'form.form') Icon = FormInput;
+  else if (type === 'form.input') Icon = Type;
+  else if (type === 'form.textarea') Icon = AlignLeft;
+  else if (type === 'form.submit') Icon = Send;
+  else if (type === 'navigation.navbar') Icon = PanelTop;
+  else if (type === 'navigation.footer') Icon = PanelBottom;
+  
+  return <Icon className="w-3 h-3" />;
 }

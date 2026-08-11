@@ -45,6 +45,11 @@ export const formFormComponent = defineComponent({
       {slots.children}
     </form>
   ),
+  ai: {
+    purpose: 'Form container for collecting user input',
+    bestFor: ['contact form', 'signup form', 'login form'],
+    semanticRole: 'form',
+  },
 });
 
 // ---------------------------------------------------------------------------
@@ -93,6 +98,11 @@ export const formInputComponent = defineComponent({
       />
     </div>
   ),
+  ai: {
+    purpose: 'Single-line text input field',
+    bestFor: ['name input', 'email input', 'short text'],
+    semanticRole: 'input',
+  },
 });
 
 // ---------------------------------------------------------------------------
@@ -141,6 +151,11 @@ export const formTextareaComponent = defineComponent({
       />
     </div>
   ),
+  ai: {
+    purpose: 'Multi-line text input field',
+    bestFor: ['message input', 'description', 'comments'],
+    semanticRole: 'textarea',
+  },
 });
 
 // ---------------------------------------------------------------------------
@@ -177,4 +192,9 @@ export const formSubmitComponent = defineComponent({
       {props.label}
     </button>
   ),
+  ai: {
+    purpose: 'Form submission button',
+    bestFor: ['submit form', 'send message'],
+    semanticRole: 'button',
+  },
 });

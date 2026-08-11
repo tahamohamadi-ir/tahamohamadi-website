@@ -27,7 +27,7 @@ export interface InspectorPanelProps {
 // Component
 // ---------------------------------------------------------------------------
 
-export function InspectorPanel({
+export const InspectorPanel = React.memo(function InspectorPanel({
   node,
   document,
   onUpdateProps,
@@ -127,7 +127,7 @@ export function InspectorPanel({
       </div>
     </div>
   );
-}
+});
 
 // ---------------------------------------------------------------------------
 // PropField — Generic property editor
@@ -139,7 +139,7 @@ interface PropFieldProps {
   onChange: (value: unknown) => void;
 }
 
-function PropField({ label, value, onChange }: PropFieldProps) {
+const PropField = React.memo(function PropField({ label, value, onChange }: PropFieldProps) {
   const fieldStyle: React.CSSProperties = {
     width: '100%',
     padding: '0.375rem 0.5rem',
@@ -219,7 +219,7 @@ function PropField({ label, value, onChange }: PropFieldProps) {
       />
     </div>
   );
-}
+});
 
 function formatLabel(key: string): string {
   return key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ');
