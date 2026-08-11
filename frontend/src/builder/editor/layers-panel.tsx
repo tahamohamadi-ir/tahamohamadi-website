@@ -9,6 +9,7 @@
 'use client';
 
 import React, { useState, useCallback, memo } from 'react';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 import type { PageDocument, NodeId } from '../schema/document';
 import { componentRegistry } from '../registry';
 
@@ -71,7 +72,7 @@ export const LayersPanel = memo(function LayersPanel({
       </div>
     </div>
   );
-}
+});
 
 // ---------------------------------------------------------------------------
 // Layer Node (recursive)
@@ -108,17 +109,48 @@ function LayerNode({
   );
 
   const node = document.nodes[nodeId];
+  const isRoot = nodeId === document.rootNodeId;
+
+  // Drag and Drop Hooks
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+    id: `drop-layer-${nodeId}`,
+    data: { type: 'layer_node', nodeId },
+  });
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDraggableRef,
+    isDragging,
+  } = useDraggable({
+    id: `drag-layer-${nodeId}`,
+    data: { type: 'layer_node', nodeId },
+    disabled: isRoot,
+  });
+
+  const setRefs = useCallback(
+    (el: HTMLElement | null) => {
+      setDroppableRef(el);
+      setDraggableRef(el);
+    },
+    [setDroppableRef, setDraggableRef],
+  );
+
   if (!node) return null;
 
   const def = componentRegistry.get(node.type);
   const displayName = node.metadata?.name || def?.meta.name || node.type;
   const isSelected = selectedIds.includes(nodeId);
-  const isRoot = nodeId === document.rootNodeId;
   const hasChildren = Object.values(node.slots).some((s) => s.length > 0);
+
+
 
   return (
     <div>
       <div
+        ref={setRefs}
+        {...attributes}
+        {...listeners}
         onClick={(e) => onSelect(nodeId, e)}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -130,11 +162,12 @@ function LayerNode({
           paddingInlineStart: `${depth * 16 + 8}px`,
           paddingInlineEnd: '0.5rem',
           fontSize: '0.8125rem',
-          cursor: 'pointer',
+          cursor: isDragging ? 'grabbing' : (isRoot ? 'default' : 'grab'),
           borderRadius: '0.25rem',
-          backgroundColor: isSelected ? '#312e81' : isHovered ? '#1f2937' : 'transparent',
-          color: isSelected ? '#c7d2fe' : '#d1d5db',
+          backgroundColor: isOver ? '#4f46e5' : (isSelected ? '#312e81' : isHovered ? '#1f2937' : 'transparent'),
+          color: isOver ? '#ffffff' : (isSelected ? '#c7d2fe' : '#d1d5db'),
           transition: 'background-color 0.1s',
+          opacity: isDragging ? 0.4 : 1,
         }}
       >
         {/* Expand/collapse toggle */}
@@ -239,10 +272,9 @@ function LayerNode({
   );
 }
 
-import { FileType, Layout, Type, Image as ImageIcon, MousePointer, FormInput, PanelTop, PanelBottom, Minus, Maximize, Square, Heading, AlignLeft, Send, TextQuote, Box } from 'lucide-react';
+import { FileType, Layout, Type, Image as ImageIcon, MousePointer, FormInput, PanelTop, PanelBottom, Minus, Maximize, Square, Heading, AlignLeft, Send, TextQuote, Box, CreditCard, Layers, LayoutTemplate } from 'lucide-react';
 
 function getNodeIcon(type: string) {
-  const category = type.split('.')[0];
   let Icon = Box;
   
   if (type === 'core.page') Icon = FileType;
@@ -250,6 +282,9 @@ function getNodeIcon(type: string) {
   else if (type === 'layout.container') Icon = Maximize;
   else if (type === 'layout.box') Icon = Square;
   else if (type === 'layout.spacer') Icon = Minus;
+  else if (type === 'layout.card') Icon = CreditCard;
+  else if (type === 'layout.frame') Icon = LayoutTemplate;
+  else if (type === 'ui.modal') Icon = Layers;
   else if (type === 'content.heading') Icon = Heading;
   else if (type === 'content.text') Icon = Type;
   else if (type === 'content.paragraph') Icon = AlignLeft;

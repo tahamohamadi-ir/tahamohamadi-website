@@ -22,12 +22,25 @@ import {
   createEmptyDocument,
 } from '../state';
 import type { DocumentStoreApi, EditorStoreApi, DocumentState, EditorState } from '../state';
-import { componentRegistry, registerBuiltInComponents } from '../registry';
+import { componentRegistry } from '../registry';
 import { CanvasFrame } from '../canvas';
 import { BuilderToolbar } from './toolbar';
 import { LayersPanel } from './layers-panel';
 import { InspectorPanel } from './inspector-panel';
 import { BlockLibraryPanel } from './block-library-panel';
+
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  defaultDropAnimationSideEffects,
+  DragStartEvent,
+  DragEndEvent,
+} from '@dnd-kit/core';
 
 // ---------------------------------------------------------------------------
 // Context
@@ -75,6 +88,7 @@ export function EditorShell({
   initialDocument,
   initialRevision = 0,
   onSave,
+  onPublish,
   pageId,
   autoSaveEnabled = true,
 }: EditorShellProps) {
@@ -115,10 +129,6 @@ export function EditorShell({
     registerNodeCommands(commandBusRef.current);
   }
 
-  // Register built-in components (once)
-  useEffect(() => {
-    registerBuiltInComponents(componentRegistry);
-  }, []);
 
   // Load initial document
   useEffect(() => {
@@ -285,6 +295,111 @@ export function EditorShell({
     [commandBus, primaryId, selectedIds, document.rootNodeId, editorStore],
   );
 
+  const handleUpdateProps = useCallback(
+    (nodeId: NodeId, patch: Record<string, unknown>) => {
+      commandBus.execute({
+        type: NODE_COMMAND_TYPES.UPDATE_PROPS,
+        payload: { nodeId, patch },
+      });
+    },
+    [commandBus],
+  );
+
+  // Drag and Drop State & Handlers
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor)
+  );
+  const [activeDragData, setActiveDragData] = React.useState<Record<string, unknown> | null>(null);
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveDragData(event.active.data.current ?? null);
+  }, []);
+
+  const handleDragOver = useCallback(() => {
+    // Optionally update visual drop indicator state
+  }, []);
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    setActiveDragData(null);
+    const { active, over, delta } = event;
+    if (!over) return;
+
+    const activeData = active.data.current;
+    const overData = over.data.current;
+
+    if (!activeData || !overData) return;
+
+    if (activeData.type === 'library_block') {
+       // Insert new node
+       const componentType = activeData.componentType;
+       const def = componentRegistry.get(componentType);
+       if (!def) return;
+       
+       commandBus.execute({
+         type: NODE_COMMAND_TYPES.INSERT,
+         payload: {
+           parentId: overData.nodeId || document.rootNodeId,
+           slotName: 'children',
+           node: {
+             type: componentType,
+             componentVersion: def.version,
+             props: { ...def.defaults },
+             slots: Object.fromEntries(
+               Object.keys(def.slots).map((name) => [name, []]),
+             ),
+             styleRefs: [],
+             metadata: { name: def.meta.name },
+           }
+         }
+       });
+     } else if (activeData.type === 'canvas_node' || activeData.type === 'layer_node') {
+        // Check if active node is absolute positioned
+        const activeNode = document.nodes[activeData.nodeId as string];
+        const styles = (activeNode?.props?.styles || {}) as Record<string, string>;
+        const isAbsolute = styles.position === 'absolute' || styles.position === 'fixed';
+
+        if (isAbsolute && activeData.type === 'canvas_node') {
+          // Freeform placement: update left/top based on delta instead of moving in tree
+          const currentLeft = parseFloat(styles.left || '0') || 0;
+          const currentTop = parseFloat(styles.top || '0') || 0;
+         
+         commandBus.execute({
+           type: NODE_COMMAND_TYPES.UPDATE_PROPS,
+           payload: {
+             nodeId: activeData.nodeId as NodeId,
+             patch: { 
+               styles: { 
+                 ...(activeNode.props.styles as Record<string, string>), 
+                 left: `${currentLeft + delta.x}px`, 
+                 top: `${currentTop + delta.y}px` 
+               } 
+             }
+           }
+         });
+         return;
+       }
+
+       // Move node
+       if (activeData.nodeId === overData.nodeId) return;
+       if (activeData.nodeId === document.rootNodeId) return; // Cannot move root
+       
+       commandBus.execute({
+         type: NODE_COMMAND_TYPES.MOVE,
+         payload: {
+           nodeId: activeData.nodeId,
+           toParentId: overData.nodeId,
+           toSlotName: 'children',
+           toIndex: 99999 // append to end
+         }
+       });
+    }
+  }, [commandBus, document]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -348,8 +463,15 @@ export function EditorShell({
           pageTitle={document.document.title}
         />
 
-        {/* Main area */}
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+        >
+          {/* Main area */}
+          <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
           {/* Left panel: Layers + Library */}
           {!isPreviewMode && openPanels.has('layers') && (
             <div style={{
@@ -379,11 +501,13 @@ export function EditorShell({
           {/* Canvas */}
           <div style={{
             flex: 1,
-            backgroundColor: '#1f2937',
+            backgroundColor: '#0f172a',
+            backgroundImage: 'radial-gradient(#334155 1.5px, transparent 1.5px)',
+            backgroundSize: '24px 24px',
             overflow: 'auto',
             display: 'flex',
             justifyContent: 'center',
-            padding: '2rem',
+            padding: '2.5rem 2rem',
           }}>
             <CanvasFrame
               document={document}
@@ -392,6 +516,7 @@ export function EditorShell({
               hoveredNodeId={hoveredId}
               onNodeClick={handleNodeClick}
               onNodeHover={handleNodeHover}
+              onUpdateProps={handleUpdateProps}
             />
           </div>
 
@@ -405,17 +530,29 @@ export function EditorShell({
               <InspectorPanel
                 node={primaryNode}
                 document={document}
-                onUpdateProps={(nodeId, patch) => {
-                  commandBus.execute({
-                    type: NODE_COMMAND_TYPES.UPDATE_PROPS,
-                    payload: { nodeId, patch },
-                  });
-                }}
+                onUpdateProps={handleUpdateProps}
                 onDelete={handleDeleteNode}
               />
             </div>
           )}
         </div>
+        
+        <DragOverlay dropAnimation={{ sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }) }}>
+          {activeDragData ? (
+            <div style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#4f46e5',
+              color: 'white',
+              borderRadius: '0.25rem',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+            }}>
+              Dragging {String(activeDragData.componentType || activeDragData.nodeId || '')}
+            </div>
+          ) : null}
+        </DragOverlay>
+        </DndContext>
       </div>
     </BuilderCtx.Provider>
   );

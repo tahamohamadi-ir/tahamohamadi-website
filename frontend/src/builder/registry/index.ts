@@ -18,3 +18,9 @@ export {
   BUILT_IN_COMPONENTS,
   registerBuiltInComponents,
 } from './built-in';
+
+import { componentRegistry } from './component-registry';
+import { registerBuiltInComponents } from './built-in';
+
+// Auto-register built-ins
+registerBuiltInComponents(componentRegistry);

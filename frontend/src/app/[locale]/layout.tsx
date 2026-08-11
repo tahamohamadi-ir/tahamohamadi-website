@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ThemeProvider } from "@/components/theme-provider";
 import {
   isValidLocale,
   localeConfig,
@@ -124,9 +125,11 @@ export default async function LocaleLayout({
     <html lang={validLocale} dir={dir} suppressHydrationWarning>
       {customStyles ? <style dangerouslySetInnerHTML={{ __html: customStyles }} /> : null}
       <body className={`${fontClass} antialiased`}>
-        <A11yProvider>
-          <PublicLayout locale={validLocale}>{children}</PublicLayout>
-        </A11yProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <A11yProvider>
+            <PublicLayout locale={validLocale}>{children}</PublicLayout>
+          </A11yProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

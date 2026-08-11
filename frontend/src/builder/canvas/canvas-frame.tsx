@@ -13,7 +13,6 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import type { PageDocument, NodeId } from '../schema/document';
 import { PageRenderer } from '../renderer';
 import { SelectionOverlay } from './selection-overlay';
-import { DropIndicator } from './drop-indicator';
 
 export interface CanvasFrameProps {
   document: PageDocument;
@@ -22,6 +21,7 @@ export interface CanvasFrameProps {
   hoveredNodeId?: NodeId | null;
   onNodeClick: (nodeId: NodeId, e: React.MouseEvent) => void;
   onNodeHover: (nodeId: NodeId | null) => void;
+  onUpdateProps?: (nodeId: NodeId, patch: Record<string, unknown>) => void;
   viewportWidth?: string | number;
 }
 
@@ -29,9 +29,9 @@ export const CanvasFrame = React.memo(function CanvasFrame({
   document,
   isEditor,
   selectedNodeIds,
-  hoveredNodeId,
   onNodeClick,
   onNodeHover,
+  onUpdateProps,
   viewportWidth = '100%',
 }: CanvasFrameProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -47,7 +47,7 @@ export const CanvasFrame = React.memo(function CanvasFrame({
       return;
     }
 
-    const element = containerRef.current.querySelector(`[data-node-id="${primaryId}"]`);
+    const element = containerRef.current.querySelector(`[data-builder-node="${primaryId}"], [data-node-id="${primaryId}"]`);
     if (!element) {
       setPrimaryRect(null);
       return;
@@ -72,39 +72,82 @@ export const CanvasFrame = React.memo(function CanvasFrame({
   useEffect(() => {
     updateSelectionOverlay();
     window.addEventListener('resize', updateSelectionOverlay);
-    return () => window.removeEventListener('resize', updateSelectionOverlay);
+    window.addEventListener('scroll', updateSelectionOverlay, true);
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('scroll', updateSelectionOverlay);
+    }
+    return () => {
+      window.removeEventListener('resize', updateSelectionOverlay);
+      window.removeEventListener('scroll', updateSelectionOverlay, true);
+      if (container) {
+        container.removeEventListener('scroll', updateSelectionOverlay);
+      }
+    };
   }, [updateSelectionOverlay, document]);
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        position: 'relative',
-        width: viewportWidth,
-        maxWidth: '100%',
-        minHeight: '600px',
-        margin: '0 auto',
-        backgroundColor: '#ffffff',
-        boxShadow: isEditor ? '0 4px 20px -2px rgba(0, 0, 0, 0.25)' : 'none',
-        borderRadius: isEditor ? '4px' : '0',
-        overflow: 'auto',
-      }}
-    >
-      <PageRenderer
-        document={document}
-        isEditor={isEditor}
-        selectedNodeIds={selectedNodeIds}
-        onNodeClick={onNodeClick}
-        onNodeHover={onNodeHover}
-      />
-
-      {isEditor && primaryRect && (
-        <SelectionOverlay
-          rect={primaryRect}
-          label={primaryNodeName}
-          isLocked={document.nodes[primaryId]?.metadata?.locked}
-        />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', position: 'relative' }}>
+      {isEditor && (
+        <div
+          style={{
+            alignSelf: 'flex-start',
+            marginInlineStart: 'auto',
+            marginInlineEnd: 'auto',
+            maxWidth: '1200px',
+            width: viewportWidth,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '8px',
+            color: '#9ca3af',
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            fontFamily: 'system-ui, sans-serif',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#60a5fa', fontWeight: 700 }}># Page</span>
+            <span style={{ backgroundColor: '#374151', padding: '2px 6px', borderRadius: '4px', fontSize: '0.6875rem' }}>
+              {typeof viewportWidth === 'number' ? `${viewportWidth}px` : viewportWidth}
+            </span>
+          </div>
+          <div style={{ fontSize: '0.6875rem', opacity: 0.8 }}>Framer Canvas Engine</div>
+        </div>
       )}
+
+      <div
+        ref={containerRef}
+        style={{
+          position: 'relative',
+          width: viewportWidth,
+          maxWidth: '1200px',
+          minHeight: '800px',
+          margin: '0 auto',
+          backgroundColor: '#ffffff',
+          boxShadow: isEditor ? '0 20px 40px -10px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)' : 'none',
+          borderRadius: isEditor ? '8px' : '0',
+          transition: 'width 0.3s ease, height 0.3s ease',
+          boxSizing: 'border-box',
+        }}
+      >
+        <PageRenderer
+          document={document}
+          isEditor={isEditor}
+          selectedNodeIds={selectedNodeIds}
+          onNodeClick={onNodeClick}
+          onNodeHover={onNodeHover}
+          onUpdateProps={onUpdateProps}
+        />
+
+        {isEditor && primaryRect && (
+          <SelectionOverlay
+            rect={primaryRect}
+            label={primaryNodeName}
+            isLocked={document.nodes[primaryId]?.metadata?.locked}
+          />
+        )}
+      </div>
     </div>
   );
 });

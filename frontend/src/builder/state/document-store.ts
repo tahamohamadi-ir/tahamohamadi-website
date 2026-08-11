@@ -61,7 +61,7 @@ export type DocumentStore = DocumentState & DocumentActions;
 // Default empty document
 // ---------------------------------------------------------------------------
 
-export function createEmptyDocument(id?: string): PageDocument {
+export function createEmptyDocument(id?: string, isTemplate?: boolean, parentId?: string): PageDocument {
   const docId = id ?? 'page_new';
   const rootId = 'node_root';
 
@@ -72,6 +72,8 @@ export function createEmptyDocument(id?: string): PageDocument {
       title: 'Untitled Page',
       locale: 'fa-IR',
       direction: 'rtl',
+      isTemplate: isTemplate ?? false,
+      parentId,
     },
     rootNodeId: rootId,
     nodes: {

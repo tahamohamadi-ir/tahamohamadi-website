@@ -255,6 +255,8 @@ export interface PageDocument {
     title: string;
     locale?: string;
     direction?: 'ltr' | 'rtl';
+    isTemplate?: boolean;
+    parentId?: string;
   };
 
   /** ID of the root node in the nodes map. */

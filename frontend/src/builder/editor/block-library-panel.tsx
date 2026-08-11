@@ -9,7 +9,9 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import { useDraggable } from '@dnd-kit/core';
 import { componentRegistry } from '../registry';
+import type { ComponentDefinition } from '../registry/registry-types';
 import { CATEGORY_LABELS, getNodeCategory } from '../schema/node-types';
 
 // ---------------------------------------------------------------------------
@@ -112,35 +114,11 @@ export const BlockLibraryPanel = React.memo(function BlockLibraryPanel({ onInser
               {CATEGORY_LABELS[category] || category}
             </div>
             {components.map((comp) => (
-              <button
+              <DraggableLibraryItem
                 key={comp.type}
-                onClick={() => onInsert(comp.type)}
-                title={comp.meta.description || comp.meta.name}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  width: '100%',
-                  padding: '0.375rem 0.5rem',
-                  fontSize: '0.8125rem',
-                  color: '#d1d5db',
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  borderRadius: '0.25rem',
-                  cursor: 'pointer',
-                  textAlign: 'start',
-                  transition: 'background-color 0.1s',
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = '#1f2937')
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor = 'transparent')
-                }
-              >
-                <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>+</span>
-                <span>{comp.meta.name}</span>
-              </button>
+                comp={comp}
+                onInsert={onInsert}
+              />
             ))}
           </div>
         ))}
@@ -160,3 +138,48 @@ export const BlockLibraryPanel = React.memo(function BlockLibraryPanel({ onInser
     </div>
   );
 });
+
+// ---------------------------------------------------------------------------
+// Draggable Library Item
+// ---------------------------------------------------------------------------
+
+function DraggableLibraryItem({ comp, onInsert }: { comp: ComponentDefinition, onInsert: (type: string) => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `library-${comp.type}`,
+    data: {
+      type: 'library_block',
+      componentType: comp.type,
+    },
+  });
+
+  return (
+    <button
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      onClick={() => onInsert(comp.type)}
+      title={comp.meta.description || comp.meta.name}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        width: '100%',
+        padding: '0.375rem 0.5rem',
+        fontSize: '0.8125rem',
+        color: '#d1d5db',
+        backgroundColor: 'transparent',
+        border: 'none',
+        borderRadius: '0.25rem',
+        cursor: isDragging ? 'grabbing' : 'grab',
+        textAlign: 'start',
+        transition: 'background-color 0.1s',
+        opacity: isDragging ? 0.5 : 1,
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1f2937')}
+      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+    >
+      <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>+</span>
+      <span>{comp.meta.name}</span>
+    </button>
+  );
+}

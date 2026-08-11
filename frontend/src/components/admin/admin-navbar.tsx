@@ -16,6 +16,7 @@ export function AdminNavbar() {
     const navItems = [
         { href: "/admin", label: "داشبورد", icon: "📊" },
         { href: "/admin/pages", label: "صفحات", icon: "📄" },
+        { href: "/admin/builder/new", label: "صفحه‌ساز", icon: "🛠️" },
         { href: "/admin/blog", label: "مقالات", icon: "✍️" },
         { href: "/admin/portfolio", label: "نمونه‌کارها", icon: "💼" },
         { href: "/admin/media", label: "رسانه‌ها", icon: "🖼️" },
