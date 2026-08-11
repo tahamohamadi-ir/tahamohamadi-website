@@ -72,12 +72,12 @@ class AdminCaseStudyViewSet(ModelViewSet):
         technologies = self.request.query_params.get("technologies")
         if technologies:
             tech_list = [t.strip() for t in technologies.split(",") if t.strip()]
+            from django.db import connection
+            is_postgres = connection.vendor == "postgresql"
             for tech in tech_list:
-                try:
-                    q = queryset.filter(technologies__contains=[tech])
-                    bool(q[:1])
-                    queryset = q
-                except NotSupportedError:
+                if is_postgres:
+                    queryset = queryset.filter(technologies__contains=[tech])
+                else:
                     queryset = queryset.filter(technologies__icontains=tech)
 
         return queryset

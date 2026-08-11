@@ -148,7 +148,27 @@ class AdminPageViewSet(ModelViewSet):
         return Response(serializer.data)
 
 
-def _active_media_ids() -> set[str]:
+def _active_media_ids(payload: dict | None = None) -> set[str]:
+    if payload:
+        referenced_ids: set[str] = set()
+        sections = payload.get("sections", [])
+        if isinstance(sections, list):
+            for section in sections:
+                if isinstance(section, dict):
+                    for block in section.get("blocks", []):
+                        if isinstance(block, dict):
+                            settings = block.get("settings", {})
+                            if isinstance(settings, dict):
+                                media_id = settings.get("media_id") or settings.get("parallax_media_id")
+                                if media_id:
+                                    referenced_ids.add(str(media_id))
+        if referenced_ids:
+            return {
+                str(media_id)
+                for media_id in MediaAsset.objects.filter(id__in=referenced_ids, status="active").values_list(
+                    "id", flat=True
+                )
+            }
     return {
         str(media_id)
         for media_id in MediaAsset.objects.filter(status="active").values_list(
@@ -161,7 +181,7 @@ def _page_composition_problem(request) -> Response | None:
     """Return the stable Problem Details response for invalid compositions."""
     composition_errors = validate_page_composition(
         {"sections": request.data.get("sections", [])},
-        known_media_ids=_active_media_ids(),
+        known_media_ids=_active_media_ids(request.data if isinstance(request.data, dict) else None),
     )
     if not composition_errors:
         return None

@@ -44,7 +44,23 @@ from apps.core.exceptions import build_problem, PROBLEM_CONTENT_TYPE
 from apps.core.services import ConflictError, save_with_optimistic_lock
 
 
-def _active_media_ids() -> set[str]:
+def _active_media_ids(blocks_data: list[dict] | None = None) -> set[str]:
+    if blocks_data:
+        referenced_ids: set[str] = set()
+        for block in blocks_data:
+            if isinstance(block, dict):
+                settings = block.get("settings", {})
+                if isinstance(settings, dict):
+                    media_id = settings.get("media_id") or settings.get("featured_image")
+                    if media_id:
+                        referenced_ids.add(str(media_id))
+        if referenced_ids:
+            return {
+                str(media_id)
+                for media_id in MediaAsset.objects.filter(id__in=referenced_ids, status="active").values_list(
+                    "id", flat=True
+                )
+            }
     return {
         str(media_id)
         for media_id in MediaAsset.objects.filter(status="active").values_list(
@@ -88,7 +104,7 @@ class AdminArticleViewSet(ModelViewSet):
         # Validate and sanitize blocks before persisting
         blocks_data = request.data.get("blocks", [])
         content_errors = validate_article_content(
-            blocks_data, known_media_ids=_active_media_ids()
+            blocks_data, known_media_ids=_active_media_ids(blocks_data if isinstance(blocks_data, list) else None)
         )
         if content_errors:
             problem = build_problem(
@@ -142,7 +158,7 @@ class AdminArticleViewSet(ModelViewSet):
         # Validate and sanitize blocks before persisting
         blocks_data = request.data.get("blocks", [])
         content_errors = validate_article_content(
-            blocks_data, known_media_ids=_active_media_ids()
+            blocks_data, known_media_ids=_active_media_ids(blocks_data if isinstance(blocks_data, list) else None)
         )
         if content_errors:
             problem = build_problem(
