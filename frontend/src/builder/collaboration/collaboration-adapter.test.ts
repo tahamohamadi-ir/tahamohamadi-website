@@ -12,7 +12,7 @@ describe('Collaboration Adapter', () => {
 
   beforeEach(() => {
     // Mock WebSocket
-    // @ts-ignore
+    // @ts-expect-error: mocking global WebSocket for tests
     global.WebSocket = class {
       static OPEN = 1;
       readyState = 1; // OPEN
@@ -28,7 +28,7 @@ describe('Collaboration Adapter', () => {
 
     presenceStore = createPresenceStore();
     commandBus = new CommandBus({
-      getDocument: () => ({} as any),
+      getDocument: () => ({} as unknown as import('../schema/document').PageDocument),
       applyPatches: vi.fn(),
       onCommandExecuted: vi.fn(),
     });
@@ -59,7 +59,7 @@ describe('Collaboration Adapter', () => {
     // wait for onopen
     await new Promise(resolve => setTimeout(resolve, 20));
 
-    const ws = (adapter as any).ws;
+    const ws = (adapter as unknown as { ws: { send: typeof vi.fn } }).ws;
     expect(ws.send).toHaveBeenCalledWith(
       JSON.stringify({
         type: 'presence.join',
@@ -72,7 +72,7 @@ describe('Collaboration Adapter', () => {
     adapter.connect();
     await new Promise(resolve => setTimeout(resolve, 20));
 
-    const ws = (adapter as any).ws;
+    const ws = (adapter as unknown as { ws: { onmessage: (ev: { data: string }) => void } }).ws;
     const remotePatches = [{ op: 'add', path: '/nodes/n2', value: {} }];
 
     ws.onmessage({
@@ -90,7 +90,7 @@ describe('Collaboration Adapter', () => {
     adapter.connect();
     await new Promise(resolve => setTimeout(resolve, 20));
 
-    const ws = (adapter as any).ws;
+    const ws = (adapter as unknown as { ws: { onmessage: (ev: { data: string }) => void } }).ws;
     ws.onmessage({
       data: JSON.stringify({
         type: 'sync.patches',

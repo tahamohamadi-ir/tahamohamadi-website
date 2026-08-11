@@ -7,7 +7,7 @@
  * @module builder/collaboration/collaboration-adapter
  */
 
-import type { Patch } from '../core/history';
+import type { Patch } from '../core/command-bus';
 import type { NodeId } from '../schema/document';
 import type { PresenceStoreApi, Collaborator } from './presence-store';
 import type { CommandBus } from '../core/command-bus';
@@ -54,6 +54,7 @@ export class CollaborationAdapter {
   private ws: WebSocket | null = null;
   private config: CollaborationConfig;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private isExplicitDisconnect = false;
 
   constructor(config: CollaborationConfig) {
     this.config = config;
@@ -62,6 +63,7 @@ export class CollaborationAdapter {
 
   public connect() {
     if (this.ws) return;
+    this.isExplicitDisconnect = false;
 
     this.ws = new WebSocket(`${this.config.wsUrl}/${this.config.pageId}`);
 
@@ -80,13 +82,17 @@ export class CollaborationAdapter {
     };
 
     this.ws.onclose = () => {
-      console.log('[CollaborationAdapter] Disconnected. Reconnecting in 3s...');
+      console.log('[CollaborationAdapter] Disconnected.');
       this.ws = null;
-      this.reconnectTimer = setTimeout(() => this.connect(), 3000);
+      if (!this.isExplicitDisconnect) {
+        console.log('[CollaborationAdapter] Reconnecting in 3s...');
+        this.reconnectTimer = setTimeout(() => this.connect(), 3000);
+      }
     };
   }
 
   public disconnect() {
+    this.isExplicitDisconnect = true;
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     if (this.ws) {
       this.ws.close();

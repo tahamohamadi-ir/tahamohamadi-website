@@ -207,6 +207,7 @@ describe("PageEditorPage", () => {
     await act(async () => { screen.getByRole("button", { name: "Edit composition" }).click(); });
     await act(async () => { resolveFirstSave?.({ ...draftPage, version: 2 }); await Promise.resolve(); });
     await act(async () => { vi.advanceTimersByTime(750); });
+    await act(async () => { await Promise.resolve(); });
 
     expect(adminFetchMock).toHaveBeenCalledTimes(3);
   });

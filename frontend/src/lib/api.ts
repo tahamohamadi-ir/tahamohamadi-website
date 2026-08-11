@@ -46,9 +46,11 @@ export class PublicApiError extends Error {
  * Client-side or fallback uses NEXT_PUBLIC_API_URL.
  */
 function getApiBaseUrl(): string {
-  if (typeof window === "undefined" && process.env.INTERNAL_API_URL) {
-    return process.env.INTERNAL_API_URL;
+  if (typeof window === "undefined") {
+    // Server-side: check for INTERNAL_API_URL first
+    return process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   }
+  // Client-side: only use the public exposed variable
   return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 }
 
@@ -99,8 +101,10 @@ export async function fetchPortfolioList(
  * @param locale - The locale to fetch content for ("fa" | "en")
  */
 export async function getPublicPage(slug: string, locale: Locale): Promise<PageDTO | null> {
+  const decodedSlug = decodeURIComponent(slug);
+  const encodedSlug = encodeURIComponent(decodedSlug);
   try {
-    return await fetchPublicAPI<PageDTO>(`/public/pages/${slug}/?locale=${locale}`);
+    return await fetchPublicAPI<PageDTO>(`/public/pages/${encodedSlug}/?locale=${locale}`);
   } catch (error) {
     if (error instanceof PublicApiError && error.status === 404) {
       return null;

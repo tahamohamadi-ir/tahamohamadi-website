@@ -135,11 +135,13 @@ export default function PageEditorPage() {
     const autosaveData = useMemo<PageSavePayload | null>(() => (
         page ? pageSavePayload(page, sections) : null
     ), [
+        page?.id,
         page?.slug_fa,
         page?.slug_en,
         page?.title_fa,
         page?.title_en,
         page?.page_type,
+        page?.template_variant,
         page?.status,
         sections,
     ]);

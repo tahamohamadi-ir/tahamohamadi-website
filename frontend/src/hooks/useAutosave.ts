@@ -79,8 +79,9 @@ export function useAutosave<T>(options: UseAutosaveOptions<T>): UseAutosaveRetur
 
                 const shouldSaveLatest = queueLatestRef.current;
                 queueLatestRef.current = false;
-                const hasNewerData = dataRef.current !== dataToSave;
+                const hasNewerData = JSON.stringify(dataRef.current) !== JSON.stringify(dataToSave);
                 if (shouldSaveLatest && mountedRef.current && statusRef.current === "draft") {
+                    cancelPendingDebounce();
                     dataToSave = dataRef.current;
                     continue;
                 }
@@ -102,11 +103,22 @@ export function useAutosave<T>(options: UseAutosaveOptions<T>): UseAutosaveRetur
     }, [cancelPendingDebounce, performSave]);
 
     const isFirstRender = useRef(true);
+    const prevDataRef = useRef<T>(data);
     useEffect(() => {
         if (isFirstRender.current) {
             isFirstRender.current = false;
+            prevDataRef.current = data;
             return;
         }
+        if (prevDataRef.current === data) {
+            return;
+        }
+        prevDataRef.current = data;
+
+        if (activeSavePromiseRef.current) {
+            queueLatestRef.current = true;
+        }
+
         cancelPendingDebounce();
         if (status !== "draft") return;
 

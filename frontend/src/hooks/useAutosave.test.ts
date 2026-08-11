@@ -242,11 +242,9 @@ describe('useAutosave', () => {
             rerender({ data: { title: 'v3' } });
 
             await act(async () => { resolveFirstSave?.(); await Promise.resolve(); });
-            expect(onSuccess).not.toHaveBeenCalled();
-
-            await act(async () => { vi.advanceTimersByTime(100); });
             expect(onSave).toHaveBeenLastCalledWith({ title: 'v3' });
             expect(onSave).toHaveBeenCalledTimes(2);
+            expect(onSuccess).toHaveBeenCalledTimes(1);
         });
     });
 
