@@ -1,80 +1,70 @@
-# Documentation Index — TahaMohamadi.ir
+# 📑 فهرست راهنما و مرجع جامع تمامی مستندات معتبر پروژه (Master Documentation Index)
 
-**Last Updated:** 2026-07-28  
-
----
-
-## Core Reference Documents
-
-| Document | Purpose | Audience |
-|---|---|---|
-| [goals-and-vision.md](goals-and-vision.md) | اهداف، چشم‌انداز، مخاطبان، MVP scope | Product / All |
-| [architecture.md](architecture.md) | معماری سیستم، دیاگرام‌ها، تصمیمات | Technical |
-| [tech-stack.md](tech-stack.md) | استک تکنولوژی و دلایل انتخاب | Technical |
-| [design-system-summary.md](design-system-summary.md) | خلاصه دیزاین سیستم (رنگ، تایپوگرافی، فاصله) | Design / Frontend |
-| [roadmap.md](roadmap.md) | نقشه راه فازبندی شده با timeline | PM / All |
-| [scalability.md](scalability.md) | استراتژی مقیاس‌پذیری و مسیر رشد | Technical |
-| [ci-cd.md](ci-cd.md) | پایپلاین CI/CD و deployment | DevOps |
-| [master-plan.md](master-plan.md) | سند جامع Product + Technical (نسخه ۲) | All |
+**آخرین به‌روزرسانی:** مرداد ۱۴۰۵ (August 2026)  
+**مسیر پوشه مستندات:** `docs/`
 
 ---
 
-## Detailed Documentation
+## 🏛️ مستند مرجع اصلی و شاه‌کلید معماری (Master Architecture Handbook)
 
-### Product & Planning
-
-| Document | Purpose |
-|---|---|
-| [tahamohamadi_site_cms_v2_development_plan.md](tahamohamadi_site_cms_v2_development_plan.md) | برنامه توسعه CMS v2 با جزئیات |
-| [master-plan.md](master-plan.md) | Research Protocol، ADRs، Risk Register |
-
-### UI/UX Design System
-
-| Document | Purpose |
-|---|---|
-| [ui-ux/README.md](ui-ux/README.md) | ایندکس UI/UX suite با ownership map |
-| [ui-ux/DESIGN.md](ui-ux/DESIGN.md) | طراحی پایه: رنگ، تایپ، فاصله، state |
-| [ui-ux/01-experience-principles.md](ui-ux/01-experience-principles.md) | اصول تجربه کاربری |
-| [ui-ux/02-information-architecture.md](ui-ux/02-information-architecture.md) | ساختار اطلاعات و navigation |
-| [ui-ux/03-user-journeys.md](ui-ux/03-user-journeys.md) | سناریوهای کاربری |
-| [ui-ux/04-page-specifications.md](ui-ux/04-page-specifications.md) | مشخصات هر صفحه |
-| [ui-ux/05-content-and-localization.md](ui-ux/05-content-and-localization.md) | محتوا و بومی‌سازی |
-| [ui-ux/06-responsive-rtl-ltr.md](ui-ux/06-responsive-rtl-ltr.md) | واکنش‌گرایی و RTL/LTR |
-| [ui-ux/07-accessibility.md](ui-ux/07-accessibility.md) | دسترس‌پذیری |
-| [ui-ux/08-seo-ssr-hydration.md](ui-ux/08-seo-ssr-hydration.md) | SEO و SSR |
-| [ui-ux/09-interaction-and-page-states.md](ui-ux/09-interaction-and-page-states.md) | وضعیت‌های صفحه و تعامل |
-| [ui-ux/10-visual-qa.md](ui-ux/10-visual-qa.md) | بازبینی بصری |
-| [ui-ux/11-implementation-roadmap.md](ui-ux/11-implementation-roadmap.md) | نقشه راه پیاده‌سازی UI |
-| [ui-ux/12-agent-handoff-contract.md](ui-ux/12-agent-handoff-contract.md) | قرارداد AI agent |
-| [ui-ux/13-decision-register.md](ui-ux/13-decision-register.md) | ثبت تصمیمات |
-| [ui-ux/design-system/](ui-ux/design-system/) | دیزاین سیستم (foundations, tokens, etc.) |
+| مستند | موضوع و هدف | مخاطبان |
+| :--- | :--- | :--- |
+| 📄 **[project_architecture_and_technical_documentation.md](project_architecture_and_technical_documentation.md)** | **دفترچه مرجع الترا-تفصیلی و دایرةالمعارف کامل معماری** شامل مدل‌های دیتابیس پایتون، اینترفیس‌های TypeScript، نمونه کامل APIs، ۳۵+ کامپوننت بوم، الگوریتم Autosave، WebSocket، تعاملات و کانفیگ‌های Docker/Nginx. | **تمامی تیم توسعه / معماران سیستم** |
 
 ---
 
-## Kiro Spec (Implementation Reference)
+## 📐 مستندات فنی پایه‌ای (Core Technical Architecture)
 
-| File | Purpose |
-|---|---|
-| `.kiro/specs/react-django-rewrite/requirements.md` | 15 requirement با acceptance criteria |
-| `.kiro/specs/react-django-rewrite/design.md` | طراحی فنی با دیاگرام و pseudocode |
-| `.kiro/specs/react-django-rewrite/tasks.md` | تسک‌لیست ۱۰ فازی (~95 تسک) |
-
----
-
-## Document Precedence (Highest → Lowest)
-
-1. **Kiro Spec** (requirements → design → tasks) — implementation truth
-2. **docs/architecture.md** — system-level decisions
-3. **docs/ui-ux/DESIGN.md** — design rules
-4. **Source code** — runtime behavior
-5. **Other docs** — supporting context
+| مستند | موضوع و هدف |
+| :--- | :--- |
+| 📄 **[architecture.md](architecture.md)** | معماری کلان سیستم، زیرسیستم‌ها و تصمیمات فنی اولیه |
+| 📄 **[tech-stack.md](tech-stack.md)** | استک تکنولوژی‌های انتخابی (Django, Next.js, Postgres, Redis) و دلایل انتخاب |
+| 📄 **[scalability.md](scalability.md)** | استراتژی مقیاس‌پذیری و مسیر توسعه آینده |
+| 📄 **[ci-cd.md](ci-cd.md)** | پایپلاین استقرار سرور، CI/CD و ساختار Docker Compose |
+| 📄 **[incident-runbook.md](incident-runbook.md)** | دستورالعمل مدیریت خطاها و بازیابی در شرایط بحرانی |
 
 ---
 
-## How to Use
+## 🎨 صفحه‌ساز بصری، CMS و دیزاین سیستم (Visual Builder, CMS & Design)
 
-- **Starting development?** Read `roadmap.md` → open `tasks.md` → begin Phase 1
-- **Understanding architecture?** Read `architecture.md` + `tech-stack.md`
-- **Frontend design questions?** Read `design-system-summary.md` → detailed in `ui-ux/`
-- **Deployment?** Read `ci-cd.md` + `docker-compose.yml`
-- **Scaling decisions?** Read `scalability.md`
+| مستند | موضوع و هدف |
+| :--- | :--- |
+| 📄 **[composer-block-catalog.md](composer-block-catalog.md)** | کاتالوگ بلاک‌های محتوایی و کامپوننت‌های بوم صفحه‌ساز |
+| 📄 **[design-system-summary.md](design-system-summary.md)** | خلاصه دیزاین سیستم (تایپوگرافی، پالت رنگ، فواصل) |
+| 📄 **[design-system.md](design-system.md)** | قوانین و مشخصات تفصیلی دیزاین سیستم |
+| 📄 **[ui-ux/README.md](ui-ux/README.md)** | راهنمای کامل سوئیت UI/UX به همراه اصالت طراحی و User Journeys |
+| 📄 **[wordpress-capability-extraction-and-cms-reference.md](wordpress-capability-extraction-and-cms-reference.md)** | مرجع قابلیت‌های پیشرفته CMS و قابلیت‌های استخراج شده از وردپرس |
+
+---
+
+## 🗺️ برنامه توسعه، برنامه‌ریزی و نقشه‌راه (Product Planning & Roadmap)
+
+| مستند | موضوع و هدف |
+| :--- | :--- |
+| 📄 **[master-plan.md](master-plan.md)** | برنامه جامع فنی و محصولات پروژه (Master Product & Technical Plan) |
+| 📄 **[roadmap.md](roadmap.md)** | نقشه راه فازبندی شده توسعه پروژه |
+| 📄 **[goals-and-vision.md](goals-and-vision.md)** | اهداف، چشم‌انداز، مخاطبان هدف و دامنه MVP |
+| 📄 **[tahamohamadi_site_cms_v2_development_plan.md](tahamohamadi_site_cms_v2_development_plan.md)** | برنامه توسعه ارتقای CMS v2 |
+| 📄 **[walkthrough.md](walkthrough.md)** | گزارش تست‌ها و تغییرات فازهای اجرا شده |
+
+---
+
+## 🔬 ارزیابی‌های کیفی و تست‌ها (Quality Audits & Compliance)
+
+| مستند | موضوع و هدف |
+| :--- | :--- |
+| 📄 **[accessibility-audit.md](accessibility-audit.md)** | ارزیابی و گزارش دسترس‌پذیری استاندارد WCAG |
+| 📄 **[performance-audit.md](performance-audit.md)** | ارزیابی عملکرد و سرعت بارگذاری (Lighthouse / Web Vitals) |
+| 📄 **[reduced-motion-audit.md](reduced-motion-audit.md)** | ارزیابی انیمیشن‌ها و انطباق با درخواست کاهش انیمیشن کاربر |
+| 📄 **[manual-test-responsive.md](manual-test-responsive.md)** | دستورالعمل تست دستی واکنش‌گرایی در دستگا‌ه‌ها |
+| 📄 **[manual-test-rtl-ltr.md](manual-test-rtl-ltr.md)** | دستورالعمل تست دستی جهت‌های فارسی و انگلیسی (RTL / LTR) |
+
+---
+
+## 🥇 اولویت و اعتبار مستندات (Document Precedence)
+
+1. **`docs/project_architecture_and_technical_documentation.md`** — مرجع نهایی و الترا-تفصیلی کد و معماری فعلی سیستم (Implementation Truth)
+2. **`docs/INDEX.md`** — فهرست راهنما و مرجع جستجوی مستندات
+3. **`docs/architecture.md`** — تصمیمات کلان معماری سیستم
+4. **`docs/design-system-summary.md`** — قوانین دیزاین سیستم
+5. **سورس‌کد پروژه (`backend/` و `frontend/`)** — عملکرد سیستم در زمان اجرا
